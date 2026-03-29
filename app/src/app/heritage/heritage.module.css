@@ -1,0 +1,273 @@
+.hero {
+  position: relative;
+  height: 50vh;
+  min-height: 350px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, #1A1A1A 0%, #2a1a0a 100%);
+  text-align: center;
+}
+
+.heroOverlay {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(ellipse at center, rgba(240, 199, 94, 0.06) 0%, transparent 60%);
+}
+
+.heroContent {
+  position: relative;
+  z-index: 2;
+  padding: 0 var(--space-lg);
+  animation: fadeInUp 0.8s ease;
+}
+
+.heroContent h1 {
+  font-size: clamp(2.5rem, 5vw, 4rem);
+  color: #FFFFFF;
+  margin-bottom: var(--space-sm);
+}
+
+.label {
+  font-family: var(--font-body);
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.25em;
+  text-transform: uppercase;
+  color: var(--color-gold);
+  margin-bottom: 0.75rem;
+}
+
+.subtitle {
+  font-size: 1.125rem;
+  color: rgba(255, 255, 255, 0.6);
+}
+
+/* Story Section */
+.storySection {
+  padding: var(--space-3xl) 0;
+}
+
+.storyGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-2xl);
+  align-items: center;
+}
+
+.storyImageCol {
+  height: 500px;
+}
+
+.storyImage {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.placeholderEmoji {
+  font-size: 5rem;
+}
+
+.storyTextCol h2 {
+  font-size: clamp(2rem, 3.5vw, 2.75rem);
+  margin-bottom: 0.5rem;
+}
+
+.goldDivider {
+  width: 60px;
+  height: 2px;
+  background: var(--color-gold);
+  margin-bottom: var(--space-md);
+}
+
+.storyTextCol p {
+  font-size: 1rem;
+  line-height: 1.8;
+  color: var(--color-text-secondary);
+  margin-bottom: var(--space-md);
+}
+
+/* Timeline */
+.timelineSection {
+  padding: var(--space-3xl) 0;
+  background: var(--color-bg-section);
+}
+
+.timelineTitle {
+  text-align: center;
+  font-size: clamp(2rem, 3.5vw, 2.75rem);
+  margin-bottom: var(--space-2xl);
+}
+
+.timeline {
+  position: relative;
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+.timeline::before {
+  content: '';
+  position: absolute;
+  left: 50%;
+  top: 0;
+  bottom: 0;
+  width: 2px;
+  background: var(--color-gold);
+  transform: translateX(-50%);
+}
+
+.timelineItem {
+  display: flex;
+  align-items: center;
+  margin-bottom: var(--space-xl);
+  position: relative;
+}
+
+.timelineItem:nth-child(odd) {
+  flex-direction: row;
+}
+
+.timelineItem:nth-child(even) {
+  flex-direction: row-reverse;
+}
+
+.timelineYear {
+  flex: 1;
+  font-family: var(--font-headline);
+  font-size: 2rem;
+  font-weight: 700;
+  color: var(--color-gold);
+  text-align: right;
+  padding-right: var(--space-lg);
+}
+
+.timelineItem:nth-child(even) .timelineYear {
+  text-align: left;
+  padding-right: 0;
+  padding-left: var(--space-lg);
+}
+
+.timelineDot {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: var(--color-gold);
+  border: 3px solid var(--color-bg-section);
+  z-index: 1;
+  flex-shrink: 0;
+}
+
+.timelineText {
+  flex: 1;
+  font-size: 1rem;
+  line-height: 1.6;
+  color: var(--color-text-secondary);
+  padding-left: var(--space-lg);
+}
+
+.timelineItem:nth-child(even) .timelineText {
+  padding-left: 0;
+  padding-right: var(--space-lg);
+  text-align: right;
+}
+
+/* Philosophy Section */
+.philosophySection {
+  padding: var(--space-3xl) 0;
+}
+
+.philosophyGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-2xl);
+  align-items: center;
+}
+
+.philosophyTextCol h2 {
+  font-size: clamp(2rem, 3.5vw, 2.75rem);
+  margin-bottom: 0.5rem;
+}
+
+.philosophyTextCol p {
+  font-size: 1rem;
+  line-height: 1.8;
+  color: var(--color-text-secondary);
+  margin-bottom: var(--space-md);
+}
+
+.philosophyFeatures {
+  margin-top: var(--space-lg);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+}
+
+.feature {
+  display: flex;
+  gap: 1rem;
+  align-items: flex-start;
+}
+
+.featureIcon {
+  font-size: 1.75rem;
+  flex-shrink: 0;
+  margin-top: 0.25rem;
+}
+
+.feature h4 {
+  font-family: var(--font-headline);
+  font-size: 1.125rem;
+  margin-bottom: 0.25rem;
+}
+
+.feature p {
+  font-size: 0.9rem;
+  color: var(--color-text-secondary);
+  margin-bottom: 0 !important;
+}
+
+.philosophyImageCol {
+  height: 500px;
+}
+
+.philosophyImage {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+@media (max-width: 900px) {
+  .storyGrid,
+  .philosophyGrid { grid-template-columns: 1fr; }
+
+  .storyImageCol,
+  .philosophyImageCol { height: 300px; }
+
+  .timeline::before { left: 20px; }
+  .timelineItem,
+  .timelineItem:nth-child(even) {
+    flex-direction: column;
+    align-items: flex-start;
+    padding-left: 50px;
+  }
+  .timelineYear,
+  .timelineItem:nth-child(even) .timelineYear {
+    text-align: left;
+    padding: 0;
+    font-size: 1.5rem;
+  }
+  .timelineText,
+  .timelineItem:nth-child(even) .timelineText {
+    text-align: left;
+    padding: 0;
+  }
+  .timelineDot {
+    position: absolute;
+    left: 12px;
+  }
+}

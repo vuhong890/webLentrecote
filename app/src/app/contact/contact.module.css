@@ -1,0 +1,222 @@
+.hero {
+  position: relative;
+  height: 40vh;
+  min-height: 300px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, #1A1A1A 0%, #2a1a0a 100%);
+  text-align: center;
+}
+
+.heroOverlay {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(ellipse at center, rgba(240, 199, 94, 0.06) 0%, transparent 60%);
+}
+
+.heroContent {
+  position: relative;
+  z-index: 2;
+  animation: fadeInUp 0.8s ease;
+}
+
+.heroContent h1 {
+  font-size: clamp(2.5rem, 5vw, 4rem);
+  color: #FFFFFF;
+}
+
+.label {
+  font-family: var(--font-body);
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.25em;
+  text-transform: uppercase;
+  color: var(--color-gold);
+  margin-bottom: 0.75rem;
+}
+
+.subtitle {
+  font-size: 1.125rem;
+  color: rgba(255, 255, 255, 0.6);
+  margin-top: 0.5rem;
+}
+
+/* Contact Section */
+.contactSection {
+  padding: var(--space-3xl) 0;
+}
+
+.contactGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-2xl);
+}
+
+/* Info Column */
+.infoCol h2 {
+  font-size: 2rem;
+}
+
+.goldDivider {
+  width: 60px;
+  height: 2px;
+  background: var(--color-gold);
+  margin: var(--space-sm) 0 var(--space-lg);
+}
+
+.infoBlock {
+  margin-bottom: var(--space-md);
+}
+
+.infoBlock h4 {
+  font-family: var(--font-body);
+  font-size: 0.85rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  margin-bottom: 0.35rem;
+  color: var(--color-text-primary);
+}
+
+.infoBlock p {
+  font-size: 0.95rem;
+  line-height: 1.6;
+  color: var(--color-text-secondary);
+}
+
+.infoBlock a {
+  color: var(--color-gold);
+  font-weight: 600;
+  transition: opacity var(--transition-fast);
+}
+
+.infoBlock a:hover {
+  opacity: 0.8;
+}
+
+/* Social */
+.socialLinks {
+  display: flex;
+  gap: 0.75rem;
+  margin: var(--space-md) 0 var(--space-lg);
+  flex-wrap: wrap;
+}
+
+.socialBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.6rem 1.25rem;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--color-text-primary);
+  border: 1px solid rgba(26, 26, 26, 0.15);
+  transition: all var(--transition-fast);
+}
+
+.socialBtn:hover {
+  border-color: var(--color-gold);
+  color: var(--color-gold);
+  transform: translateY(-2px);
+}
+
+/* Map */
+.mapWrap {
+  margin-top: var(--space-md);
+  overflow: hidden;
+}
+
+.mapWrap iframe {
+  width: 100%;
+  min-height: 250px;
+}
+
+/* Form Column */
+.formCol h2 {
+  font-size: 2rem;
+}
+
+.formIntro {
+  font-size: 0.95rem;
+  color: var(--color-text-secondary);
+  margin-bottom: var(--space-lg);
+  line-height: 1.7;
+}
+
+.form {
+  display: flex;
+  flex-direction: column;
+}
+
+.formGroup {
+  margin-bottom: var(--space-md);
+}
+
+.formLabel {
+  display: block;
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--color-text-secondary);
+  margin-bottom: 0.4rem;
+}
+
+.formInput {
+  width: 100%;
+  padding: 0.75rem 0;
+  background: transparent;
+  border: none;
+  border-bottom: 1px solid rgba(208, 197, 179, 0.3);
+  font-size: 1rem;
+  font-family: var(--font-body);
+  color: var(--color-text-primary);
+  outline: none;
+  transition: border-color var(--transition-fast);
+}
+
+.formInput:focus {
+  border-bottom-color: var(--color-gold);
+}
+
+textarea.formInput {
+  resize: vertical;
+  min-height: 120px;
+}
+
+/* Success */
+.successMessage {
+  text-align: center;
+  padding: var(--space-2xl);
+  background: var(--color-bg-section);
+  animation: fadeInUp 0.5s ease;
+}
+
+.successIcon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  background: var(--color-gold);
+  color: var(--color-black);
+  font-size: 1.5rem;
+  font-weight: 700;
+  margin-bottom: var(--space-md);
+}
+
+.successMessage h3 {
+  font-size: 1.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.successMessage p {
+  color: var(--color-text-secondary);
+}
+
+@media (max-width: 900px) {
+  .contactGrid {
+    grid-template-columns: 1fr;
+  }
+}

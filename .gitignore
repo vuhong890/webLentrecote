@@ -1,0 +1,15 @@
+# Skills folder (Gemini agent)
+skills/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Gemini
+.gemini/
