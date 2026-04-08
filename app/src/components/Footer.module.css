@@ -12,8 +12,8 @@
 
 .topSection {
   display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: var(--space-2xl);
+  grid-template-columns: 1fr 1.2fr 1fr;
+  gap: var(--space-xl);
   padding-bottom: var(--space-2xl);
 }
 
@@ -80,6 +80,19 @@
   opacity: 0.8;
 }
 
+.emailLine {
+  font-weight: 600;
+}
+
+.emailLine a {
+  color: var(--color-gold);
+  transition: opacity var(--transition-fast);
+}
+
+.emailLine a:hover {
+  opacity: 0.8;
+}
+
 /* Social */
 .social {
   display: flex;
@@ -103,6 +116,126 @@
   background: var(--color-gold);
   color: var(--color-black);
   transform: translateY(-2px);
+}
+
+/* Contact Form Column */
+.contactColumn {
+  display: flex;
+  flex-direction: column;
+}
+
+.contactTitle {
+  font-family: var(--font-body);
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--color-gold);
+  margin-bottom: var(--space-md);
+}
+
+.contactForm {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.formRow {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.75rem;
+}
+
+.formInput {
+  width: 100%;
+  padding: 0.65rem 0.85rem;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  color: var(--color-text-light);
+  font-family: var(--font-body);
+  font-size: 0.85rem;
+  transition: all var(--transition-fast);
+  outline: none;
+}
+
+.formInput::placeholder {
+  color: rgba(255, 255, 255, 0.4);
+}
+
+.formInput:focus {
+  border-color: var(--color-gold);
+  background: rgba(255, 255, 255, 0.12);
+}
+
+.formTextarea {
+  width: 100%;
+  padding: 0.65rem 0.85rem;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  color: var(--color-text-light);
+  font-family: var(--font-body);
+  font-size: 0.85rem;
+  resize: vertical;
+  min-height: 80px;
+  transition: all var(--transition-fast);
+  outline: none;
+}
+
+.formTextarea::placeholder {
+  color: rgba(255, 255, 255, 0.4);
+}
+
+.formTextarea:focus {
+  border-color: var(--color-gold);
+  background: rgba(255, 255, 255, 0.12);
+}
+
+.sendBtn {
+  align-self: flex-start;
+  padding: 0.6rem 1.5rem;
+  background: var(--color-gold);
+  color: var(--color-black);
+  font-family: var(--font-body);
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  border: none;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.sendBtn:hover {
+  background: var(--color-accent-hover);
+  transform: translateY(-1px);
+}
+
+.successMessage {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 1rem;
+  background: rgba(240, 199, 94, 0.1);
+  border: 1px solid rgba(240, 199, 94, 0.3);
+}
+
+.successIcon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: var(--color-gold);
+  color: var(--color-black);
+  font-weight: 700;
+  font-size: 1rem;
+  flex-shrink: 0;
+}
+
+.successMessage p {
+  font-size: 0.9rem;
+  color: var(--color-gold);
 }
 
 /* Map Column */
@@ -162,12 +295,18 @@
   color: var(--color-gold);
 }
 
-@media (max-width: 768px) {
+@media (max-width: 900px) {
   .topSection {
     grid-template-columns: 1fr;
     gap: var(--space-xl);
   }
 
+  .formRow {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 768px) {
   .bottomBar {
     flex-direction: column;
     gap: 0.75rem;

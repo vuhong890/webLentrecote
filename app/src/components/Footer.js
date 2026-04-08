@@ -1,10 +1,25 @@
 'use client';
+import { useState } from 'react';
 import { usePathname } from 'next/navigation';
 import styles from './Footer.module.css';
 
 export default function Footer() {
   const pathname = usePathname();
+  const [formData, setFormData] = useState({ name: '', email: '', message: '' });
+  const [sent, setSent] = useState(false);
+
   if (pathname?.startsWith('/admin')) return null;
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    setSent(true);
+    setFormData({ name: '', email: '', message: '' });
+    setTimeout(() => setSent(false), 4000);
+  };
+
+  const handleChange = (e) => {
+    setFormData({ ...formData, [e.target.name]: e.target.value });
+  };
 
   return (
     <footer className={styles.footer}>
@@ -27,6 +42,9 @@ export default function Footer() {
               <p className={styles.hotline}>
                 Hotline: <a href="tel:+84327157002">(+84) 32 7157 002</a>
               </p>
+              <p className={styles.emailLine}>
+                Email: <a href="mailto:bonjour@lentrecote.vn">bonjour@lentrecote.vn</a>
+              </p>
             </div>
 
             <div className={styles.social}>
@@ -46,6 +64,52 @@ export default function Footer() {
                 </svg>
               </a>
             </div>
+          </div>
+
+          {/* Contact Form Column */}
+          <div className={styles.contactColumn}>
+            <h4 className={styles.contactTitle}>SEND A MESSAGE</h4>
+            {sent ? (
+              <div className={styles.successMessage}>
+                <span className={styles.successIcon}>✓</span>
+                <p>Thank you! We'll respond within 24 hours.</p>
+              </div>
+            ) : (
+              <form onSubmit={handleSubmit} className={styles.contactForm}>
+                <div className={styles.formRow}>
+                  <input
+                    type="text"
+                    name="name"
+                    value={formData.name}
+                    onChange={handleChange}
+                    className={styles.formInput}
+                    placeholder="Your name"
+                    required
+                  />
+                  <input
+                    type="email"
+                    name="email"
+                    value={formData.email}
+                    onChange={handleChange}
+                    className={styles.formInput}
+                    placeholder="Your email"
+                    required
+                  />
+                </div>
+                <textarea
+                  name="message"
+                  value={formData.message}
+                  onChange={handleChange}
+                  className={styles.formTextarea}
+                  placeholder="Your message..."
+                  rows="3"
+                  required
+                ></textarea>
+                <button type="submit" className={styles.sendBtn}>
+                  SEND MESSAGE
+                </button>
+              </form>
+            )}
           </div>
 
           {/* Map Column */}

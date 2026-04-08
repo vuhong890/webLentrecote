@@ -125,16 +125,16 @@ export default function Header() {
       <div className={styles.container}>
         {/* Logo */}
         <Link href="/" className={styles.logo}>
-          <div className={styles.logoIcon}>
-            <svg viewBox="0 0 100 80" fill="none" xmlns="http://www.w3.org/2000/svg" className={styles.cowSvg}>
-              <path d="M15 25 Q10 5 5 2 Q12 8 20 15 Q25 5 35 3 Q30 12 28 20 Q35 18 42 22 Q45 28 47 35 Q48 40 50 42 Q52 40 53 35 Q55 28 58 22 Q65 18 72 20 Q70 12 65 3 Q75 5 80 15 Q88 8 95 2 Q90 5 85 25 Q88 32 85 40 Q82 48 75 52 Q70 55 65 55 Q60 55 57 52 Q55 50 53 48 Q51 47 50 47 Q49 47 47 48 Q45 50 43 52 Q40 55 35 55 Q30 55 25 52 Q18 48 15 40 Q12 32 15 25Z" stroke="currentColor" strokeWidth="2.5" fill="none"/>
-              <circle cx="38" cy="32" r="2" fill="currentColor"/>
-              <circle cx="62" cy="32" r="2" fill="currentColor"/>
-              <path d="M44 42 Q47 45 50 46 Q53 45 56 42" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round"/>
-              <path d="M46 48 Q48 50 50 50 Q52 50 54 48" stroke="currentColor" strokeWidth="1.5" fill="none" strokeLinecap="round"/>
-            </svg>
-          </div>
-          <span className={styles.logoText}>L&apos;Entrecôte</span>
+          <img
+            src="/logo_image.png"
+            alt="L'Entrecôte Logo"
+            className={styles.logoIcon}
+          />
+          <img
+            src="/logo_text.png"
+            alt="L'Entrecôte Social Meating"
+            className={styles.logoText}
+          />
         </Link>
 
         {/* Desktop Nav */}
