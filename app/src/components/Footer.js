@@ -28,8 +28,11 @@ export default function Footer() {
           {/* Info Column */}
           <div className={styles.infoColumn}>
             <div className={styles.brandName}>
-              <h3>L'ENTRECÔTE</h3>
-              <p className={styles.tagline}>Social Meating</p>
+              <img
+                src="/logo_text.png"
+                alt="L'Entrecôte Social Meating"
+                className={styles.footerLogo}
+              />
             </div>
             <div className={styles.divider}></div>
             <div className={styles.details}>

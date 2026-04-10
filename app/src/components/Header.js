@@ -126,11 +126,6 @@ export default function Header() {
         {/* Logo */}
         <Link href="/" className={styles.logo}>
           <img
-            src="/logo_image.png"
-            alt="L'Entrecôte Logo"
-            className={styles.logoIcon}
-          />
-          <img
             src="/logo_text.png"
             alt="L'Entrecôte Social Meating"
             className={styles.logoText}

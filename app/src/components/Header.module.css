@@ -17,9 +17,8 @@
 }
 
 .container {
-  max-width: var(--max-width);
-  margin: 0 auto;
-  padding: 0 var(--space-lg);
+  width: 100%;
+  padding: 0 var(--space-lg) 0 100px;
   height: 100%;
   display: flex;
   align-items: center;
@@ -30,27 +29,20 @@
 .logo {
   display: flex;
   align-items: center;
-  gap: 0.75rem;
   text-decoration: none;
   color: var(--color-text-light);
   transition: opacity var(--transition-fast);
+  flex-shrink: 0;
 }
 
 .logo:hover {
   opacity: 0.85;
 }
 
-.logoIcon {
-  height: 57px;
-  width: auto;
-  object-fit: contain;
-}
-
 .logoText {
-  height: 160px;
+  height: 48px;
   width: auto;
   object-fit: contain;
-  margin-left: -0.5rem;
 }
 
 /* Navigation */
