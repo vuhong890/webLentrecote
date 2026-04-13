@@ -10,6 +10,7 @@ export default function AdminPages() {
   const [form, setForm] = useState({});
   const [saving, setSaving] = useState(false);
   const [uploading, setUploading] = useState(false);
+  const [dragOver, setDragOver] = useState(false);
   const fileInputRef = useRef(null);
 
   // Signature items state
@@ -74,8 +75,7 @@ export default function AdminPages() {
     loadSections();
   }
 
-  async function handleImageUpload(e) {
-    const file = e.target.files?.[0];
+  async function uploadFile(file) {
     if (!file) return;
     setUploading(true);
     const fd = new FormData();
@@ -88,6 +88,35 @@ export default function AdminPages() {
       else alert('Upload failed: ' + (data.error || 'Unknown error'));
     } catch (err) { alert('Upload error: ' + err.message); }
     setUploading(false);
+  }
+
+  function handleImageUpload(e) {
+    const file = e.target.files?.[0];
+    if (file) uploadFile(file);
+  }
+
+  function handleDrop(e) {
+    e.preventDefault();
+    e.stopPropagation();
+    setDragOver(false);
+    const file = e.dataTransfer.files?.[0];
+    if (file && file.type.startsWith('image/')) {
+      uploadFile(file);
+    } else {
+      alert('Please drop an image file (JPG, PNG, WebP)');
+    }
+  }
+
+  function handleDragOver(e) {
+    e.preventDefault();
+    e.stopPropagation();
+    setDragOver(true);
+  }
+
+  function handleDragLeave(e) {
+    e.preventDefault();
+    e.stopPropagation();
+    setDragOver(false);
   }
 
   function handleRemoveImage() {
@@ -343,18 +372,30 @@ export default function AdminPages() {
                   </div>
                 </div>
               ) : (
-                <label style={st.uploadArea}>
+                <div
+                  style={{
+                    ...st.uploadArea,
+                    borderColor: dragOver ? '#F0C75E' : 'rgba(255,255,255,0.15)',
+                    background: dragOver ? 'rgba(240,199,94,0.05)' : '#0a0a0a',
+                  }}
+                  onClick={() => fileInputRef.current?.click()}
+                  onDrop={handleDrop}
+                  onDragOver={handleDragOver}
+                  onDragLeave={handleDragLeave}
+                >
                   <input ref={fileInputRef} type="file" accept="image/*" onChange={handleImageUpload} style={{ display: 'none' }} />
                   {uploading ? (
                     <p style={{ color: '#F0C75E', margin: 0 }}>Uploading...</p>
                   ) : (
                     <>
-                      <p style={{ color: 'rgba(255,255,255,0.5)', margin: '0 0 0.5rem 0', fontSize: '2rem' }}>📁</p>
-                      <p style={{ color: 'rgba(255,255,255,0.5)', margin: 0, fontSize: '0.85rem' }}>Click to upload an image</p>
+                      <p style={{ color: dragOver ? '#F0C75E' : 'rgba(255,255,255,0.5)', margin: '0 0 0.5rem 0', fontSize: '2rem' }}>📁</p>
+                      <p style={{ color: dragOver ? '#F0C75E' : 'rgba(255,255,255,0.5)', margin: 0, fontSize: '0.85rem' }}>
+                        {dragOver ? 'Drop image here' : 'Click or drag & drop to upload an image'}
+                      </p>
                       <p style={{ color: 'rgba(255,255,255,0.25)', margin: '0.25rem 0 0 0', fontSize: '0.7rem' }}>JPG, PNG, WebP (max 5MB)</p>
                     </>
                   )}
-                </label>
+                </div>
               )}
             </div>
 
