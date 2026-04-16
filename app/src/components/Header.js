@@ -110,6 +110,20 @@ export default function Header() {
     setMobileOpen(false);
   }, [pathname]);
 
+  // Prevent background scrolling when mobile menu is open
+  useEffect(() => {
+    if (mobileOpen) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = 'unset';
+    }
+    
+    // Cleanup to ensure we don't accidentally leave scroll locked
+    return () => {
+      document.body.style.overflow = 'unset';
+    };
+  }, [mobileOpen]);
+
   // Determine which nav link is active
   const getActiveClass = (linkHref) => {
     if (isHomePage) {

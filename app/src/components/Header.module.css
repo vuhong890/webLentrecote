@@ -182,7 +182,23 @@
 }
 
 @media (max-width: 900px) {
+  .container {
+    padding: 0 var(--space-md);
+  }
   .nav { display: none; }
-  .hamburger { display: flex; }
+  .hamburger { 
+    display: flex; 
+    order: -1;
+  }
+  .langToggle {
+    order: 1;
+    margin-left: 0;
+  }
+  .logo {
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
+    padding: 0;
+  }
   .mobileMenu { display: flex; }
 }
