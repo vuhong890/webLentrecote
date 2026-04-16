@@ -10,10 +10,17 @@ export default function Reservation() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [branches, setBranches] = useState([]);
+  const [pageSections, setPageSections] = useState({});
 
   useEffect(() => {
     fetch('/api/site-settings').then(r => r.json()).then(data => {
       // We don't have a branches API yet, but can set a default
+    }).catch(() => {});
+
+    fetch('/api/page-sections?page=reservation').then(r => r.json()).then(data => {
+      const ps = {};
+      (Array.isArray(data) ? data : []).forEach(s => { ps[s.section_key] = s; });
+      setPageSections(ps);
     }).catch(() => {});
   }, []);
 
@@ -51,15 +58,22 @@ export default function Reservation() {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
+  const hero = pageSections.hero || {};
+  const heroMeta = hero.metadata || {};
+  const bookingInfo = pageSections.booking_info || {};
+
   return (
     <>
       {/* Hero */}
-      <section className={styles.hero}>
+      <section 
+        className={styles.hero}
+        style={hero.image_url ? { backgroundImage: `url(${hero.image_url})`, backgroundSize: 'cover', backgroundPosition: 'center' } : undefined}
+      >
         <div className={styles.heroOverlay}></div>
         <div className={styles.heroContent}>
-          <p className={styles.label}>RESERVATION</p>
-          <h1>Secure Your Table</h1>
-          <p className={styles.subtitle}>An unforgettable evening begins with a single step</p>
+          <p className={styles.label}>{heroMeta.label_en || 'RESERVATION'}</p>
+          <h1>{hero.title_en || 'Secure Your Table'}</h1>
+          <p className={styles.subtitle} dangerouslySetInnerHTML={{ __html: hero.content_en || 'An unforgettable evening begins with a single step' }}></p>
         </div>
       </section>
 
@@ -152,13 +166,15 @@ export default function Reservation() {
             {/* Info Side */}
             <div className={styles.infoCol}>
               <div className={styles.infoCard}>
-                <div className={styles.infoImagePlaceholder} style={{
-                  background: 'linear-gradient(135deg, #2a1a0a 0%, #3a2a1a 100%)'
-                }}>
-                  <span style={{fontSize: '4rem'}}>🕯️</span>
+                <div className={styles.infoImagePlaceholder} style={
+                  bookingInfo.image_url
+                    ? { backgroundImage: `url(${bookingInfo.image_url})`, backgroundSize: 'cover', backgroundPosition: 'center' }
+                    : { background: 'linear-gradient(135deg, #2a1a0a 0%, #3a2a1a 100%)' }
+                }>
+                  {!bookingInfo.image_url && <span style={{fontSize: '4rem'}}>🕯️</span>}
                 </div>
                 <div className={styles.infoCardBody}>
-                  <h3>The Bistro Experience</h3>
+                  <h3>{bookingInfo.title_en || 'The Bistro Experience'}</h3>
                   <div className={styles.goldDivider}></div>
                   <div className={styles.infoItem}>
                     <span className={styles.infoLabel}>LUNCH</span>

@@ -77,6 +77,19 @@ export default function Menus() {
   const [items, setItems] = useState([]);
   const [popupIndex, setPopupIndex] = useState(null);
   const [dbLoaded, setDbLoaded] = useState(false);
+  const [pageSections, setPageSections] = useState({});
+
+  // Load page sections
+  useEffect(() => {
+    fetch('/api/page-sections?page=menus')
+      .then(r => r.json())
+      .then(data => {
+        const ps = {};
+        (Array.isArray(data) ? data : []).forEach(s => { ps[s.section_key] = s; });
+        setPageSections(ps);
+      })
+      .catch(() => {});
+  }, []);
 
   // Load categories from API
   useEffect(() => {
@@ -173,14 +186,21 @@ export default function Menus() {
   };
   const getImage = (item) => item.image_url || '';
 
+  const hero = pageSections.hero || {};
+  const heroMeta = hero.metadata || {};
+
   return (
     <>
       {/* Hero */}
-      <section className={styles.hero}>
+      <section 
+        className={styles.hero}
+        style={hero.image_url ? { backgroundImage: `url(${hero.image_url})`, backgroundSize: 'cover', backgroundPosition: 'center' } : undefined}
+      >
         <div className={styles.heroOverlay}></div>
         <div className={styles.heroContent}>
-          <p className={styles.label}>THE MENU</p>
-          <h1>Signature Selection</h1>
+          <p className={styles.label}>{heroMeta.label_en || 'THE MENU'}</p>
+          <h1>{hero.title_en || 'Signature Selection'}</h1>
+          {hero.content_en && <p className={styles.subtitle} dangerouslySetInnerHTML={{ __html: hero.content_en }}></p>}
         </div>
       </section>
 

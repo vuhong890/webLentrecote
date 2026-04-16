@@ -313,7 +313,7 @@ export default function AdminPages() {
       </div>
 
       <div style={st.tabs}>
-        {['home', 'heritage'].map(p => (
+        {['home', 'heritage', 'menus', 'reservation', 'gallery', 'contact'].map(p => (
           <button key={p} style={{ ...st.tab, ...(activePage === p ? st.tabActive : {}) }} onClick={() => setActivePage(p)}>
             {p}
           </button>

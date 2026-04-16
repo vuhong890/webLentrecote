@@ -49,7 +49,7 @@
 }
 
 .details p {
-  font-size: 0.95rem;
+  font-size: 1.15rem;
   line-height: 1.6;
   color: rgba(255, 255, 255, 0.8);
 }
@@ -120,7 +120,7 @@
 
 .contactTitle {
   font-family: var(--font-body);
-  font-size: 0.75rem;
+  font-size: 1.05rem;
   font-weight: 700;
   letter-spacing: 0.2em;
   text-transform: uppercase;
@@ -147,7 +147,7 @@
   border: 1px solid rgba(255, 255, 255, 0.15);
   color: var(--color-text-light);
   font-family: var(--font-body);
-  font-size: 0.85rem;
+  font-size: 1.05rem;
   transition: all var(--transition-fast);
   outline: none;
 }
@@ -168,7 +168,7 @@
   border: 1px solid rgba(255, 255, 255, 0.15);
   color: var(--color-text-light);
   font-family: var(--font-body);
-  font-size: 0.85rem;
+  font-size: 1.05rem;
   resize: vertical;
   min-height: 80px;
   transition: all var(--transition-fast);
@@ -190,7 +190,7 @@
   background: var(--color-gold);
   color: var(--color-black);
   font-family: var(--font-body);
-  font-size: 0.7rem;
+  font-size: 1rem;
   font-weight: 700;
   letter-spacing: 0.15em;
   text-transform: uppercase;
@@ -240,7 +240,7 @@
 
 .mapTitle {
   font-family: var(--font-body);
-  font-size: 0.75rem;
+  font-size: 1.05rem;
   font-weight: 700;
   letter-spacing: 0.2em;
   text-transform: uppercase;
@@ -270,7 +270,7 @@
 }
 
 .bottomBar p {
-  font-size: 0.8rem;
+  font-size: 1rem;
   color: rgba(255, 255, 255, 0.5);
 }
 
@@ -280,7 +280,7 @@
 }
 
 .bottomLinks a {
-  font-size: 0.8rem;
+  font-size: 1rem;
   color: rgba(255, 255, 255, 0.5);
   transition: color var(--transition-fast);
 }

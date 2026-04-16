@@ -12,7 +12,7 @@
 .heroOverlay {
   position: absolute;
   inset: 0;
-  background: radial-gradient(ellipse at center, rgba(240, 199, 94, 0.06) 0%, transparent 60%);
+  background: linear-gradient(180deg, rgba(0,0,0,0.5) 0%, rgba(0,0,0,0.2) 100%), radial-gradient(ellipse at center, transparent 40%, rgba(0,0,0,0.4) 100%);
 }
 
 .heroContent {
@@ -23,23 +23,27 @@
 
 .heroContent h1 {
   font-size: 3.25rem;
-  color: #FFFFFF;
+  color: #FDFAF5;
+  text-shadow: 0 2px 4px rgba(0,0,0,0.8), 0 8px 24px rgba(0,0,0,0.5);
+  margin-bottom: var(--space-sm);
 }
 
 .label {
   font-family: var(--font-body);
-  font-size: 0.75rem;
+  font-size: 1.05rem;
   font-weight: 700;
   letter-spacing: 0.25em;
   text-transform: uppercase;
   color: var(--color-gold);
+  text-shadow: 0 2px 4px rgba(0,0,0,0.6);
   margin-bottom: 0.75rem;
 }
 
 .subtitle {
   font-size: 1.125rem;
-  color: rgba(255, 255, 255, 0.6);
+  color: #EBEBEB;
   margin-top: 0.5rem;
+  text-shadow: 0 2px 4px rgba(0,0,0,0.8), 0 6px 16px rgba(0,0,0,0.5);
 }
 
 /* Booking Section */

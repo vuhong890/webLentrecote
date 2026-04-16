@@ -1,5 +1,5 @@
 'use client';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import styles from './contact.module.css';
 
 export default function Contact() {
@@ -7,6 +7,15 @@ export default function Contact() {
     name: '', email: '', subject: '', message: ''
   });
   const [sent, setSent] = useState(false);
+  const [pageSections, setPageSections] = useState({});
+
+  useEffect(() => {
+    fetch('/api/page-sections?page=contact').then(r => r.json()).then(data => {
+      const ps = {};
+      (Array.isArray(data) ? data : []).forEach(s => { ps[s.section_key] = s; });
+      setPageSections(ps);
+    }).catch(() => {});
+  }, []);
 
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -18,15 +27,23 @@ export default function Contact() {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
+  const hero = pageSections.hero || {};
+  const heroMeta = hero.metadata || {};
+  const details = pageSections.details || {};
+  const detailsMeta = details.metadata || {};
+
   return (
     <>
       {/* Hero */}
-      <section className={styles.hero}>
+      <section 
+        className={styles.hero}
+        style={hero.image_url ? { backgroundImage: `url(${hero.image_url})`, backgroundSize: 'cover', backgroundPosition: 'center' } : undefined}
+      >
         <div className={styles.heroOverlay}></div>
         <div className={styles.heroContent}>
-          <p className={styles.label}>CONTACT</p>
-          <h1>Get in Touch</h1>
-          <p className={styles.subtitle}>We'd love to hear from you</p>
+          <p className={styles.label}>{heroMeta.label_en || 'CONTACT'}</p>
+          <h1>{hero.title_en || 'Get in Touch'}</h1>
+          <p className={styles.subtitle} dangerouslySetInnerHTML={{ __html: hero.content_en || "We'd love to hear from you. For private events and media inquiries, drop us a line." }}></p>
         </div>
       </section>
 
@@ -36,14 +53,12 @@ export default function Contact() {
           <div className={styles.contactGrid}>
             {/* Contact Info */}
             <div className={styles.infoCol}>
-              <h2>Visit Us</h2>
+              <h2>{detailsMeta.label_en || 'Visit Us'}</h2>
               <div className={styles.goldDivider}></div>
 
               <div className={styles.infoBlock}>
-                <h4>📍 Address</h4>
-                <p>L'Entrecôte Social Meating</p>
-                <p>Level 2, Dong Du</p>
-                <p>Saigon Ward, Ho Chi Minh City</p>
+                <h4>📍 {details.title_en || 'Address'}</h4>
+                <div dangerouslySetInnerHTML={{ __html: details.content_en || "<p>L'Entrecôte Social Meating</p><p>Level 2, Dong Du</p><p>Saigon Ward, Ho Chi Minh City</p>" }}></div>
               </div>
 
               <div className={styles.infoBlock}>

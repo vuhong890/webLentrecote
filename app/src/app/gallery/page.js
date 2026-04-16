@@ -32,6 +32,7 @@ export default function Gallery() {
   const [lightbox, setLightbox] = useState(null);
   const [images, setImages] = useState([]);
   const [dbLoaded, setDbLoaded] = useState(false);
+  const [pageSections, setPageSections] = useState({});
 
   useEffect(() => {
     fetch('/api/gallery')
@@ -50,6 +51,12 @@ export default function Gallery() {
         }
       })
       .catch(() => setImages(staticGallery));
+
+    fetch('/api/page-sections?page=gallery').then(r => r.json()).then(data => {
+      const ps = {};
+      (Array.isArray(data) ? data : []).forEach(s => { ps[s.section_key] = s; });
+      setPageSections(ps);
+    }).catch(() => {});
   }, []);
 
   const filtered = activeFilter === 'all'
@@ -58,15 +65,21 @@ export default function Gallery() {
 
   const getTitle = (img) => img.title_en || img.title || 'Untitled';
 
+  const hero = pageSections.hero || {};
+  const heroMeta = hero.metadata || {};
+
   return (
     <>
       {/* Hero */}
-      <section className={styles.hero}>
+      <section 
+        className={styles.hero}
+        style={hero.image_url ? { backgroundImage: `url(${hero.image_url})`, backgroundSize: 'cover', backgroundPosition: 'center' } : undefined}
+      >
         <div className={styles.heroOverlay}></div>
         <div className={styles.heroContent}>
-          <p className={styles.label}>GALLERY</p>
-          <h1>Visual Stories</h1>
-          <p className={styles.subtitle}>A curated glimpse into the L'Entrecôte experience</p>
+          <p className={styles.label}>{heroMeta.label_en || 'GALLERY'}</p>
+          <h1>{hero.title_en || 'Visual Stories'}</h1>
+          <p className={styles.subtitle} dangerouslySetInnerHTML={{ __html: hero.content_en || 'A curated glimpse into the L\'Entrecôte experience' }}></p>
         </div>
       </section>
 
