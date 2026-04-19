@@ -145,7 +145,7 @@
 }
 
 .heritageText {
-  font-size: 1rem;
+  font-size: 1.25rem;
   line-height: 1.8;
   color: var(--color-text-secondary);
   margin-bottom: var(--space-lg);
@@ -181,7 +181,7 @@
 
 .miniTimelineYear {
   font-family: var(--font-headline);
-  font-size: 1rem;
+  font-size: 1.5rem;
   font-weight: 700;
   color: var(--color-gold);
   min-width: 48px;
@@ -213,7 +213,7 @@
 }
 
 .miniTimelineText {
-  font-size: 0.85rem;
+  font-size: 1.275rem;
   color: var(--color-text-secondary);
   line-height: 1.5;
 }

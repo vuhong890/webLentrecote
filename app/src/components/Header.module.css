@@ -16,6 +16,14 @@
   box-shadow: 0 2px 20px rgba(0, 0, 0, 0.3);
 }
 
+/* Force solid black when mobile menu is open */
+.header.mobileMenuActive,
+.header.mobileMenuActive.scrolled {
+  background: var(--color-bg-dark);
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+
 .container {
   width: 100%;
   padding: 0 var(--space-lg) 0 100px;

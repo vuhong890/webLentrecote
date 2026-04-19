@@ -91,7 +91,7 @@
 }
 
 .storyTextCol p {
-  font-size: 1rem;
+  font-size: 1.25rem;
   line-height: 1.8;
   color: var(--color-text-secondary);
   margin-bottom: var(--space-md);
@@ -169,7 +169,7 @@
 
 .timelineText {
   flex: 1;
-  font-size: 1rem;
+  font-size: 1.25rem;
   line-height: 1.6;
   color: var(--color-text-secondary);
   padding-left: var(--space-lg);
@@ -199,7 +199,7 @@
 }
 
 .philosophyTextCol p {
-  font-size: 1rem;
+  font-size: 1.25rem;
   line-height: 1.8;
   color: var(--color-text-secondary);
   margin-bottom: var(--space-md);
@@ -231,7 +231,7 @@
 }
 
 .feature p {
-  font-size: 0.9rem;
+  font-size: 1.125rem;
   color: var(--color-text-secondary);
   margin-bottom: 0 !important;
 }
@@ -249,32 +249,81 @@
 }
 
 @media (max-width: 900px) {
+  /* Grid → single column */
   .storyGrid,
   .philosophyGrid { grid-template-columns: 1fr; }
 
   .storyImageCol,
   .philosophyImageCol { height: 300px; }
 
+  /* Hero */
+  .heroContent h1 {
+    font-size: 2rem;
+  }
+  .heroContent {
+    padding: 0 var(--space-md);
+  }
+
+  /* Section padding */
+  .storySection,
+  .timelineSection,
+  .philosophySection {
+    padding: var(--space-xl) 0;
+  }
+
+  /* Story & Philosophy headings */
+  .storyTextCol h2,
+  .philosophyTextCol h2 {
+    font-size: 1.75rem;
+  }
+
+  /* Story & Philosophy body text */
+  .storyTextCol p,
+  .philosophyTextCol p {
+    font-size: 1.05rem;
+  }
+
+  /* Timeline title */
+  .timelineTitle {
+    font-size: 1.75rem;
+    margin-bottom: var(--space-lg);
+  }
+
+  /* Timeline layout */
   .timeline::before { left: 20px; }
+
   .timelineItem,
   .timelineItem:nth-child(even) {
     flex-direction: column;
     align-items: flex-start;
-    padding-left: 50px;
+    padding-left: 45px;
+    margin-bottom: var(--space-lg);
   }
+
   .timelineYear,
   .timelineItem:nth-child(even) .timelineYear {
     text-align: left;
     padding: 0;
-    font-size: 1.5rem;
+    font-size: 1.35rem;
   }
+
   .timelineText,
   .timelineItem:nth-child(even) .timelineText {
     text-align: left;
     padding: 0;
+    font-size: 1rem;
   }
+
   .timelineDot {
     position: absolute;
     left: 12px;
+  }
+
+  /* Philosophy features */
+  .feature h4 {
+    font-size: 1rem;
+  }
+  .feature p {
+    font-size: 0.95rem;
   }
 }

@@ -135,7 +135,7 @@ export default function Header() {
   };
 
   return (
-    <header className={`${styles.header} ${scrolled ? styles.scrolled : ''}`}>
+    <header className={`${styles.header} ${scrolled ? styles.scrolled : ''} ${mobileOpen ? styles.mobileMenuActive : ''}`}>
       <div className={styles.container}>
         {/* Logo */}
         <Link href="/" className={styles.logo}>
