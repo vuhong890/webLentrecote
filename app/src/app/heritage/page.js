@@ -2,7 +2,7 @@ import styles from './heritage.module.css';
 import Image from 'next/image';
 import { createClient } from '@supabase/supabase-js';
 
-export const dynamic = 'force-dynamic';
+export const revalidate = 60;
 
 async function getHeritageSections() {
   const supabase = createClient(
