@@ -48,7 +48,8 @@ export async function GET(request) {
     return { ...item, menu_items: undefined };
   });
 
-  return NextResponse.json(merged);
+  const headers = all ? {} : { 'Cache-Control': 'public, s-maxage=60, stale-while-revalidate=300' };
+  return NextResponse.json(merged, { headers });
 }
 
 // POST — create (admin) — now accepts menu_item_id

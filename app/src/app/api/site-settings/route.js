@@ -14,13 +14,21 @@ function authClient(token) {
 
 // GET all settings
 export async function GET() {
-  const { data, error } = await supabase.from('site_settings').select('*');
+  const { data, error } = await supabase
+    .from('site_settings')
+    .select('key, value');
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
-
-  // Convert to key-value object
+  
   const settings = {};
-  data.forEach(s => { settings[s.key] = s.value; });
-  return NextResponse.json(settings);
+  (data || []).forEach(item => {
+    settings[item.key] = item.value;
+  });
+  
+  return NextResponse.json(settings, {
+    headers: {
+      'Cache-Control': 'public, s-maxage=60, stale-while-revalidate=300'
+    }
+  });
 }
 
 // PUT update setting
