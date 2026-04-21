@@ -1,6 +1,7 @@
 'use client';
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { usePathname } from 'next/navigation';
 import { useLanguage } from '@/lib/i18n';
 import styles from './Header.module.css';
@@ -139,10 +140,13 @@ export default function Header() {
       <div className={styles.container}>
         {/* Logo */}
         <Link href="/" className={styles.logo}>
-          <img
+          <Image
             src="/logo_text.png"
             alt="L'Entrecôte Social Meating"
+            width={200}
+            height={50}
             className={styles.logoText}
+            priority
           />
         </Link>
 

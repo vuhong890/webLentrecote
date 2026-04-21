@@ -1,5 +1,6 @@
 'use client';
 import { useState, useEffect } from 'react';
+import Image from 'next/image';
 import styles from './menus.module.css';
 
 // Static fallback data (used when DB is empty)
@@ -165,8 +166,10 @@ export default function Menus() {
       {/* Hero */}
       <section 
         className={styles.hero}
-        style={hero.image_url ? { backgroundImage: `url(${hero.image_url})`, backgroundSize: 'cover', backgroundPosition: 'center' } : undefined}
       >
+        {hero.image_url && (
+          <Image src={hero.image_url} alt="Menu" fill sizes="100vw" priority quality={80} style={{ objectFit: 'cover', objectPosition: 'center' }} />
+        )}
         <div className={styles.heroOverlay}></div>
         <div className={styles.heroContent}>
           <p className={styles.label}>{heroMeta.label_en || 'THE MENU'}</p>
@@ -194,10 +197,14 @@ export default function Menus() {
           {/* Drink Menu — show static image */}
           {activeSlug === 'drinks' ? (
             <div className={styles.drinkMenuImage}>
-              <img
+              <Image
                 src="/drink_menu_wine_list.png"
                 alt="Drink Menu & Wine List"
+                width={1035}
+                height={1300}
                 className={styles.drinkMenuImg}
+                sizes="(max-width: 768px) 100vw, 1035px"
+                quality={80}
               />
             </div>
           ) : (

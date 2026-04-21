@@ -1,5 +1,6 @@
 'use client';
 import { useState, useEffect } from 'react';
+import Image from 'next/image';
 import styles from './reservation.module.css';
 
 export default function Reservation() {
@@ -67,8 +68,10 @@ export default function Reservation() {
       {/* Hero */}
       <section 
         className={styles.hero}
-        style={hero.image_url ? { backgroundImage: `url(${hero.image_url})`, backgroundSize: 'cover', backgroundPosition: 'center' } : undefined}
       >
+        {hero.image_url && (
+          <Image src={hero.image_url} alt="Reservation" fill sizes="100vw" priority quality={80} style={{ objectFit: 'cover', objectPosition: 'center' }} />
+        )}
         <div className={styles.heroOverlay}></div>
         <div className={styles.heroContent}>
           <p className={styles.label}>{heroMeta.label_en || 'RESERVATION'}</p>
@@ -166,12 +169,12 @@ export default function Reservation() {
             {/* Info Side */}
             <div className={styles.infoCol}>
               <div className={styles.infoCard}>
-                <div className={styles.infoImagePlaceholder} style={
-                  bookingInfo.image_url
-                    ? { backgroundImage: `url(${bookingInfo.image_url})`, backgroundSize: 'cover', backgroundPosition: 'center' }
-                    : { background: 'linear-gradient(135deg, #2a1a0a 0%, #3a2a1a 100%)' }
-                }>
-                  {!bookingInfo.image_url && <span style={{fontSize: '4rem'}}>🕯️</span>}
+                <div className={styles.infoImagePlaceholder}>
+                  {bookingInfo.image_url ? (
+                    <Image src={bookingInfo.image_url} alt="Booking" fill sizes="(max-width: 768px) 100vw, 400px" quality={75} style={{ objectFit: 'cover', objectPosition: 'center' }} />
+                  ) : (
+                    <span style={{fontSize: '4rem'}}>🕯️</span>
+                  )}
                 </div>
                 <div className={styles.infoCardBody}>
                   <h3>{bookingInfo.title_en || 'The Bistro Experience'}</h3>

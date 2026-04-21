@@ -1,5 +1,6 @@
 'use client';
 import { useState, useEffect, useCallback, useRef } from 'react';
+import Image from 'next/image';
 import styles from './SignatureCarousel.module.css';
 
 function formatPrice(price) {
@@ -53,7 +54,7 @@ export default function SignatureCarousel({ items, onItemClick }) {
           >
             <div className={styles.imageWrap}>
               {item.image_url ? (
-                <img src={item.image_url} alt={item.name_en} className={styles.image} />
+                <Image src={item.image_url} alt={item.name_en} className={styles.image} width={400} height={300} sizes="(max-width: 768px) 100vw, 33vw" quality={75} />
               ) : (
                 <div className={styles.imagePlaceholder}>
                   <span className={styles.placeholderEmoji}>

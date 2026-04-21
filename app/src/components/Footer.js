@@ -1,6 +1,7 @@
 'use client';
 import { useState } from 'react';
 import { usePathname } from 'next/navigation';
+import Image from 'next/image';
 import styles from './Footer.module.css';
 
 export default function Footer() {
@@ -28,9 +29,11 @@ export default function Footer() {
           {/* Info Column */}
           <div className={styles.infoColumn}>
             <div className={styles.brandName}>
-              <img
+              <Image
                 src="/logo_text.png"
                 alt="L'Entrecôte Social Meating"
+                width={200}
+                height={50}
                 className={styles.footerLogo}
               />
             </div>

@@ -1,6 +1,7 @@
 'use client';
 import { useState, useEffect, useCallback } from 'react';
 import styles from './page.module.css';
+import Image from 'next/image';
 import Link from 'next/link';
 import SignatureCarousel from '@/components/SignatureCarousel';
 
@@ -121,8 +122,10 @@ export default function Home() {
       <section
         id="home"
         className={styles.hero}
-        style={hero.image_url ? { backgroundImage: `url(${hero.image_url})`, backgroundSize: 'cover', backgroundPosition: 'center' } : undefined}
       >
+        {hero.image_url && (
+          <Image src={hero.image_url} alt="Hero" fill sizes="100vw" priority quality={80} style={{ objectFit: 'cover', objectPosition: 'center' }} />
+        )}
         <div className={styles.heroOverlay}></div>
         <div className={styles.heroContent}>
           <p className={styles.heroLabel}>{heroMeta.label_en || 'SINCE 1959 · PARIS'}</p>
@@ -175,12 +178,12 @@ export default function Home() {
               </Link>
             </div>
             <div className={styles.heritageImageCol}>
-              <div className={styles.heritageImageLarge} style={
-                heritageStory.image_url
-                  ? { backgroundImage: `url(${heritageStory.image_url})`, backgroundSize: 'cover', backgroundPosition: 'center' }
-                  : { background: 'linear-gradient(135deg, #2a1a0a 0%, #4a2a1a 100%)' }
-              }>
-                {!heritageStory.image_url && <div className={styles.imagePlaceholderText}>🏛️</div>}
+              <div className={styles.heritageImageLarge}>
+                {heritageStory.image_url ? (
+                  <Image src={heritageStory.image_url} alt="Heritage" fill sizes="(max-width: 768px) 100vw, 50vw" quality={75} style={{ objectFit: 'cover', objectPosition: 'center' }} />
+                ) : (
+                  <div className={styles.imagePlaceholderText}>🏛️</div>
+                )}
               </div>
             </div>
           </div>
@@ -258,12 +261,12 @@ export default function Home() {
                     style={{ animationDelay: `${i * 0.08}s` }}
                     onClick={() => setLightboxImage(img)}
                   >
-                    <div className={styles.galleryItemInner} style={
-                      img?.image_url
-                        ? { backgroundImage: `url(${img.image_url})`, backgroundSize: 'cover', backgroundPosition: 'center' }
-                        : { background: `linear-gradient(${120 + i * 25}deg, #2a1a0a 0%, #4a2a1a 100%)` }
-                    }>
-                      {!img?.image_url && <span className={styles.galleryEmoji}>📸</span>}
+                    <div className={styles.galleryItemInner}>
+                      {img?.image_url ? (
+                        <Image src={img.image_url} alt={img?.title_en || 'Gallery'} fill sizes="(max-width: 768px) 50vw, 25vw" quality={70} style={{ objectFit: 'cover', objectPosition: 'center' }} />
+                      ) : (
+                        <span className={styles.galleryEmoji}>📸</span>
+                      )}
                       <div className={styles.galleryOverlay}>
                         <p className={styles.galleryItemTitle}>{img?.title_en || 'Untitled'}</p>
                       </div>
@@ -296,12 +299,10 @@ export default function Home() {
           </button>
 
           <div className={styles.popupContent} onClick={(e) => e.stopPropagation()}>
-            <div className={styles.popupImage} style={
-              popupItem.image_url
-                ? { backgroundImage: `url(${popupItem.image_url})`, backgroundSize: 'cover', backgroundPosition: 'center' }
-                : { background: 'linear-gradient(135deg, #2a1a0a 0%, #4a2a1a 50%, #3a1a0a 100%)' }
-            }>
-              {!popupItem.image_url && (
+            <div className={styles.popupImage}>
+              {popupItem.image_url ? (
+                <Image src={popupItem.image_url} alt={popupItem.name_en} fill sizes="50vw" quality={80} style={{ objectFit: 'cover', objectPosition: 'center' }} />
+              ) : (
                 <span className={styles.popupEmoji}>🍽️</span>
               )}
               {popupItem.badge && (
@@ -332,12 +333,12 @@ export default function Home() {
         <div className={styles.lightbox} onClick={() => setLightboxImage(null)}>
           <button className={styles.lightboxClose} onClick={() => setLightboxImage(null)}>✕</button>
           <div className={styles.lightboxContent} onClick={e => e.stopPropagation()}>
-            <div className={styles.lightboxImageWrap} style={
-              lightboxImage.image_url
-                ? { backgroundImage: `url(${lightboxImage.image_url})`, backgroundSize: 'contain', backgroundRepeat: 'no-repeat', backgroundPosition: 'center' }
-                : { background: 'linear-gradient(135deg, #2a1a0a 0%, #4a2a1a 100%)' }
-            }>
-              {!lightboxImage.image_url && <span style={{ fontSize: '8rem' }}>📸</span>}
+            <div className={styles.lightboxImageWrap}>
+              {lightboxImage.image_url ? (
+                <Image src={lightboxImage.image_url} alt={lightboxImage.title_en || ''} fill sizes="90vw" quality={85} style={{ objectFit: 'contain', objectPosition: 'center' }} />
+              ) : (
+                <span style={{ fontSize: '8rem' }}>📸</span>
+              )}
             </div>
             <p className={styles.lightboxTitle}>{lightboxImage.title_en || 'Untitled'}</p>
           </div>

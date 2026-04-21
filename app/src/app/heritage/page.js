@@ -1,4 +1,5 @@
 import styles from './heritage.module.css';
+import Image from 'next/image';
 import { createClient } from '@supabase/supabase-js';
 
 export const dynamic = 'force-dynamic';
@@ -77,8 +78,10 @@ export default async function Heritage() {
       {/* Hero */}
       <section
         className={styles.hero}
-        style={hero.image_url ? { backgroundImage: `url(${hero.image_url})`, backgroundSize: 'cover', backgroundPosition: 'center' } : undefined}
       >
+        {hero.image_url && (
+          <Image src={hero.image_url} alt="Heritage" fill sizes="100vw" priority quality={80} style={{ objectFit: 'cover', objectPosition: 'center' }} />
+        )}
         <div className={styles.heroOverlay}></div>
         <div className={styles.heroContent}>
           <p className={styles.label}>{heroMeta.label_en || 'OUR HERITAGE'}</p>
@@ -92,12 +95,12 @@ export default async function Heritage() {
         <div className="container">
           <div className={styles.storyGrid}>
             <div className={styles.storyImageCol}>
-              <div className={styles.storyImage} style={
-                story.image_url
-                  ? { backgroundImage: `url(${story.image_url})`, backgroundSize: 'cover', backgroundPosition: 'center' }
-                  : { background: 'linear-gradient(135deg, #2a1a0a 0%, #4a2a1a 100%)' }
-              }>
-                {!story.image_url && <div className={styles.placeholderEmoji}>🏰</div>}
+              <div className={styles.storyImage}>
+                {story.image_url ? (
+                  <Image src={story.image_url} alt="Our Story" fill sizes="(max-width: 768px) 100vw, 50vw" quality={75} style={{ objectFit: 'cover', objectPosition: 'center' }} />
+                ) : (
+                  <div className={styles.placeholderEmoji}>🏰</div>
+                )}
               </div>
             </div>
             <div className={styles.storyTextCol}>
@@ -166,12 +169,12 @@ export default async function Heritage() {
               </div>
             </div>
             <div className={styles.philosophyImageCol}>
-              <div className={styles.philosophyImage} style={
-                philosophy.image_url
-                  ? { backgroundImage: `url(${philosophy.image_url})`, backgroundSize: 'cover', backgroundPosition: 'center' }
-                  : { background: 'linear-gradient(135deg, #3a1a0a 0%, #5a2a1a 100%)' }
-              }>
-                {!philosophy.image_url && <div className={styles.placeholderEmoji}>🥩</div>}
+              <div className={styles.philosophyImage}>
+                {philosophy.image_url ? (
+                  <Image src={philosophy.image_url} alt="Beef Philosophy" fill sizes="(max-width: 768px) 100vw, 50vw" quality={75} style={{ objectFit: 'cover', objectPosition: 'center' }} />
+                ) : (
+                  <div className={styles.placeholderEmoji}>🥩</div>
+                )}
               </div>
             </div>
           </div>

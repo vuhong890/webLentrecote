@@ -1,5 +1,6 @@
 'use client';
 import { useState, useEffect } from 'react';
+import Image from 'next/image';
 import styles from './contact.module.css';
 
 export default function Contact() {
@@ -37,8 +38,10 @@ export default function Contact() {
       {/* Hero */}
       <section 
         className={styles.hero}
-        style={hero.image_url ? { backgroundImage: `url(${hero.image_url})`, backgroundSize: 'cover', backgroundPosition: 'center' } : undefined}
       >
+        {hero.image_url && (
+          <Image src={hero.image_url} alt="Contact" fill sizes="100vw" priority quality={80} style={{ objectFit: 'cover', objectPosition: 'center' }} />
+        )}
         <div className={styles.heroOverlay}></div>
         <div className={styles.heroContent}>
           <p className={styles.label}>{heroMeta.label_en || 'CONTACT'}</p>
