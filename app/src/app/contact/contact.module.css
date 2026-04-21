@@ -75,21 +75,23 @@
 
 .infoBlock h4 {
   font-family: var(--font-body);
-  font-size: 0.85rem;
+  font-size: 1.28rem;
   font-weight: 700;
   letter-spacing: 0.05em;
   margin-bottom: 0.35rem;
   color: var(--color-text-primary);
 }
 
-.infoBlock p {
-  font-size: 0.95rem;
+.infoBlock p,
+.infoBlock div {
+  font-size: 1.28rem;
   line-height: 1.6;
   color: var(--color-text-secondary);
 }
 
 .infoBlock a {
   color: var(--color-gold);
+  font-size: 1.28rem;
   font-weight: 600;
   transition: opacity var(--transition-fast);
 }

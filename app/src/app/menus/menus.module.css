@@ -101,7 +101,6 @@
   overflow: hidden;
   transition: transform var(--transition-med), box-shadow var(--transition-med);
   animation: fadeInUp 0.5s ease both;
-  cursor: pointer;
 }
 
 .menuCard:hover {
@@ -194,190 +193,23 @@
   }
 }
 
-/* ============ Detail Popup ============ */
-.popup {
-  position: fixed;
-  inset: 0;
-  z-index: 2000;
-  background: rgba(0, 0, 0, 0.88);
+/* Drink Menu Image */
+.drinkMenuImage {
   display: flex;
-  align-items: center;
   justify-content: center;
-  gap: 1.5rem;
-  animation: popupFadeIn 0.3s ease;
+  animation: fadeInUp 0.5s ease both;
 }
 
-@keyframes popupFadeIn {
-  from { opacity: 0; }
-  to { opacity: 1; }
+.drinkMenuImg {
+  width: 100%;
+  max-width: 1035px;
+  height: auto;
+  display: block;
+  box-shadow: 0 8px 40px rgba(0, 0, 0, 0.2);
 }
 
-/* Arrow buttons */
-.popupArrow {
-  flex-shrink: 0;
-  width: 48px;
-  height: 48px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: none;
-  border: none;
-  color: rgba(255, 255, 255, 0.6);
-  cursor: pointer;
-  transition: color 0.2s, transform 0.2s;
-}
-
-.popupArrow:hover {
-  color: #FFFFFF;
-  transform: scale(1.2);
-}
-
-/* Content card */
-.popupContent {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  max-width: 820px;
-  width: 90vw;
-  max-height: 80vh;
-  background: var(--color-bg-dark);
-  overflow: hidden;
-  animation: popupSlideIn 0.35s ease;
-}
-
-@keyframes popupSlideIn {
-  from { opacity: 0; transform: scale(0.95) translateY(10px); }
-  to { opacity: 1; transform: scale(1) translateY(0); }
-}
-
-/* Left side — image */
-.popupImage {
-  position: relative;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  min-height: 380px;
-  overflow: hidden;
-}
-
-.popupEmoji {
-  font-size: 6rem;
-}
-
-.popupBadge {
-  position: absolute;
-  top: 16px;
-  left: 16px;
-  padding: 0.3rem 0.75rem;
-  font-family: var(--font-body);
-  font-size: 0.65rem;
-  font-weight: 700;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-  background: var(--color-gold);
-  color: var(--color-black);
-}
-
-/* Right side — info */
-.popupInfo {
-  padding: 2.5rem 2rem;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-}
-
-.popupCategory {
-  font-family: var(--font-body);
-  font-size: 0.7rem;
-  font-weight: 700;
-  letter-spacing: 0.2em;
-  text-transform: uppercase;
-  color: var(--color-gold);
-  margin-bottom: 0.75rem;
-}
-
-.popupName {
-  font-family: var(--font-headline);
-  font-size: 1.875rem;
-  font-weight: 600;
-  color: #FFFFFF;
-  line-height: 1.25;
-  margin-bottom: 0.75rem;
-}
-
-.popupDivider {
-  width: 50px;
-  height: 2px;
-  background: rgba(255, 255, 255, 0.2);
-  margin-bottom: 1.25rem;
-}
-
-.popupDesc {
-  font-size: 0.95rem;
-  line-height: 1.7;
-  color: rgba(255, 255, 255, 0.65);
-  margin-bottom: 1.5rem;
-}
-
-.popupPrice {
-  font-family: var(--font-headline);
-  font-size: 1.375rem;
-  font-weight: 700;
-  color: var(--color-gold);
-}
-
-/* Close button */
-.popupClose {
-  position: absolute;
-  top: 1rem;
-  right: 1.25rem;
-  background: none;
-  border: none;
-  font-size: 1.5rem;
-  color: rgba(255, 255, 255, 0.6);
-  cursor: pointer;
-  width: 44px;
-  height: 44px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: color 0.2s;
-  z-index: 2001;
-}
-
-.popupClose:hover {
-  color: #FFFFFF;
-}
-
-/* Responsive popup */
 @media (max-width: 768px) {
-  .popup {
-    gap: 0;
-    padding: 0.5rem;
-  }
-
-  .popupArrow {
-    position: absolute;
-    top: 50%;
-    transform: translateY(-50%);
-    z-index: 2002;
-  }
-
-  .popupArrow[data-dir="left"] { left: 0.5rem; }
-  .popupArrow[data-dir="right"] { right: 0.5rem; }
-
-  .popupContent {
-    grid-template-columns: 1fr;
-    max-height: 85vh;
-    overflow-y: auto;
-    width: 95vw;
-  }
-
-  .popupImage {
-    min-height: 250px;
-  }
-
-  .popupInfo {
-    padding: 1.5rem;
+  .drinkMenuImg {
+    max-width: 100%;
   }
 }
-

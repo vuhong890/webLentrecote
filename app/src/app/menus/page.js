@@ -1,5 +1,5 @@
 'use client';
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect } from 'react';
 import styles from './menus.module.css';
 
 // Static fallback data (used when DB is empty)
@@ -75,7 +75,6 @@ export default function Menus() {
   const [categories, setCategories] = useState([]);
   const [activeSlug, setActiveSlug] = useState('small-bites');
   const [items, setItems] = useState([]);
-  const [popupIndex, setPopupIndex] = useState(null);
   const [dbLoaded, setDbLoaded] = useState(false);
   const [pageSections, setPageSections] = useState({});
 
@@ -103,8 +102,12 @@ export default function Menus() {
       .catch(() => {});
   }, []);
 
-  // Load items when category changes
+  // Load items when category changes (skip for drinks — uses static image)
   useEffect(() => {
+    if (activeSlug === 'drinks') {
+      setItems([]);
+      return;
+    }
     const cat = categories.find(c => c.slug === activeSlug);
     if (cat) {
       fetch(`/api/menu-items?category_id=${cat.id}`)
@@ -127,7 +130,6 @@ export default function Menus() {
       setItems(staticMenuData[activeSlug] || []);
       setDbLoaded(false);
     }
-    setPopupIndex(null);
   }, [activeSlug, categories]);
 
   const displayCategories = categories.length > 0 ? categories : [
@@ -141,40 +143,9 @@ export default function Menus() {
     { slug: 'drinks', name_en: 'DRINK MENU & WINE LIST' },
   ];
 
-  const currentCategoryLabel = displayCategories.find(c => c.slug === activeSlug)?.name_en || '';
 
-  const openPopup = (index) => setPopupIndex(index);
-  const closePopup = () => setPopupIndex(null);
 
-  const goNext = useCallback(() => {
-    if (popupIndex === null) return;
-    setPopupIndex((popupIndex + 1) % items.length);
-  }, [popupIndex, items.length]);
 
-  const goPrev = useCallback(() => {
-    if (popupIndex === null) return;
-    setPopupIndex((popupIndex - 1 + items.length) % items.length);
-  }, [popupIndex, items.length]);
-
-  useEffect(() => {
-    if (popupIndex === null) return;
-    const handleKey = (e) => {
-      if (e.key === 'Escape') closePopup();
-      if (e.key === 'ArrowRight') goNext();
-      if (e.key === 'ArrowLeft') goPrev();
-    };
-    window.addEventListener('keydown', handleKey);
-    return () => window.removeEventListener('keydown', handleKey);
-  }, [popupIndex, goNext, goPrev]);
-
-  useEffect(() => {
-    if (popupIndex !== null) {
-      document.body.style.overflow = 'hidden';
-    } else {
-      document.body.style.overflow = '';
-    }
-    return () => { document.body.style.overflow = ''; };
-  }, [popupIndex]);
 
   // Get display name/desc/price for item (works for both DB and static data)
   const getName = (item) => item.name_en || item.name || '';
@@ -220,71 +191,46 @@ export default function Menus() {
             ))}
           </div>
 
-          {/* Menu Items Grid */}
-          <div className={styles.menuGrid}>
-            {items.map((item, i) => (
-              <div key={`${activeSlug}-${i}`} className={styles.menuCard} style={{ animationDelay: `${i * 0.1}s` }} onClick={() => openPopup(i)}>
-                <div className={styles.menuCardImage} style={
-                  getImage(item) 
-                    ? { backgroundImage: `url(${getImage(item)})`, backgroundSize: 'cover', backgroundPosition: 'center' }
-                    : { background: `linear-gradient(${135 + i * 20}deg, #2a1a0a 0%, #4a2a1a 50%, #3a1a0a 100%)` }
-                }>
-                  {!getImage(item) && (
-                    <div className={styles.menuEmoji}>{getEmoji(activeSlug)}</div>
-                  )}
-                  {item.badge && (
-                    <span className={styles.menuBadge}>{item.badge}</span>
-                  )}
-                </div>
-                <div className={styles.menuCardBody}>
-                  <div className={styles.menuCardHeader}>
-                    <h3>{getName(item)}</h3>
-                    <span className={styles.menuPrice}>{getPrice(item)}</span>
+          {/* Drink Menu — show static image */}
+          {activeSlug === 'drinks' ? (
+            <div className={styles.drinkMenuImage}>
+              <img
+                src="/drink_menu_wine_list.png"
+                alt="Drink Menu & Wine List"
+                className={styles.drinkMenuImg}
+              />
+            </div>
+          ) : (
+            /* Menu Items Grid */
+            <div className={styles.menuGrid}>
+              {items.map((item, i) => (
+                <div key={`${activeSlug}-${i}`} className={styles.menuCard} style={{ animationDelay: `${i * 0.1}s` }}>
+                  <div className={styles.menuCardImage} style={
+                    getImage(item) 
+                      ? { backgroundImage: `url(${getImage(item)})`, backgroundSize: 'cover', backgroundPosition: 'center' }
+                      : { background: `linear-gradient(${135 + i * 20}deg, #2a1a0a 0%, #4a2a1a 50%, #3a1a0a 100%)` }
+                  }>
+                    {!getImage(item) && (
+                      <div className={styles.menuEmoji}>{getEmoji(activeSlug)}</div>
+                    )}
+                    {item.badge && (
+                      <span className={styles.menuBadge}>{item.badge}</span>
+                    )}
                   </div>
-                  <p className={styles.menuDesc}>{getDesc(item)}</p>
+                  <div className={styles.menuCardBody}>
+                    <div className={styles.menuCardHeader}>
+                      <h3>{getName(item)}</h3>
+                      <span className={styles.menuPrice}>{getPrice(item)}</span>
+                    </div>
+                    <p className={styles.menuDesc}>{getDesc(item)}</p>
+                  </div>
                 </div>
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
+          )}
         </div>
       </section>
 
-      {/* Detail Popup */}
-      {popupIndex !== null && items[popupIndex] && (
-        <div className={styles.popup} onClick={closePopup}>
-          <button className={styles.popupArrow} data-dir="left" onClick={(e) => { e.stopPropagation(); goPrev(); }} aria-label="Previous">
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
-          </button>
-
-          <div className={styles.popupContent} onClick={(e) => e.stopPropagation()}>
-            <div className={styles.popupImage} style={
-              getImage(items[popupIndex])
-                ? { backgroundImage: `url(${getImage(items[popupIndex])})`, backgroundSize: 'cover', backgroundPosition: 'center' }
-                : { background: `linear-gradient(${135 + popupIndex * 20}deg, #2a1a0a 0%, #4a2a1a 50%, #3a1a0a 100%)` }
-            }>
-              {!getImage(items[popupIndex]) && (
-                <span className={styles.popupEmoji}>{getEmoji(activeSlug)}</span>
-              )}
-              {items[popupIndex].badge && (
-                <span className={styles.popupBadge}>{items[popupIndex].badge}</span>
-              )}
-            </div>
-            <div className={styles.popupInfo}>
-              <p className={styles.popupCategory}>{currentCategoryLabel}</p>
-              <h2 className={styles.popupName}>{getName(items[popupIndex])}</h2>
-              <div className={styles.popupDivider}></div>
-              <p className={styles.popupDesc}>{getDesc(items[popupIndex])}</p>
-              <p className={styles.popupPrice}>{getPrice(items[popupIndex])}</p>
-            </div>
-          </div>
-
-          <button className={styles.popupArrow} data-dir="right" onClick={(e) => { e.stopPropagation(); goNext(); }} aria-label="Next">
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
-          </button>
-
-          <button className={styles.popupClose} onClick={closePopup}>✕</button>
-        </div>
-      )}
     </>
   );
 }

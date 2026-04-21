@@ -19,9 +19,9 @@
 /* Force solid black when mobile menu is open */
 .header.mobileMenuActive,
 .header.mobileMenuActive.scrolled {
-  background: var(--color-bg-dark);
-  backdrop-filter: none;
-  -webkit-backdrop-filter: none;
+  background: #1A1A1A !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
 }
 
 .container {
@@ -158,14 +158,21 @@
   left: 0;
   right: 0;
   bottom: 0;
-  background: var(--color-bg-dark);
+  background: #1A1A1A;
   flex-direction: column;
   align-items: center;
   justify-content: center;
   gap: var(--space-lg);
+  z-index: 999;
   opacity: 0;
   pointer-events: none;
   transition: opacity var(--transition-med);
+  -webkit-transform: translateZ(0);
+  transform: translateZ(0);
+  -webkit-backface-visibility: hidden;
+  backface-visibility: hidden;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
 }
 
 .mobileMenu.mobileOpen {
