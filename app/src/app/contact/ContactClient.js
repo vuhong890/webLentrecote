@@ -2,12 +2,15 @@
 import { useState } from 'react';
 import Image from 'next/image';
 import styles from './contact.module.css';
+import { useLanguage, useTranslation } from '@/lib/i18n';
 
 export default function ContactClient({ initialPageSections = {} }) {
   const [formData, setFormData] = useState({
     name: '', email: '', subject: '', message: ''
   });
   const [sent, setSent] = useState(false);
+  const { lang, t: tField } = useLanguage();
+  const t = useTranslation();
   const pageSections = initialPageSections;
 
   const handleSubmit = (e) => {
@@ -20,10 +23,22 @@ export default function ContactClient({ initialPageSections = {} }) {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
+  // Helper to get field by language from DB sections
+  const tf = (section, field, fallback = '') => {
+    if (!section) return fallback;
+    const val = section[`${field}_${lang}`];
+    if (val && val.trim()) return val;
+    return section[`${field}_en`] || fallback;
+  };
+  const tm = (section, key, fallback = '') => {
+    if (!section?.metadata) return fallback;
+    const val = section.metadata[`${key}_${lang}`];
+    if (val && val.trim()) return val;
+    return section.metadata[`${key}_en`] || fallback;
+  };
+
   const hero = pageSections.hero || {};
-  const heroMeta = hero.metadata || {};
   const details = pageSections.details || {};
-  const detailsMeta = details.metadata || {};
 
   return (
     <>
@@ -36,9 +51,9 @@ export default function ContactClient({ initialPageSections = {} }) {
         )}
         <div className={styles.heroOverlay}></div>
         <div className={styles.heroContent}>
-          <p className={styles.label}>{heroMeta.label_en || 'CONTACT'}</p>
-          <h1>{hero.title_en || 'Get in Touch'}</h1>
-          <p className={styles.subtitle} dangerouslySetInnerHTML={{ __html: hero.content_en || "We'd love to hear from you. For private events and media inquiries, drop us a line." }}></p>
+          <p className={styles.label}>{tm(hero, 'label', t('contact').toUpperCase())}</p>
+          <h1>{tf(hero, 'title', t('contact'))}</h1>
+          <p className={styles.subtitle} dangerouslySetInnerHTML={{ __html: tf(hero, 'content', lang === 'vi' ? "Chúng tôi rất mong nhận được phản hồi từ bạn." : "We'd love to hear from you.") }}></p>
         </div>
       </section>
 
@@ -48,29 +63,32 @@ export default function ContactClient({ initialPageSections = {} }) {
           <div className={styles.contactGrid}>
             {/* Contact Info */}
             <div className={styles.infoCol}>
-              <h2>{detailsMeta.label_en || 'Visit Us'}</h2>
+              <h2>{tm(details, 'label', lang === 'vi' ? 'Vị Trí Của Chúng Tôi' : 'Our Location')}</h2>
               <div className={styles.goldDivider}></div>
 
               <div className={styles.infoBlock}>
-                <h4>📍 {details.title_en || 'Address'}</h4>
-                <div dangerouslySetInnerHTML={{ __html: details.content_en || "<p>L'Entrecôte Social Meating</p><p>Level 2, Dong Du</p><p>Saigon Ward, Ho Chi Minh City</p>" }}></div>
+                <h4>📍 {tf(details, 'title', "L'Entrecôte Saigon")}</h4>
+                <div dangerouslySetInnerHTML={{ __html: tf(details, 'content', lang === 'vi' 
+                  ? "<p>L'Entrecôte Social Meating</p><p>Tầng 2, Đồng Du</p><p>Phường Sài Gòn, TP. Hồ Chí Minh</p>" 
+                  : "<p>L'Entrecôte Social Meating</p><p>Level 2, Dong Du</p><p>Saigon Ward, Ho Chi Minh City</p>") 
+                }}></div>
               </div>
 
               <div className={styles.infoBlock}>
-                <h4>⏰ Opening Hours</h4>
-                <p><strong>Lunch:</strong> 11:30 AM – 2:00 PM</p>
-                <p><strong>Dinner:</strong> 4:00 PM – 11:00 PM</p>
-                <p><strong>Last order:</strong> 10:00 PM</p>
-                <p style={{ fontStyle: 'italic', marginTop: '0.25rem', opacity: 0.7 }}>Open daily</p>
+                <h4>⏰ {t('openingHours')}</h4>
+                <p><strong>{t('lunch')}:</strong> 11:30 AM – 2:00 PM</p>
+                <p><strong>{t('dinner')}:</strong> 4:00 PM – 11:00 PM</p>
+                <p><strong>{t('lastOrder')}:</strong> 10:00 PM</p>
+                <p style={{ fontStyle: 'italic', marginTop: '0.25rem', opacity: 0.7 }}>{t('openDaily')}</p>
               </div>
 
               <div className={styles.infoBlock}>
-                <h4>📞 Hotline</h4>
+                <h4>📞 {t('hotline')}</h4>
                 <p><a href="tel:+84327157002">(+84) 32 7157 002</a></p>
               </div>
 
               <div className={styles.infoBlock}>
-                <h4>📧 Email</h4>
+                <h4>📧 {t('email')}</h4>
                 <p><a href="mailto:booking@lentrecotevietnam.com">booking@lentrecotevietnam.com</a></p>
               </div>
 
@@ -112,39 +130,38 @@ export default function ContactClient({ initialPageSections = {} }) {
 
             {/* Contact Form */}
             <div className={styles.formCol}>
-              <h2>Send a Message</h2>
+              <h2>{t('sendMessage')}</h2>
               <div className={styles.goldDivider}></div>
               <p className={styles.formIntro}>
-                Have a question, feedback, or a special request? Drop us a line and we'll
-                get back to you promptly.
+                {t('contactFormIntro')}
               </p>
 
               {sent ? (
                 <div className={styles.successMessage}>
                   <span className={styles.successIcon}>✓</span>
-                  <h3>Message Sent</h3>
-                  <p>Thank you! We'll respond within 24 hours.</p>
+                  <h3>{t('messageSentTitle')}</h3>
+                  <p>{t('messageSentDesc')}</p>
                 </div>
               ) : (
                 <form onSubmit={handleSubmit} className={styles.form}>
                   <div className={styles.formGroup}>
-                    <label className={styles.formLabel}>Your Name</label>
-                    <input type="text" name="name" value={formData.name} onChange={handleChange} className={styles.formInput} required placeholder="Full name" />
+                    <label className={styles.formLabel}>{t('yourName')}</label>
+                    <input type="text" name="name" value={formData.name} onChange={handleChange} className={styles.formInput} required placeholder={t('fullNamePlaceholder')} />
                   </div>
                   <div className={styles.formGroup}>
-                    <label className={styles.formLabel}>Email</label>
-                    <input type="email" name="email" value={formData.email} onChange={handleChange} className={styles.formInput} required placeholder="your@email.com" />
+                    <label className={styles.formLabel}>{t('email')}</label>
+                    <input type="email" name="email" value={formData.email} onChange={handleChange} className={styles.formInput} required placeholder={t('emailPlaceholder')} />
                   </div>
                   <div className={styles.formGroup}>
-                    <label className={styles.formLabel}>Subject</label>
-                    <input type="text" name="subject" value={formData.subject} onChange={handleChange} className={styles.formInput} placeholder="What is this about?" />
+                    <label className={styles.formLabel}>{t('subject')}</label>
+                    <input type="text" name="subject" value={formData.subject} onChange={handleChange} className={styles.formInput} placeholder={t('subjectPlaceholder')} />
                   </div>
                   <div className={styles.formGroup}>
-                    <label className={styles.formLabel}>Message</label>
-                    <textarea name="message" value={formData.message} onChange={handleChange} className={styles.formInput} rows="5" required placeholder="Your message..."></textarea>
+                    <label className={styles.formLabel}>{t('message')}</label>
+                    <textarea name="message" value={formData.message} onChange={handleChange} className={styles.formInput} rows="5" required placeholder={t('messagePlaceholder')}></textarea>
                   </div>
                   <button type="submit" className="btn btn-primary" style={{ width: '100%', marginTop: '0.5rem' }}>
-                    SEND MESSAGE
+                    {t('sendBtn')}
                   </button>
                 </form>
               )}
