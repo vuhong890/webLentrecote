@@ -1,9 +1,7 @@
-import { createClient } from '@supabase/supabase-js';
+import { getSupabase } from '@/lib/supabase-server';
 import HomeClient from './HomeClient';
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-const supabase = createClient(supabaseUrl, supabaseKey);
+const supabase = getSupabase();
 
 // Revalidate this page every 60 seconds (SSG with ISR)
 export const revalidate = 60;

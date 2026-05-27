@@ -4,6 +4,8 @@ import Image from 'next/image';
 import styles from './contact.module.css';
 import { useLanguage, useTranslation } from '@/lib/i18n';
 
+const BLUR_PLACEHOLDER = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciPjxyZWN0IHdpZHRoPSIxMDAlIiBoZWlnaHQ9IjEwMCUiIGZpbGw9IiMyYTFhMGEiLz48L3N2Zz4=';
+
 export default function ContactClient({ initialPageSections = {} }) {
   const [formData, setFormData] = useState({
     name: '', email: '', subject: '', message: ''
@@ -47,7 +49,7 @@ export default function ContactClient({ initialPageSections = {} }) {
         className={styles.hero}
       >
         {hero.image_url && (
-          <Image src={hero.image_url} alt="Contact" fill sizes="100vw" priority quality={80} style={{ objectFit: 'cover', objectPosition: 'center' }} />
+          <Image src={hero.image_url} alt="Contact" fill sizes="100vw" priority quality={80} placeholder="blur" blurDataURL={BLUR_PLACEHOLDER} style={{ objectFit: 'cover', objectPosition: 'center' }} />
         )}
         <div className={styles.heroOverlay}></div>
         <div className={styles.heroContent}>

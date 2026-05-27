@@ -5,6 +5,9 @@ import Image from 'next/image';
 import Link from 'next/link';
 import SignatureCarousel from '@/components/SignatureCarousel';
 
+// Tiny dark blur placeholder for hero/fill images
+const BLUR_PLACEHOLDER = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciPjxyZWN0IHdpZHRoPSIxMDAlIiBoZWlnaHQ9IjEwMCUiIGZpbGw9IiMyYTFhMGEiLz48L3N2Zz4=';
+
 function formatPrice(price) {
   if (!price || price === 0) return 'Complimentary';
   return `${Number(price).toLocaleString()}₫`;
@@ -102,7 +105,7 @@ export default function HomeClient({ initialHomeSections, initialHeritageSection
         className={styles.hero}
       >
         {hero.image_url && (
-          <Image src={hero.image_url} alt="Hero" fill sizes="100vw" priority quality={80} style={{ objectFit: 'cover', objectPosition: 'center' }} />
+          <Image src={hero.image_url} alt="Hero" fill sizes="100vw" priority quality={80} placeholder="blur" blurDataURL={BLUR_PLACEHOLDER} style={{ objectFit: 'cover', objectPosition: 'center' }} />
         )}
         <div className={styles.heroOverlay}></div>
         <div className={styles.heroContent}>
@@ -158,7 +161,7 @@ export default function HomeClient({ initialHomeSections, initialHeritageSection
             <div className={styles.heritageImageCol}>
               <div className={styles.heritageImageLarge}>
                 {heritageStory.image_url ? (
-                  <Image src={heritageStory.image_url} alt="Heritage" fill sizes="(max-width: 768px) 100vw, 50vw" quality={75} style={{ objectFit: 'cover', objectPosition: 'center' }} />
+                  <Image src={heritageStory.image_url} alt="Heritage" fill sizes="(max-width: 768px) 100vw, 50vw" quality={75} placeholder="blur" blurDataURL={BLUR_PLACEHOLDER} style={{ objectFit: 'cover', objectPosition: 'center' }} />
                 ) : (
                   <div className={styles.imagePlaceholderText}>🏛️</div>
                 )}
@@ -241,7 +244,7 @@ export default function HomeClient({ initialHomeSections, initialHeritageSection
                   >
                     <div className={styles.galleryItemInner}>
                       {img?.image_url ? (
-                        <Image src={img.image_url} alt={img?.title_en || 'Gallery'} fill sizes="(max-width: 768px) 50vw, 25vw" quality={70} style={{ objectFit: 'cover', objectPosition: 'center' }} />
+                        <Image src={img.image_url} alt={img?.title_en || 'Gallery'} fill sizes="(max-width: 768px) 50vw, 25vw" quality={70} placeholder="blur" blurDataURL={BLUR_PLACEHOLDER} style={{ objectFit: 'cover', objectPosition: 'center' }} />
                       ) : (
                         <span className={styles.galleryEmoji}>📸</span>
                       )}

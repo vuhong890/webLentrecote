@@ -1,14 +1,15 @@
-import styles from './heritage.module.css';
-import Image from 'next/image';
-import { createClient } from '@supabase/supabase-js';
+import { getSupabase } from '@/lib/supabase-server';
+import HeritageClient from './HeritageClient';
 
 export const revalidate = 60;
 
-async function getHeritageSections() {
-  const supabase = createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
-  );
+export const metadata = {
+  title: "Heritage | L'Entrecôte",
+  description: "Discover the rich heritage of L'Entrecôte — from Paris 1959 to Saigon's vibrant dining scene.",
+};
+
+export default async function Heritage() {
+  const supabase = getSupabase();
   const { data } = await supabase
     .from('page_sections')
     .select('*')
@@ -17,169 +18,6 @@ async function getHeritageSections() {
 
   const sections = {};
   (data || []).forEach(s => { sections[s.section_key] = s; });
-  return sections;
-}
 
-export const metadata = {
-  title: "Heritage | L'Entrecôte",
-  description: "Discover the rich heritage of L'Entrecôte — from Paris 1959 to Saigon's vibrant dining scene.",
-};
-
-export default async function Heritage() {
-  const s = await getHeritageSections();
-
-  const hero = s.hero || {};
-  const heroMeta = hero.metadata || {};
-  const story = s.our_story || {};
-  const storyMeta = story.metadata || {};
-  const timeline = s.timeline || {};
-  const timelineMeta = timeline.metadata || {};
-  const philosophy = s.beef_philosophy || {};
-  const philosophyMeta = philosophy.metadata || {};
-
-  // Parse timeline items from content_en (format: "YEAR: text. YEAR: text.")
-  const defaultTimeline = [
-    { year: '1959', text: "L'Entrecôte opens its doors in Paris, serving one perfect dish." },
-    { year: '1980', text: 'Expansion across France — Geneva, Bordeaux, and beyond.' },
-    { year: '2000', text: 'International presence grows with locations across Europe.' },
-    { year: '2024', text: "L'Entrecôte Social Meating arrives in Saigon, Ho Chi Minh City." },
-  ];
-
-  let timelineItems = defaultTimeline;
-  if (timeline.content_en) {
-    const parsed = timeline.content_en.match(/(\d{4}):\s*([^.]+\.)/g);
-    if (parsed && parsed.length > 0) {
-      timelineItems = parsed.map(item => {
-        const match = item.match(/(\d{4}):\s*(.+)/);
-        return match ? { year: match[1], text: match[2].trim() } : null;
-      }).filter(Boolean);
-    }
-  }
-
-  // Parse story paragraphs
-  const storyParagraphs = story.content_en
-    ? story.content_en.split(/\n\n|\n/).filter(p => p.trim())
-    : [
-        "L'Entrecôte was born from a simple yet revolutionary idea: serve only one dish, but make it the most unforgettable meal of your life.",
-        "The secret lies not just in our legendary butter sauce — a recipe known only to a select few — but in the philosophy that perfection comes from singular focus.",
-        "Today, from Paris to Geneva, London to Saigon, L'Entrecôte continues to welcome millions of guests each year, all seeking the same timeless experience.",
-      ];
-
-  // Parse philosophy paragraphs
-  const philosophyParagraphs = philosophy.content_en
-    ? philosophy.content_en.split(/\n\n|\n/).filter(p => p.trim())
-    : [
-        "Every cut of entrecôte that reaches your plate has been carefully selected from the finest grass-fed cattle.",
-        "The entrecôte — the \"cut between the ribs\" — is prized for its exceptional marbling.",
-      ];
-
-  return (
-    <>
-      {/* Hero */}
-      <section
-        className={styles.hero}
-      >
-        {hero.image_url && (
-          <Image src={hero.image_url} alt="Heritage" fill sizes="100vw" priority quality={80} style={{ objectFit: 'cover', objectPosition: 'center' }} />
-        )}
-        <div className={styles.heroOverlay}></div>
-        <div className={styles.heroContent}>
-          <p className={styles.label}>{heroMeta.label_en || 'OUR HERITAGE'}</p>
-          <h1>{hero.title_en || 'A Story Written in Flavour'}</h1>
-          <p className={styles.subtitle}>{hero.content_en || heroMeta.subtitle_en || 'From the heart of Paris to the soul of Saigon'}</p>
-        </div>
-      </section>
-
-      {/* Our Story */}
-      <section className={styles.storySection}>
-        <div className="container">
-          <div className={styles.storyGrid}>
-            <div className={styles.storyImageCol}>
-              <div className={styles.storyImage}>
-                {story.image_url ? (
-                  <Image src={story.image_url} alt="Our Story" fill sizes="(max-width: 768px) 100vw, 50vw" quality={75} style={{ objectFit: 'cover', objectPosition: 'center' }} />
-                ) : (
-                  <div className={styles.placeholderEmoji}>🏰</div>
-                )}
-              </div>
-            </div>
-            <div className={styles.storyTextCol}>
-              <p className={styles.label}>{storyMeta.label_en || 'OUR STORY'}</p>
-              <h2>{story.title_en || 'Born in Paris, 1959'}</h2>
-              <div className={styles.goldDivider}></div>
-              {storyParagraphs.map((p, i) => (
-                <p key={i}>{p}</p>
-              ))}
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Timeline */}
-      <section className={styles.timelineSection}>
-        <div className="container">
-          <p className={styles.label} style={{ textAlign: 'center' }}>{timelineMeta.label_en || 'THE JOURNEY'}</p>
-          <h2 className={styles.timelineTitle}>{timeline.title_en || 'Milestones Through Time'}</h2>
-          <div className={styles.timeline}>
-            {timelineItems.map((item, i) => (
-              <div key={i} className={styles.timelineItem}>
-                <div className={styles.timelineYear}>{item.year}</div>
-                <div className={styles.timelineDot}></div>
-                <div className={styles.timelineText}>{item.text}</div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* Beef Philosophy */}
-      <section className={styles.philosophySection}>
-        <div className="container">
-          <div className={styles.philosophyGrid}>
-            <div className={styles.philosophyTextCol}>
-              <p className={styles.label}>{philosophyMeta.label_en || 'OUR BEEF PHILOSOPHY'}</p>
-              <h2>{philosophy.title_en || 'The Art of Selection'}</h2>
-              <div className={styles.goldDivider}></div>
-              {philosophyParagraphs.map((p, i) => (
-                <p key={i}>{p}</p>
-              ))}
-
-              <div className={styles.philosophyFeatures}>
-                <div className={styles.feature}>
-                  <span className={styles.featureIcon}>🌿</span>
-                  <div>
-                    <h4>Grass-Fed</h4>
-                    <p>100% grass-fed cattle from premium farms</p>
-                  </div>
-                </div>
-                <div className={styles.feature}>
-                  <span className={styles.featureIcon}>⏳</span>
-                  <div>
-                    <h4>Aged to Perfection</h4>
-                    <p>Optimal aging for maximum flavour and tenderness</p>
-                  </div>
-                </div>
-                <div className={styles.feature}>
-                  <span className={styles.featureIcon}>👨‍🍳</span>
-                  <div>
-                    <h4>Chef&apos;s Precision</h4>
-                    <p>Cooked to your exact preference, every time</p>
-                  </div>
-                </div>
-              </div>
-            </div>
-            <div className={styles.philosophyImageCol}>
-              <div className={styles.philosophyImage}>
-                {philosophy.image_url ? (
-                  <Image src={philosophy.image_url} alt="Beef Philosophy" fill sizes="(max-width: 768px) 100vw, 50vw" quality={75} style={{ objectFit: 'cover', objectPosition: 'center' }} />
-                ) : (
-                  <div className={styles.placeholderEmoji}>🥩</div>
-                )}
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-    </>
-  );
+  return <HeritageClient initialSections={sections} />;
 }

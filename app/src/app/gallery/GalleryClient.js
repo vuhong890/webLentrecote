@@ -3,6 +3,8 @@ import { useState, useEffect } from 'react';
 import Image from 'next/image';
 import styles from './gallery.module.css';
 
+const BLUR_PLACEHOLDER = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciPjxyZWN0IHdpZHRoPSIxMDAlIiBoZWlnaHQ9IjEwMCUiIGZpbGw9IiMyYTFhMGEiLz48L3N2Zz4=';
+
 // Static fallback
 const staticGallery = [
   { id: 1, category: 'food', emoji: '🥩', title_en: 'The Signature Entrecôte', aspect: 'tall' },
@@ -31,6 +33,7 @@ const filters = [
 export default function GalleryClient({ initialImages = [], initialPageSections = {} }) {
   const [activeFilter, setActiveFilter] = useState('all');
   const [lightbox, setLightbox] = useState(null);
+  const [visibleCount, setVisibleCount] = useState(12);
 
   let images = staticGallery;
   if (initialImages && initialImages.length > 0) {
@@ -46,6 +49,14 @@ export default function GalleryClient({ initialImages = [], initialPageSections 
     ? images
     : images.filter(img => img.category === activeFilter);
 
+  // Reset visible count when filter changes
+  useEffect(() => {
+    setVisibleCount(12);
+  }, [activeFilter]);
+
+  const visibleImages = filtered.slice(0, visibleCount);
+  const hasMore = filtered.length > visibleCount;
+
   const getTitle = (img) => img.title_en || img.title || 'Untitled';
 
   const hero = pageSections.hero || {};
@@ -58,7 +69,7 @@ export default function GalleryClient({ initialImages = [], initialPageSections 
         className={styles.hero}
       >
         {hero.image_url && (
-          <Image src={hero.image_url} alt="Gallery" fill sizes="100vw" priority quality={80} style={{ objectFit: 'cover', objectPosition: 'center' }} />
+          <Image src={hero.image_url} alt="Gallery" fill sizes="100vw" priority quality={80} placeholder="blur" blurDataURL={BLUR_PLACEHOLDER} style={{ objectFit: 'cover', objectPosition: 'center' }} />
         )}
         <div className={styles.heroOverlay}></div>
         <div className={styles.heroContent}>
@@ -86,7 +97,7 @@ export default function GalleryClient({ initialImages = [], initialPageSections 
 
           {/* Masonry Grid */}
           <div className={styles.masonryGrid}>
-            {filtered.map((img, i) => (
+            {visibleImages.map((img, i) => (
               <div
                 key={img.id}
                 className={`${styles.gridItem} ${styles[img.aspect]}`}
@@ -95,7 +106,7 @@ export default function GalleryClient({ initialImages = [], initialPageSections 
               >
                 <div className={styles.gridItemInner}>
                   {img.image_url ? (
-                    <Image src={img.image_url} alt={getTitle(img)} fill sizes="(max-width: 768px) 50vw, 33vw" quality={70} style={{ objectFit: 'cover', objectPosition: 'center' }} />
+                    <Image src={img.image_url} alt={getTitle(img)} fill sizes="(max-width: 768px) 50vw, 33vw" quality={70} placeholder="blur" blurDataURL={BLUR_PLACEHOLDER} style={{ objectFit: 'cover', objectPosition: 'center' }} />
                   ) : (
                     <span className={styles.gridEmoji}>{img.emoji || '📸'}</span>
                   )}
@@ -106,6 +117,18 @@ export default function GalleryClient({ initialImages = [], initialPageSections 
               </div>
             ))}
           </div>
+
+          {/* Load More */}
+          {hasMore && (
+            <div style={{ textAlign: 'center', marginTop: '2.5rem' }}>
+              <button
+                className="btn btn-dark"
+                onClick={() => setVisibleCount(prev => prev + 8)}
+              >
+                LOAD MORE ({filtered.length - visibleCount} remaining)
+              </button>
+            </div>
+          )}
         </div>
       </section>
 
