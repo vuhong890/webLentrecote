@@ -2,6 +2,7 @@
 import { useState, useEffect } from 'react';
 import Image from 'next/image';
 import styles from './gallery.module.css';
+import { useLanguage } from '@/lib/i18n';
 
 const BLUR_PLACEHOLDER = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciPjxyZWN0IHdpZHRoPSIxMDAlIiBoZWlnaHQ9IjEwMCUiIGZpbGw9IiMyYTFhMGEiLz48L3N2Zz4=';
 
@@ -24,13 +25,14 @@ const staticGallery = [
 const aspects = ['square', 'tall', 'wide', 'square', 'tall', 'wide'];
 
 const filters = [
-  { id: 'all', label: 'ALL' },
-  { id: 'food', label: 'FOOD & DRINKS' },
-  { id: 'ambiance', label: 'AMBIANCE' },
-  { id: 'events', label: 'EVENTS' },
+  { id: 'all', label_en: 'ALL', label_vi: 'TẤT CẢ' },
+  { id: 'food', label_en: 'FOOD & DRINKS', label_vi: 'ĐỒ ĂN & THỨC UỐNG' },
+  { id: 'ambiance', label_en: 'AMBIANCE', label_vi: 'KHÔNG GIAN' },
+  { id: 'events', label_en: 'EVENTS', label_vi: 'SỰ KIỆN' },
 ];
 
 export default function GalleryClient({ initialImages = [], initialPageSections = {} }) {
+  const { lang } = useLanguage();
   const [activeFilter, setActiveFilter] = useState('all');
   const [lightbox, setLightbox] = useState(null);
   const [visibleCount, setVisibleCount] = useState(12);
@@ -57,7 +59,10 @@ export default function GalleryClient({ initialImages = [], initialPageSections 
   const visibleImages = filtered.slice(0, visibleCount);
   const hasMore = filtered.length > visibleCount;
 
-  const getTitle = (img) => img.title_en || img.title || 'Untitled';
+  const tf = (obj, field) => obj ? obj[`${field}_${lang}`] || obj[`${field}_en`] || '' : '';
+  const tm = (obj, key) => obj?.metadata ? obj.metadata[`${key}_${lang}`] || obj.metadata[`${key}_en`] || '' : '';
+
+  const getTitle = (img) => tf(img, 'title') || img.title || 'Untitled';
 
   const hero = pageSections.hero || {};
   const heroMeta = hero.metadata || {};
@@ -73,9 +78,9 @@ export default function GalleryClient({ initialImages = [], initialPageSections 
         )}
         <div className={styles.heroOverlay}></div>
         <div className={styles.heroContent}>
-          <p className={styles.label}>{heroMeta.label_en || 'GALLERY'}</p>
-          <h1>{hero.title_en || 'Visual Stories'}</h1>
-          <p className={styles.subtitle} dangerouslySetInnerHTML={{ __html: hero.content_en || 'A curated glimpse into the L\'Entrecôte experience' }}></p>
+          <p className={styles.label}>{tm(hero, 'label') || 'GALLERY'}</p>
+          <h1>{tf(hero, 'title') || 'Visual Stories'}</h1>
+          <p className={styles.subtitle} dangerouslySetInnerHTML={{ __html: tf(hero, 'content') || 'A curated glimpse into the L\'Entrecôte experience' }}></p>
         </div>
       </section>
 
@@ -90,7 +95,7 @@ export default function GalleryClient({ initialImages = [], initialPageSections 
                 className={`${styles.filterBtn} ${activeFilter === f.id ? styles.filterActive : ''}`}
                 onClick={() => setActiveFilter(f.id)}
               >
-                {f.label}
+                {lang === 'vi' && f.label_vi ? f.label_vi : f.label_en}
               </button>
             ))}
           </div>
@@ -125,7 +130,7 @@ export default function GalleryClient({ initialImages = [], initialPageSections 
                 className="btn btn-dark"
                 onClick={() => setVisibleCount(prev => prev + 8)}
               >
-                LOAD MORE ({filtered.length - visibleCount} remaining)
+                {lang === 'vi' ? 'TẢI THÊM' : 'LOAD MORE'} ({filtered.length - visibleCount})
               </button>
             </div>
           )}

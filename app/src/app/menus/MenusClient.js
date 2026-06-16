@@ -2,6 +2,7 @@
 import { useState, useEffect } from 'react';
 import Image from 'next/image';
 import styles from './menus.module.css';
+import { useLanguage } from '@/lib/i18n';
 
 // Static fallback data (used when DB is empty)
 const staticMenuData = {
@@ -77,7 +78,11 @@ export default function MenusClient({ initialCategories = [], allMenuItems = [],
   const [items, setItems] = useState([]);
   const [dbLoaded, setDbLoaded] = useState(true);
 
+  const { lang } = useLanguage();
   const categories = initialCategories;
+
+  const tf = (obj, field) => obj ? obj[`${field}_${lang}`] || obj[`${field}_en`] || '' : '';
+  const tm = (obj, key) => obj?.metadata ? obj.metadata[`${key}_${lang}`] || obj.metadata[`${key}_en`] || '' : '';
 
   // Load items when category changes (skip for drinks — uses static image)
   useEffect(() => {
@@ -103,14 +108,14 @@ export default function MenusClient({ initialCategories = [], allMenuItems = [],
   }, [activeSlug, categories, allMenuItems]);
 
   const displayCategories = categories.length > 0 ? categories : [
-    { slug: 'small-bites', name_en: 'SMALL BITES' },
-    { slug: 'salads', name_en: 'SALADS' },
-    { slug: 'starters', name_en: 'STARTERS' },
-    { slug: 'mains', name_en: 'MAINS' },
-    { slug: 'beef-selection', name_en: 'BEEF SELECTION' },
-    { slug: 'sauces', name_en: 'SAUCES' },
-    { slug: 'side-dishes', name_en: 'SIDE DISHES' },
-    { slug: 'drinks', name_en: 'DRINK MENU & WINE LIST' },
+    { slug: 'small-bites', name_en: 'SMALL BITES', name_vi: 'KHAI VỊ NHỎ' },
+    { slug: 'salads', name_en: 'SALADS', name_vi: 'SALAD' },
+    { slug: 'starters', name_en: 'STARTERS', name_vi: 'MÓN KHAI VỊ' },
+    { slug: 'mains', name_en: 'MAINS', name_vi: 'MÓN CHÍNH' },
+    { slug: 'beef-selection', name_en: 'BEEF SELECTION', name_vi: 'BÒ TUYỂN CHỌN' },
+    { slug: 'sauces', name_en: 'SAUCES', name_vi: 'NƯỚC SỐT' },
+    { slug: 'side-dishes', name_en: 'SIDE DISHES', name_vi: 'MÓN ĂN KÈM' },
+    { slug: 'drinks', name_en: 'DRINK MENU & WINE LIST', name_vi: 'THỨC UỐNG & RƯỢU VANG' },
   ];
 
 
@@ -118,8 +123,8 @@ export default function MenusClient({ initialCategories = [], allMenuItems = [],
 
 
   // Get display name/desc/price for item (works for both DB and static data)
-  const getName = (item) => item.name_en || item.name || '';
-  const getDesc = (item) => item.description_en || item.description || '';
+  const getName = (item) => tf(item, 'name') || item.name || '';
+  const getDesc = (item) => tf(item, 'description') || item.description || '';
   const getPrice = (item) => {
     if (dbLoaded) return formatPrice(item.price);
     if (item.price === 0) return 'Complimentary';
@@ -141,9 +146,9 @@ export default function MenusClient({ initialCategories = [], allMenuItems = [],
         )}
         <div className={styles.heroOverlay}></div>
         <div className={styles.heroContent}>
-          <p className={styles.label}>{heroMeta.label_en || 'THE MENU'}</p>
-          <h1>{hero.title_en || 'Signature Selection'}</h1>
-          {hero.content_en && <p className={styles.subtitle} dangerouslySetInnerHTML={{ __html: hero.content_en }}></p>}
+          <p className={styles.label}>{tm(hero, 'label') || 'THE MENU'}</p>
+          <h1>{tf(hero, 'title') || 'Signature Selection'}</h1>
+          {tf(hero, 'content') && <p className={styles.subtitle} dangerouslySetInnerHTML={{ __html: tf(hero, 'content') }}></p>}
         </div>
       </section>
 
@@ -158,7 +163,7 @@ export default function MenusClient({ initialCategories = [], allMenuItems = [],
                 className={`${styles.categoryBtn} ${activeSlug === cat.slug ? styles.categoryActive : ''}`}
                 onClick={() => setActiveSlug(cat.slug)}
               >
-                {cat.name_en}
+                {tf(cat, 'name')}
               </button>
             ))}
           </div>

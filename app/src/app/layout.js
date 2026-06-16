@@ -3,6 +3,7 @@ import localFont from 'next/font/local';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import Providers from '@/components/Providers';
+import { getSupabase } from '@/lib/supabase-server';
 
 const aptos = localFont({
   src: '../../public/fonts/Aptos.ttf',
@@ -29,7 +30,14 @@ export const metadata = {
   keywords: "L'Entrecôte, steak, frites, restaurant, Ho Chi Minh City, Saigon, French bistro",
 };
 
-export default function RootLayout({ children }) {
+export default async function RootLayout({ children }) {
+  const supabase = getSupabase();
+  const { data: settingsData } = await supabase.from('site_settings').select('*');
+  const siteSettings = {};
+  if (settingsData) {
+    settingsData.forEach(s => { siteSettings[s.key] = s.value; });
+  }
+
   return (
     <html lang="en" className={`${aptos.variable} ${baskerville.variable}`}>
       <body>
@@ -38,7 +46,7 @@ export default function RootLayout({ children }) {
           <main style={{ paddingTop: 'var(--nav-height)' }}>
             {children}
           </main>
-          <Footer />
+          <Footer settings={siteSettings} />
         </Providers>
       </body>
     </html>

@@ -3,7 +3,7 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { usePathname } from 'next/navigation';
-import { useLanguage } from '@/lib/i18n';
+import { useLanguage, useTranslation } from '@/lib/i18n';
 import styles from './Header.module.css';
 
 // Map section IDs on home page to nav hrefs
@@ -17,12 +17,12 @@ const sectionToNav = {
 };
 
 const navLinks = [
-  { href: '/', label: 'HOME' },
-  { href: '/heritage', label: 'HERITAGE' },
-  { href: '/menus', label: 'MENUS' },
-  { href: '/reservation', label: 'RESERVATION' },
-  { href: '/gallery', label: 'GALLERY' },
-  { href: '/contact', label: 'CONTACT' },
+  { href: '/', tKey: 'home' },
+  { href: '/heritage', tKey: 'heritage' },
+  { href: '/menus', tKey: 'menus' },
+  { href: '/reservation', tKey: 'reservation' },
+  { href: '/gallery', tKey: 'gallery' },
+  { href: '/contact', tKey: 'contact' },
 ];
 
 export default function Header() {
@@ -31,6 +31,7 @@ export default function Header() {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [activeSection, setActiveSection] = useState('/');
   const { lang, setLang } = useLanguage();
+  const t = useTranslation();
 
   // Hide header on admin pages
   const isAdmin = pathname?.startsWith('/admin');
@@ -158,7 +159,7 @@ export default function Header() {
               href={link.href}
               className={`${styles.navLink} ${getActiveClass(link.href)}`}
             >
-              {link.label}
+              {t(link.tKey).toUpperCase()}
               <span className={styles.navUnderline}></span>
             </Link>
           ))}
@@ -192,8 +193,9 @@ export default function Header() {
             key={link.href}
             href={link.href}
             className={`${styles.mobileLink} ${getActiveClass(link.href)}`}
+            onClick={() => setMobileOpen(false)}
           >
-            {link.label}
+            {t(link.tKey).toUpperCase()}
           </Link>
         ))}
       </div>

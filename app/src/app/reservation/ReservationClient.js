@@ -2,8 +2,17 @@
 import { useState, useEffect } from 'react';
 import Image from 'next/image';
 import styles from './reservation.module.css';
+import { useLanguage, useTranslation } from '@/lib/i18n';
+
+// Tiny blur placeholder for hero images
+const BLUR_PLACEHOLDER = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciPjxyZWN0IHdpZHRoPSIxMDAlIiBoZWlnaHQ9IjEwMCUiIGZpbGw9IiMyYTFhMGEiLz48L3N2Zz4=';
 
 export default function ReservationClient({ initialPageSections = {} }) {
+  const { lang } = useLanguage();
+  const t = useTranslation();
+  
+  const tf = (obj, field) => obj ? obj[`${field}_${lang}`] || obj[`${field}_en`] || '' : '';
+  const tm = (obj, key) => obj?.metadata ? obj.metadata[`${key}_${lang}`] || obj.metadata[`${key}_en`] || '' : '';
   const [formData, setFormData] = useState({
     name: '', email: '', phone: '', date: '', time: '', guests: '2', requests: '', branch: ''
   });
@@ -58,13 +67,13 @@ export default function ReservationClient({ initialPageSections = {} }) {
         className={styles.hero}
       >
         {hero.image_url && (
-          <Image src={hero.image_url} alt="Reservation" fill sizes="100vw" priority quality={80} style={{ objectFit: 'cover', objectPosition: 'center' }} />
+          <Image src={hero.image_url} alt="Reservation" fill sizes="100vw" priority quality={80} placeholder="blur" blurDataURL={BLUR_PLACEHOLDER} style={{ objectFit: 'cover', objectPosition: 'center' }} />
         )}
         <div className={styles.heroOverlay}></div>
         <div className={styles.heroContent}>
-          <p className={styles.label}>{heroMeta.label_en || 'RESERVATION'}</p>
-          <h1>{hero.title_en || 'Secure Your Table'}</h1>
-          <p className={styles.subtitle} dangerouslySetInnerHTML={{ __html: hero.content_en || 'An unforgettable evening begins with a single step' }}></p>
+          <p className={styles.label}>{tm(hero, 'label') || 'RESERVATION'}</p>
+          <h1>{tf(hero, 'title') || 'Secure Your Table'}</h1>
+          <p className={styles.subtitle} dangerouslySetInnerHTML={{ __html: tf(hero, 'content') || 'An unforgettable evening begins with a single step' }}></p>
         </div>
       </section>
 
@@ -74,47 +83,46 @@ export default function ReservationClient({ initialPageSections = {} }) {
           <div className={styles.bookingGrid}>
             {/* Form */}
             <div className={styles.formCol}>
-              <h2>Book a Table</h2>
+              <h2>{t('bookATable')}</h2>
               <div className={styles.goldDivider}></div>
               <p className={styles.formIntro}>
-                Reserve your spot for a curated dining experience. For parties over 8,
-                please call us directly at <a href="tel:+84327157002">(+84) 32 7157 002</a>.
+                {t('reservationFormIntro')} <a href="tel:+84327157002">(+84) 32 7157 002</a>.
               </p>
 
               {submitted ? (
                 <div className={styles.successMessage}>
                   <span className={styles.successIcon}>✓</span>
-                  <h3>Reservation Confirmed</h3>
-                  <p>We look forward to welcoming you. A confirmation has been sent to your email.</p>
+                  <h3>{t('reservationConfirmedTitle')}</h3>
+                  <p>{t('reservationConfirmedDesc')}</p>
                 </div>
               ) : (
                 <form onSubmit={handleSubmit} className={styles.form}>
                   {error && <div style={{ background: 'rgba(220,50,50,0.15)', color: '#ef4444', padding: '0.75rem', marginBottom: '1rem', fontSize: '0.85rem', border: '1px solid rgba(220,50,50,0.3)' }}>{error}</div>}
                   <div className={styles.formRow}>
                     <div className={styles.formGroup}>
-                      <label className={styles.formLabel}>Full Name</label>
-                      <input type="text" name="name" value={formData.name} onChange={handleChange} className={styles.formInput} required placeholder="Your name" />
+                      <label className={styles.formLabel}>{t('name')}</label>
+                      <input type="text" name="name" value={formData.name} onChange={handleChange} className={styles.formInput} required placeholder={t('fullNamePlaceholder') || "Your name"} />
                     </div>
                     <div className={styles.formGroup}>
-                      <label className={styles.formLabel}>Phone</label>
+                      <label className={styles.formLabel}>{t('phone')}</label>
                       <input type="tel" name="phone" value={formData.phone} onChange={handleChange} className={styles.formInput} required placeholder="+84 ..." />
                     </div>
                   </div>
 
                   <div className={styles.formGroup}>
-                    <label className={styles.formLabel}>Email</label>
-                    <input type="email" name="email" value={formData.email} onChange={handleChange} className={styles.formInput} required placeholder="your@email.com" />
+                    <label className={styles.formLabel}>{t('email')}</label>
+                    <input type="email" name="email" value={formData.email} onChange={handleChange} className={styles.formInput} required placeholder={t('emailPlaceholder') || "your@email.com"} />
                   </div>
 
                   <div className={styles.formRow}>
                     <div className={styles.formGroup}>
-                      <label className={styles.formLabel}>Date</label>
+                      <label className={styles.formLabel}>{t('date')}</label>
                       <input type="date" name="date" value={formData.date} onChange={handleChange} className={styles.formInput} required />
                     </div>
                     <div className={styles.formGroup}>
-                      <label className={styles.formLabel}>Time</label>
+                      <label className={styles.formLabel}>{t('time')}</label>
                       <select name="time" value={formData.time} onChange={handleChange} className={styles.formInput} required>
-                        <option value="">Select time</option>
+                        <option value="">{t('selectTime')}</option>
                         <option value="11:30">11:30 AM</option>
                         <option value="12:00">12:00 PM</option>
                         <option value="12:30">12:30 PM</option>
@@ -133,22 +141,22 @@ export default function ReservationClient({ initialPageSections = {} }) {
                       </select>
                     </div>
                     <div className={styles.formGroup}>
-                      <label className={styles.formLabel}>Guests</label>
+                      <label className={styles.formLabel}>{t('guestsLabel')}</label>
                       <select name="guests" value={formData.guests} onChange={handleChange} className={styles.formInput}>
                         {[1,2,3,4,5,6,7,8].map(n => (
-                          <option key={n} value={n}>{n} {n === 1 ? 'Guest' : 'Guests'}</option>
+                          <option key={n} value={n}>{n} {n === 1 ? t('guest') : t('guests')}</option>
                         ))}
                       </select>
                     </div>
                   </div>
 
                   <div className={styles.formGroup}>
-                    <label className={styles.formLabel}>Special Requests</label>
-                    <textarea name="requests" value={formData.requests} onChange={handleChange} className={styles.formInput} rows="3" placeholder="Allergies, celebrations, seating preferences..."></textarea>
+                    <label className={styles.formLabel}>{t('specialRequests')}</label>
+                    <textarea name="requests" value={formData.requests} onChange={handleChange} className={styles.formInput} rows="3" placeholder={t('allergiesPlaceholder')}></textarea>
                   </div>
 
                   <button type="submit" className="btn btn-primary" style={{ width: '100%', marginTop: '1rem' }} disabled={loading}>
-                    {loading ? 'SUBMITTING...' : 'CONFIRM RESERVATION'}
+                    {loading ? t('submitting') : t('confirmReservation')}
                   </button>
                 </form>
               )}
@@ -165,27 +173,27 @@ export default function ReservationClient({ initialPageSections = {} }) {
                   )}
                 </div>
                 <div className={styles.infoCardBody}>
-                  <h3>{bookingInfo.title_en || 'The Bistro Experience'}</h3>
+                  <h3>{tf(bookingInfo, 'title') || 'The Bistro Experience'}</h3>
                   <div className={styles.goldDivider}></div>
                   <div className={styles.infoItem}>
-                    <span className={styles.infoLabel}>LUNCH</span>
+                    <span className={styles.infoLabel}>{t('lunch').toUpperCase()}</span>
                     <span>11:30 AM – 2:00 PM</span>
                   </div>
                   <div className={styles.infoItem}>
-                    <span className={styles.infoLabel}>DINNER</span>
+                    <span className={styles.infoLabel}>{t('dinner').toUpperCase()}</span>
                     <span>4:00 PM – 11:00 PM</span>
                   </div>
                   <div className={styles.infoItem}>
-                    <span className={styles.infoLabel}>LAST ORDER</span>
+                    <span className={styles.infoLabel}>{t('lastOrder').toUpperCase()}</span>
                     <span>10:00 PM</span>
                   </div>
                   <div className={styles.infoDivider}></div>
                   <div className={styles.infoItem}>
-                    <span className={styles.infoLabel}>DRESS CODE</span>
-                    <span>Smart Casual</span>
+                    <span className={styles.infoLabel}>{t('dressCode').toUpperCase()}</span>
+                    <span>{t('smartCasual')}</span>
                   </div>
                   <div className={styles.infoItem}>
-                    <span className={styles.infoLabel}>LOCATION</span>
+                    <span className={styles.infoLabel}>{t('location').toUpperCase()}</span>
                     <span>Level 2, Dong Du,<br/>Saigon Ward, HCMC</span>
                   </div>
                 </div>

@@ -1,9 +1,10 @@
 'use client';
 import { useState, useEffect, useCallback } from 'react';
-import styles from './page.module.css';
 import Image from 'next/image';
 import Link from 'next/link';
 import SignatureCarousel from '@/components/SignatureCarousel';
+import { useLanguage, useTranslation } from '@/lib/i18n';
+import styles from './page.module.css';
 
 // Tiny dark blur placeholder for hero/fill images
 const BLUR_PLACEHOLDER = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciPjxyZWN0IHdpZHRoPSIxMDAlIiBoZWlnaHQ9IjEwMCUiIGZpbGw9IiMyYTFhMGEiLz48L3N2Zz4=';
@@ -14,6 +15,8 @@ function formatPrice(price) {
 }
 
 export default function HomeClient({ initialHomeSections, initialHeritageSections, initialSignatureItems, initialGalleryPicks }) {
+  const { lang } = useLanguage();
+  const t = useTranslation();
   const [popupItem, setPopupItem] = useState(null);
   const [lightboxImage, setLightboxImage] = useState(null);
 
@@ -21,6 +24,9 @@ export default function HomeClient({ initialHomeSections, initialHeritageSection
   const heritageSections = initialHeritageSections || {};
   const signatureItems = initialSignatureItems || [];
   const galleryPicks = initialGalleryPicks || [];
+
+  const tf = (obj, field) => obj ? obj[`${field}_${lang}`] || obj[`${field}_en`] || '' : '';
+  const tm = (obj, key) => obj?.metadata ? obj.metadata[`${key}_${lang}`] || obj.metadata[`${key}_en`] || '' : '';
 
   // Close popup on Escape
   useEffect(() => {
@@ -75,8 +81,17 @@ export default function HomeClient({ initialHomeSections, initialHeritageSection
 
   // Heritage data
   const heritageStory = heritageSections.our_story || {};
-  const heritageStoryMeta = heritageStory.metadata || {};
+  const heritagePreview = homeSections.heritage_preview || {};
+  const heritagePreviewMeta = heritagePreview.metadata || {};
   const timeline = heritageSections.timeline || {};
+
+  // CTA data
+  const ctaBanner = homeSections.cta_banner || {};
+  const ctaMeta = ctaBanner.metadata || {};
+
+  // Gallery preview
+  const galleryPreview = homeSections.gallery_preview || {};
+  const galleryPreviewMeta = galleryPreview.metadata || {};
 
   // Parse timeline items
   const defaultTimeline = [
@@ -87,8 +102,9 @@ export default function HomeClient({ initialHomeSections, initialHeritageSection
   ];
 
   let timelineItems = defaultTimeline;
-  if (timeline.content_en) {
-    const parsed = timeline.content_en.match(/(\d{4}):\s*([^.]+\.)/g);
+  const tContent = tf(timeline, 'content');
+  if (tContent) {
+    const parsed = tContent.match(/(\d{4}):\s*([^.]+\.)/g);
     if (parsed && parsed.length > 0) {
       timelineItems = parsed.map(item => {
         const match = item.match(/(\d{4}):\s*(.+)/);
@@ -109,10 +125,10 @@ export default function HomeClient({ initialHomeSections, initialHeritageSection
         )}
         <div className={styles.heroOverlay}></div>
         <div className={styles.heroContent}>
-          <p className={styles.heroLabel}>{heroMeta.label_en || 'SINCE 1959 · PARIS'}</p>
-          <h1 className={styles.heroTitle}>{hero.title_en || 'Le Seul Plat.'}</h1>
+          <p className={styles.heroLabel}>{tm(hero, 'label') || 'SINCE 1959 · PARIS'}</p>
+          <h1 className={styles.heroTitle}>{tf(hero, 'title') || 'Le Seul Plat.'}</h1>
           <p className={styles.heroSubtitle}>
-            {hero.content_en || 'The one and only dish — our legendary trimmed entrecôte steak, bathed in our secret sauce, served with crispy golden frites.'}
+            {tf(hero, 'content') || 'The one and only dish — our legendary trimmed entrecôte steak, bathed in our secret sauce, served with crispy golden frites.'}
           </p>
           <div className={styles.heroCta}>
             <Link href="/reservation" className="btn btn-primary">
@@ -133,12 +149,12 @@ export default function HomeClient({ initialHomeSections, initialHeritageSection
         <div className="container">
           <div className={styles.heritageGrid}>
             <div className={styles.heritageTextCol}>
-              <p className={styles.sectionLabel}>{heritageStoryMeta.label_en || 'OUR HERITAGE'}</p>
-              <h2 className={styles.sectionTitle}>{heritageStory.title_en || 'A Legacy of Timeless Flavour'}</h2>
+              <p className={styles.sectionLabel}>{tm(heritagePreview, 'label') || 'OUR HERITAGE'}</p>
+              <h2 className={styles.sectionTitle}>{tf(heritagePreview, 'title') || 'A Legacy of Timeless Flavour'}</h2>
               <div className={styles.goldDivider}></div>
               <p className={styles.heritageText}>
-                {heritageStory.content_en
-                  ? heritageStory.content_en.split(/\n\n|\n/)[0]
+                {tf(heritagePreview, 'content')
+                  ? tf(heritagePreview, 'content').split(/\n\n|\n/)[0]
                   : "Born in Paris in 1959, L'Entrecôte has captivated diners with a singular vision: one perfect dish, executed to perfection."
                 }
               </p>
@@ -160,8 +176,8 @@ export default function HomeClient({ initialHomeSections, initialHeritageSection
             </div>
             <div className={styles.heritageImageCol}>
               <div className={styles.heritageImageLarge}>
-                {heritageStory.image_url ? (
-                  <Image src={heritageStory.image_url} alt="Heritage" fill sizes="(max-width: 768px) 100vw, 50vw" quality={75} placeholder="blur" blurDataURL={BLUR_PLACEHOLDER} style={{ objectFit: 'cover', objectPosition: 'center' }} />
+                {heritageStory.image_url || heritagePreview.image_url ? (
+                  <Image src={heritagePreview.image_url || heritageStory.image_url} alt="Heritage" fill sizes="(max-width: 768px) 100vw, 50vw" quality={75} placeholder="blur" blurDataURL={BLUR_PLACEHOLDER} style={{ objectFit: 'cover', objectPosition: 'center' }} />
                 ) : (
                   <div className={styles.imagePlaceholderText}>🏛️</div>
                 )}
@@ -174,8 +190,8 @@ export default function HomeClient({ initialHomeSections, initialHeritageSection
       {/* ==================== SECTION 3: MENUS (Signature Offerings) ==================== */}
       <section id="menus" className={styles.signatureSection}>
         <div className="container">
-          <p className={styles.sectionLabel}>{sigMeta.label_en || 'THE EXPERIENCE'}</p>
-          <h2 className={styles.sectionTitle}>{signature.title_en || 'Signature Offerings'}</h2>
+          <p className={styles.sectionLabel}>{tm(signature, 'label') || 'THE EXPERIENCE'}</p>
+          <h2 className={styles.sectionTitle}>{tf(signature, 'title') || 'Signature Offerings'}</h2>
           <SignatureCarousel
             items={signatureItems}
             onItemClick={(item) => setPopupItem(item)}
@@ -190,33 +206,36 @@ export default function HomeClient({ initialHomeSections, initialHeritageSection
 
       {/* ==================== SECTION 4: RESERVATION CTA ==================== */}
       <section id="reservation" className={styles.reservationSection}>
+        {ctaBanner.image_url && (
+          <Image src={ctaBanner.image_url} alt="Reservation CTA" fill sizes="100vw" quality={70} placeholder="blur" blurDataURL={BLUR_PLACEHOLDER} style={{ objectFit: 'cover', objectPosition: 'center', zIndex: 0 }} />
+        )}
         <div className={styles.reservationOverlay}></div>
-        <div className={styles.reservationContent}>
-          <p className={styles.sectionLabel} style={{ color: '#F0C75E' }}>RESERVATION</p>
-          <h2 className={styles.reservationTitle}>An Evening of Timeless Elegance Awaits</h2>
+        <div className={styles.reservationContent} style={{ zIndex: 1 }}>
+          <p className={styles.sectionLabel} style={{ color: '#F0C75E' }}>{tm(ctaBanner, 'label') || 'RESERVATION'}</p>
+          <h2 className={styles.reservationTitle}>{tf(ctaBanner, 'title') || 'An Evening of Timeless Elegance Awaits'}</h2>
           <p className={styles.reservationText}>
-            Join us for an unforgettable dining experience at L&apos;Entrecôte Social Meating, Saigon.
+            {tf(ctaBanner, 'content') || "Join us for an unforgettable dining experience at L'Entrecôte Social Meating, Saigon."}
           </p>
           <div className={styles.reservationInfo}>
             <div className={styles.reservationInfoItem}>
               <span className={styles.reservationInfoIcon}>🕐</span>
               <div>
-                <strong>Lunch</strong>
+                <strong>{t('lunch')}</strong>
                 <p>11:30 AM – 2:00 PM</p>
               </div>
             </div>
             <div className={styles.reservationInfoItem}>
               <span className={styles.reservationInfoIcon}>🌙</span>
               <div>
-                <strong>Dinner</strong>
+                <strong>{t('dinner')}</strong>
                 <p>4:00 PM – 11:00 PM</p>
               </div>
             </div>
             <div className={styles.reservationInfoItem}>
               <span className={styles.reservationInfoIcon}>👔</span>
               <div>
-                <strong>Dress Code</strong>
-                <p>Smart Casual</p>
+                <strong>{t('dressCode')}</strong>
+                <p>{t('smartCasual')}</p>
               </div>
             </div>
           </div>
@@ -229,8 +248,8 @@ export default function HomeClient({ initialHomeSections, initialHeritageSection
       {/* ==================== SECTION 5: GALLERY PREVIEW ==================== */}
       <section id="gallery" className={styles.gallerySection}>
         <div className="container">
-          <p className={styles.sectionLabel}>GALLERY</p>
-          <h2 className={styles.sectionTitle}>Visual Stories</h2>
+          <p className={styles.sectionLabel}>{tm(galleryPreview, 'label') || t('gallery').toUpperCase()}</p>
+          <h2 className={styles.sectionTitle}>{tf(galleryPreview, 'title') || 'Visual Stories'}</h2>
           {galleryPicks.length > 0 ? (
             <div className={styles.galleryGrid}>
               {galleryPicks.map((pick, i) => {
@@ -244,12 +263,12 @@ export default function HomeClient({ initialHomeSections, initialHeritageSection
                   >
                     <div className={styles.galleryItemInner}>
                       {img?.image_url ? (
-                        <Image src={img.image_url} alt={img?.title_en || 'Gallery'} fill sizes="(max-width: 768px) 50vw, 25vw" quality={70} placeholder="blur" blurDataURL={BLUR_PLACEHOLDER} style={{ objectFit: 'cover', objectPosition: 'center' }} />
+                        <Image src={img.image_url} alt={tf(img, 'title') || 'Gallery'} fill sizes="(max-width: 768px) 50vw, 25vw" quality={70} placeholder="blur" blurDataURL={BLUR_PLACEHOLDER} style={{ objectFit: 'cover', objectPosition: 'center' }} />
                       ) : (
                         <span className={styles.galleryEmoji}>📸</span>
                       )}
                       <div className={styles.galleryOverlay}>
-                        <p className={styles.galleryItemTitle}>{img?.title_en || 'Untitled'}</p>
+                        <p className={styles.galleryItemTitle}>{tf(img, 'title') || 'Untitled'}</p>
                       </div>
                     </div>
                   </div>
@@ -282,7 +301,7 @@ export default function HomeClient({ initialHomeSections, initialHeritageSection
           <div className={styles.popupContent} onClick={(e) => e.stopPropagation()}>
             <div className={styles.popupImage}>
               {popupItem.image_url ? (
-                <Image src={popupItem.image_url} alt={popupItem.name_en} fill sizes="50vw" quality={80} style={{ objectFit: 'cover', objectPosition: 'center' }} />
+                <Image src={popupItem.image_url} alt={tf(popupItem, 'name')} fill sizes="50vw" quality={80} style={{ objectFit: 'cover', objectPosition: 'center' }} />
               ) : (
                 <span className={styles.popupEmoji}>🍽️</span>
               )}
@@ -291,10 +310,10 @@ export default function HomeClient({ initialHomeSections, initialHeritageSection
               )}
             </div>
             <div className={styles.popupInfo}>
-              <p className={styles.popupCategory}>SIGNATURE OFFERINGS</p>
-              <h2 className={styles.popupName}>{popupItem.name_en}</h2>
+              <p className={styles.popupCategory}>{tf(signature, 'title') || 'SIGNATURE OFFERINGS'}</p>
+              <h2 className={styles.popupName}>{tf(popupItem, 'name')}</h2>
               <div className={styles.popupDivider}></div>
-              <p className={styles.popupDesc}>{popupItem.description_en}</p>
+              <p className={styles.popupDesc}>{tf(popupItem, 'description')}</p>
               {popupItem.price > 0 && (
                 <p className={styles.popupPrice}>{formatPrice(popupItem.price)}</p>
               )}
@@ -316,12 +335,12 @@ export default function HomeClient({ initialHomeSections, initialHeritageSection
           <div className={styles.lightboxContent} onClick={e => e.stopPropagation()}>
             <div className={styles.lightboxImageWrap}>
               {lightboxImage.image_url ? (
-                <Image src={lightboxImage.image_url} alt={lightboxImage.title_en || ''} fill sizes="90vw" quality={85} style={{ objectFit: 'contain', objectPosition: 'center' }} />
+                <Image src={lightboxImage.image_url} alt={tf(lightboxImage, 'title') || ''} fill sizes="90vw" quality={85} style={{ objectFit: 'contain', objectPosition: 'center' }} />
               ) : (
                 <span style={{ fontSize: '8rem' }}>📸</span>
               )}
             </div>
-            <p className={styles.lightboxTitle}>{lightboxImage.title_en || 'Untitled'}</p>
+            <p className={styles.lightboxTitle}>{tf(lightboxImage, 'title') || 'Untitled'}</p>
           </div>
         </div>
       )}
