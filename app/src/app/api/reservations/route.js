@@ -55,9 +55,7 @@ export async function POST(request) {
       branch: body.branch || '',
       note: body.note || '',
       status: 'pending',
-    })
-    .select()
-    .single();
+    });
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
 
