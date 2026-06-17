@@ -33,20 +33,28 @@ export default function AdminReservations() {
   }
 
   async function updateStatus(id, status) {
-    await fetch('/api/reservations', {
+    const res = await fetch('/api/reservations', {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
       body: JSON.stringify({ id, status }),
     });
+    if (!res.ok) {
+      const data = await res.json();
+      alert('Error: ' + (data.error || 'Failed to update'));
+    }
     loadReservations();
   }
 
   async function handleDelete(id) {
     if (!confirm('Are you sure you want to delete this reservation?')) return;
-    await fetch(`/api/reservations?id=${id}`, {
+    const res = await fetch(`/api/reservations?id=${id}`, {
       method: 'DELETE',
       headers: { Authorization: `Bearer ${token}` }
     });
+    if (!res.ok) {
+      const data = await res.json();
+      alert('Error: ' + (data.error || 'Failed to delete'));
+    }
     loadReservations();
   }
 
@@ -65,21 +73,28 @@ export default function AdminReservations() {
 
   async function handleSaveForm(e) {
     e.preventDefault();
+    let res;
     if (editingRes) {
-      await fetch('/api/reservations', {
+      res = await fetch('/api/reservations', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
         body: JSON.stringify({ id: editingRes.id, ...form })
       });
     } else {
-      await fetch('/api/reservations', {
+      res = await fetch('/api/reservations', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(form)
       });
     }
-    setIsModalOpen(false);
-    loadReservations();
+    
+    if (!res.ok) {
+      const data = await res.json();
+      alert('Error saving: ' + (data.error || 'Unknown error'));
+    } else {
+      setIsModalOpen(false);
+      loadReservations();
+    }
   }
 
   const statusColors = {
