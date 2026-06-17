@@ -19,6 +19,9 @@ export default function ReservationClient({ initialPageSections = {} }) {
   const [submitted, setSubmitted] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [showPopup, setShowPopup] = useState(false);
+  const [popupType, setPopupType] = useState('success');
+  const [popupMessage, setPopupMessage] = useState('');
 
   const pageSections = initialPageSections;
 
@@ -45,8 +48,14 @@ export default function ReservationClient({ initialPageSections = {} }) {
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'Failed to submit');
       setSubmitted(true);
+      setPopupType('success');
+      setPopupMessage(lang === 'vi' ? 'Đặt bàn thành công! Chúng tôi sẽ liên hệ lại với bạn sớm nhất.' : 'Reservation successful! We will contact you shortly.');
+      setShowPopup(true);
     } catch (err) {
       setError(err.message);
+      setPopupType('error');
+      setPopupMessage(lang === 'vi' ? 'Lỗi: Không thể gửi yêu cầu đặt bàn lúc này. Vui lòng thử lại.' : 'Error: Failed to submit reservation. Please try again.');
+      setShowPopup(true);
     } finally {
       setLoading(false);
     }
@@ -97,7 +106,6 @@ export default function ReservationClient({ initialPageSections = {} }) {
                 </div>
               ) : (
                 <form onSubmit={handleSubmit} className={styles.form}>
-                  {error && <div style={{ background: 'rgba(220,50,50,0.15)', color: '#ef4444', padding: '0.75rem', marginBottom: '1rem', fontSize: '0.85rem', border: '1px solid rgba(220,50,50,0.3)' }}>{error}</div>}
                   <div className={styles.formRow}>
                     <div className={styles.formGroup}>
                       <label className={styles.formLabel}>{t('name')}</label>
@@ -208,6 +216,23 @@ export default function ReservationClient({ initialPageSections = {} }) {
           </div>
         </div>
       </section>
+
+      {/* POPUP MODAL */}
+      {showPopup && (
+        <div className={styles.popupOverlay}>
+          <div className={`${styles.popupBox} ${popupType === 'success' ? styles.popupSuccess : styles.popupError}`}>
+            <button className={styles.popupClose} onClick={() => setShowPopup(false)}>×</button>
+            <div className={styles.popupIcon}>
+              {popupType === 'success' ? '✓' : '✕'}
+            </div>
+            <h3>{popupType === 'success' ? (lang === 'vi' ? 'Thành công' : 'Success') : (lang === 'vi' ? 'Đã xảy ra lỗi' : 'Error')}</h3>
+            <p>{popupMessage}</p>
+            <button type="button" className={`btn btn-primary ${styles.popupBtn}`} onClick={() => setShowPopup(false)}>
+              {lang === 'vi' ? 'Đóng' : 'Close'}
+            </button>
+          </div>
+        </div>
+      )}
     </>
   );
 }
