@@ -1,6 +1,8 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 
+export const dynamic = 'force-dynamic';
+
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL,
   process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
@@ -24,11 +26,7 @@ export async function GET() {
     settings[item.key] = item.value;
   });
   
-  return NextResponse.json(settings, {
-    headers: {
-      'Cache-Control': 'public, s-maxage=60, stale-while-revalidate=300'
-    }
-  });
+  return NextResponse.json(settings);
 }
 
 // PUT update setting

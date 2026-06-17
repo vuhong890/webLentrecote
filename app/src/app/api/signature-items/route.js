@@ -1,6 +1,8 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 
+export const dynamic = 'force-dynamic';
+
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL,
   process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
@@ -48,8 +50,7 @@ export async function GET(request) {
     return { ...item, menu_items: undefined };
   });
 
-  const headers = all ? {} : { 'Cache-Control': 'public, s-maxage=60, stale-while-revalidate=300' };
-  return NextResponse.json(merged, { headers });
+  return NextResponse.json(merged);
 }
 
 // POST — create (admin) — now accepts menu_item_id
