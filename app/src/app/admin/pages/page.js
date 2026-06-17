@@ -355,13 +355,13 @@ export default function AdminPages() {
             <div style={st.field}>
               <label style={st.label}>Content (English)</label>
               <div style={st.quillWrapper}>
-                <ReactQuill theme="snow" value={form.content_en || ''} onChange={val => setForm({ ...form, content_en: val })} />
+                <ReactQuill theme="snow" value={form.content_en || ''} onChange={val => { if (val !== form.content_en) setForm(prev => ({ ...prev, content_en: val })) }} />
               </div>
             </div>
             <div style={st.field}>
               <label style={st.label}>Content (Vietnamese)</label>
               <div style={st.quillWrapper}>
-                <ReactQuill theme="snow" value={form.content_vi || ''} onChange={val => setForm({ ...form, content_vi: val })} />
+                <ReactQuill theme="snow" value={form.content_vi || ''} onChange={val => { if (val !== form.content_vi) setForm(prev => ({ ...prev, content_vi: val })) }} />
               </div>
             </div>
 
