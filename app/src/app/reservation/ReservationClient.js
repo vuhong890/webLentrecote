@@ -47,10 +47,15 @@ export default function ReservationClient({ initialPageSections = {} }) {
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'Failed to submit');
-      setSubmitted(true);
+      
       setPopupType('success');
       setPopupMessage(lang === 'vi' ? 'Đặt bàn thành công! Chúng tôi sẽ liên hệ lại với bạn sớm nhất.' : 'Reservation successful! We will contact you shortly.');
       setShowPopup(true);
+      
+      // Reset form
+      setFormData({
+        name: '', phone: '', email: '', date: '', time: '', guests: 2, note: ''
+      });
     } catch (err) {
       setError(err.message);
       setPopupType('error');
@@ -98,17 +103,10 @@ export default function ReservationClient({ initialPageSections = {} }) {
                 {t('reservationFormIntro')} <a href="tel:+84327157002">(+84) 32 7157 002</a>.
               </p>
 
-              {submitted ? (
-                <div className={styles.successMessage}>
-                  <span className={styles.successIcon}>✓</span>
-                  <h3>{t('reservationConfirmedTitle')}</h3>
-                  <p>{t('reservationConfirmedDesc')}</p>
-                </div>
-              ) : (
-                <form onSubmit={handleSubmit} className={styles.form}>
-                  <div className={styles.formRow}>
-                    <div className={styles.formGroup}>
-                      <label className={styles.formLabel}>{t('name')}</label>
+              <form onSubmit={handleSubmit} className={styles.form}>
+                <div className={styles.formRow}>
+                  <div className={styles.formGroup}>
+                    <label className={styles.formLabel}>{t('name')}</label>
                       <input type="text" name="name" value={formData.name} onChange={handleChange} className={styles.formInput} required placeholder={t('fullNamePlaceholder') || "Your name"} />
                     </div>
                     <div className={styles.formGroup}>
@@ -167,7 +165,6 @@ export default function ReservationClient({ initialPageSections = {} }) {
                     {loading ? t('submitting') : t('confirmReservation')}
                   </button>
                 </form>
-              )}
             </div>
 
             {/* Info Side */}

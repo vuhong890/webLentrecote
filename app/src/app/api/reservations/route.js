@@ -11,6 +11,12 @@ const serviceClient = createClient(supabaseUrl, serviceKey);
 // Client for checking user token
 const authClient = createClient(supabaseUrl, anonKey);
 
+function getAuthClient(token) {
+  return createClient(supabaseUrl, anonKey, {
+    global: { headers: { Authorization: `Bearer ${token}` } }
+  });
+}
+
 // GET reservations (admin — requires auth)
 export async function GET(request) {
   const token = request.headers.get('authorization')?.replace('Bearer ', '');
@@ -25,7 +31,7 @@ export async function GET(request) {
   const search = searchParams.get('search');
   const date = searchParams.get('date');
 
-  let query = serviceClient
+  let query = getAuthClient(token)
     .from('reservations')
     .select('*')
     .order('created_at', { ascending: false });
@@ -94,7 +100,7 @@ export async function PATCH(request) {
     return NextResponse.json({ error: 'Invalid status' }, { status: 400 });
   }
 
-  const { data, error } = await serviceClient
+  const { data, error } = await getAuthClient(token)
     .from('reservations')
     .update({ status })
     .eq('id', id)
