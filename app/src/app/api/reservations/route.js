@@ -1,28 +1,31 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL,
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
-);
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || anonKey;
 
-function authClient(token) {
-  return createClient(process.env.NEXT_PUBLIC_SUPABASE_URL, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY, {
-    global: { headers: { Authorization: `Bearer ${token}` } }
-  });
-}
+// Client for public insert (using service key to bypass RLS)
+const serviceClient = createClient(supabaseUrl, serviceKey);
+
+// Client for checking user token
+const authClient = createClient(supabaseUrl, anonKey);
 
 // GET reservations (admin — requires auth)
 export async function GET(request) {
   const token = request.headers.get('authorization')?.replace('Bearer ', '');
   if (!token) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
+  // Verify token
+  const { data: { user }, error: authError } = await authClient.auth.getUser(token);
+  if (authError || !user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+
   const { searchParams } = new URL(request.url);
   const status = searchParams.get('status');
   const search = searchParams.get('search');
   const date = searchParams.get('date');
 
-  let query = authClient(token)
+  let query = serviceClient
     .from('reservations')
     .select('*')
     .order('created_at', { ascending: false });
@@ -40,7 +43,7 @@ export async function GET(request) {
 export async function POST(request) {
   const body = await request.json();
 
-  const { data, error } = await supabase
+  const { data, error } = await serviceClient
     .from('reservations')
     .insert({
       full_name: body.full_name,
@@ -60,7 +63,7 @@ export async function POST(request) {
 
   // Send email notification (fire and forget)
   try {
-    const settingsRes = await supabase
+    const settingsRes = await serviceClient
       .from('site_settings')
       .select('value')
       .eq('key', 'notification_email')
@@ -82,6 +85,10 @@ export async function PATCH(request) {
   const token = request.headers.get('authorization')?.replace('Bearer ', '');
   if (!token) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
+  // Verify token
+  const { data: { user }, error: authError } = await authClient.auth.getUser(token);
+  if (authError || !user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+
   const body = await request.json();
   const { id, status } = body;
 
@@ -89,7 +96,7 @@ export async function PATCH(request) {
     return NextResponse.json({ error: 'Invalid status' }, { status: 400 });
   }
 
-  const { data, error } = await authClient(token)
+  const { data, error } = await serviceClient
     .from('reservations')
     .update({ status })
     .eq('id', id)
