@@ -73,7 +73,7 @@ export default function ReservationClient({ initialPageSections = {} }) {
         <div className={styles.heroContent}>
           <p className={styles.label}>{tm(hero, 'label') || 'RESERVATION'}</p>
           <h1>{tf(hero, 'title') || 'Secure Your Table'}</h1>
-          <p className={styles.subtitle} dangerouslySetInnerHTML={{ __html: tf(hero, 'content') || 'An unforgettable evening begins with a single step' }}></p>
+          <div className={`${styles.subtitle} richTextSubtitle`} dangerouslySetInnerHTML={{ __html: tf(hero, 'content') || 'An unforgettable evening begins with a single step' }}></div>
         </div>
       </section>
 

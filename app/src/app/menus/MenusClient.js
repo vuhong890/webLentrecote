@@ -148,7 +148,7 @@ export default function MenusClient({ initialCategories = [], allMenuItems = [],
         <div className={styles.heroContent}>
           <p className={styles.label}>{tm(hero, 'label') || 'THE MENU'}</p>
           <h1>{tf(hero, 'title') || 'Signature Selection'}</h1>
-          {tf(hero, 'content') && <p className={styles.subtitle} dangerouslySetInnerHTML={{ __html: tf(hero, 'content') }}></p>}
+          {tf(hero, 'content') && <div className={`${styles.subtitle} richTextSubtitle`} dangerouslySetInnerHTML={{ __html: tf(hero, 'content') }}></div>}
         </div>
       </section>
 

@@ -1,6 +1,10 @@
 'use client';
 import { useEffect, useState, useRef } from 'react';
 import { supabase } from '@/lib/supabase';
+import dynamic from 'next/dynamic';
+import 'react-quill/dist/quill.snow.css';
+
+const ReactQuill = dynamic(() => import('react-quill'), { ssr: false });
 
 export default function AdminPages() {
   const [activePage, setActivePage] = useState('home');
@@ -248,7 +252,7 @@ export default function AdminPages() {
     field: { marginBottom: '1rem' },
     label: { display: 'block', fontSize: '0.7rem', fontWeight: 700, color: 'rgba(255,255,255,0.5)', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: '0.3rem' },
     input: { width: '100%', padding: '0.6rem 0.75rem', background: '#0a0a0a', border: '1px solid rgba(255,255,255,0.15)', color: '#fff', fontSize: '0.9rem', fontFamily: 'var(--font-body)', outline: 'none', boxSizing: 'border-box' },
-    textarea: { width: '100%', padding: '0.6rem 0.75rem', background: '#0a0a0a', border: '1px solid rgba(255,255,255,0.15)', color: '#fff', fontSize: '0.9rem', fontFamily: 'var(--font-body)', outline: 'none', minHeight: 150, resize: 'vertical', boxSizing: 'border-box' },
+    quillWrapper: { background: '#fff', color: '#000', borderRadius: 4, overflow: 'hidden' },
     row: { display: 'flex', gap: '0.75rem', marginTop: '1.5rem' },
     saveBtn: { flex: 1, padding: '0.75rem', background: '#F0C75E', color: '#1a1a1a', border: 'none', fontWeight: 700, cursor: 'pointer' },
     cancelBtn: { flex: 1, padding: '0.75rem', background: 'rgba(255,255,255,0.06)', color: '#fff', border: 'none', cursor: 'pointer' },
@@ -349,12 +353,16 @@ export default function AdminPages() {
             </div>
 
             <div style={st.field}>
-              <label style={st.label}>Content (English) — supports HTML</label>
-              <textarea style={st.textarea} value={form.content_en || ''} onChange={e => setForm({ ...form, content_en: e.target.value })} />
+              <label style={st.label}>Content (English)</label>
+              <div style={st.quillWrapper}>
+                <ReactQuill theme="snow" value={form.content_en || ''} onChange={val => setForm({ ...form, content_en: val })} />
+              </div>
             </div>
             <div style={st.field}>
-              <label style={st.label}>Content (Vietnamese) — supports HTML</label>
-              <textarea style={st.textarea} value={form.content_vi || ''} onChange={e => setForm({ ...form, content_vi: e.target.value })} />
+              <label style={st.label}>Content (Vietnamese)</label>
+              <div style={st.quillWrapper}>
+                <ReactQuill theme="snow" value={form.content_vi || ''} onChange={val => setForm({ ...form, content_vi: val })} />
+              </div>
             </div>
 
             {/* Image Upload */}

@@ -340,6 +340,58 @@ textarea.form-input {
   background: var(--color-accent-hover);
 }
 
+/* ===== RICH TEXT STYLING ===== */
+.richTextContent {
+  color: var(--color-text-secondary);
+  font-family: var(--font-body);
+  font-size: 1.15rem;
+  line-height: 1.8;
+}
+
+.richTextContent p {
+  margin-bottom: 1.5rem;
+}
+
+.richTextContent p:last-child {
+  margin-bottom: 0;
+}
+
+.richTextContent ul,
+.richTextContent ol {
+  margin-left: 2rem;
+  margin-bottom: 1.5rem;
+  padding-left: 0;
+}
+
+.richTextContent li {
+  margin-bottom: 0.75rem;
+}
+
+.richTextContent strong {
+  font-weight: 700;
+  color: var(--color-text-primary);
+}
+
+.richTextContent em {
+  font-style: italic;
+}
+
+.richTextContent a {
+  color: var(--color-gold-dark);
+  text-decoration: underline;
+  text-underline-offset: 4px;
+  transition: color var(--transition-fast);
+}
+
+.richTextContent a:hover {
+  color: var(--color-orange);
+}
+
+.richTextSubtitle p {
+  margin: 0;
+  display: inline;
+}
+
 /* ===== RESPONSIVE ===== */
 @media (max-width: 1024px) {
   .grid-3 { grid-template-columns: repeat(2, 1fr); }

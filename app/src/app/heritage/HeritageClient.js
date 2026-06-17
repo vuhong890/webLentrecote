@@ -52,9 +52,7 @@ export default function HeritageClient({ initialSections = {} }) {
 
   // Parse paragraphs
   const storyContent = tf(story, 'content');
-  const storyParagraphs = storyContent
-    ? storyContent.split(/\n\n|\n/).filter(p => p.trim())
-    : lang === 'vi'
+  const storyFallback = lang === 'vi'
       ? ["L'Entrecôte ra đời từ một ý tưởng đơn giản nhưng cách mạng: chỉ phục vụ một món ăn, nhưng biến nó thành bữa ăn khó quên nhất trong đời bạn.",
          "Bí mật không chỉ nằm ở nước sốt bơ huyền thoại — công thức chỉ một vài người biết — mà còn ở triết lý rằng sự hoàn hảo đến từ sự tập trung tuyệt đối.",
          "Ngày nay, từ Paris đến Geneva, London đến Sài Gòn, L'Entrecôte tiếp tục chào đón hàng triệu thực khách mỗi năm."]
@@ -63,20 +61,11 @@ export default function HeritageClient({ initialSections = {} }) {
          "Today, from Paris to Geneva, London to Saigon, L'Entrecôte continues to welcome millions of guests each year, all seeking the same timeless experience."];
 
   const philContent = tf(philosophy, 'content');
-  const philosophyParagraphs = philContent
-    ? philContent.split(/\n\n|\n/).filter(p => p.trim())
-    : lang === 'vi'
+  const philFallback = lang === 'vi'
       ? ["Mỗi miếng entrecôte đến tay bạn đều được chọn lọc kỹ lưỡng từ những con bò ăn cỏ tự nhiên chất lượng cao nhất.",
          "Entrecôte — phần thịt giữa các xương sườn — được đánh giá cao nhờ vân mỡ đặc biệt."]
       : ["Every cut of entrecôte that reaches your plate has been carefully selected from the finest grass-fed cattle.",
          "The entrecôte — the \"cut between the ribs\" — is prized for its exceptional marbling."];
-
-  // Feature translations
-  const features = [
-    { icon: '🌿', title_en: 'Grass-Fed', title_vi: 'Bò Ăn Cỏ', desc_en: '100% grass-fed cattle from premium farms', desc_vi: '100% bò ăn cỏ tự nhiên từ trang trại cao cấp' },
-    { icon: '⏳', title_en: 'Aged to Perfection', title_vi: 'Ủ Hoàn Hảo', desc_en: 'Optimal aging for maximum flavour and tenderness', desc_vi: 'Ủ tối ưu để đạt hương vị và độ mềm tuyệt hảo' },
-    { icon: '👨‍🍳', title_en: "Chef's Precision", title_vi: 'Tay Nghề Đầu Bếp', desc_en: 'Cooked to your exact preference, every time', desc_vi: 'Nấu theo đúng sở thích của bạn, mọi lúc' },
-  ];
 
   return (
     <>
@@ -110,9 +99,11 @@ export default function HeritageClient({ initialSections = {} }) {
               <p className={styles.label}>{tm(story, 'label', lang === 'vi' ? 'CÂU CHUYỆN CỦA CHÚNG TÔI' : 'OUR STORY')}</p>
               <h2>{tf(story, 'title', lang === 'vi' ? 'Khởi Nguồn Tại Paris, 1959' : 'Born in Paris, 1959')}</h2>
               <div className={styles.goldDivider}></div>
-              {storyParagraphs.map((p, i) => (
-                <p key={i}>{p}</p>
-              ))}
+              {storyContent ? (
+                <div className="richTextContent" dangerouslySetInnerHTML={{ __html: storyContent }} />
+              ) : (
+                storyFallback.map((p, i) => <p key={i}>{p}</p>)
+              )}
             </div>
           </div>
         </div>
@@ -143,20 +134,11 @@ export default function HeritageClient({ initialSections = {} }) {
               <p className={styles.label}>{tm(philosophy, 'label', lang === 'vi' ? 'TRIẾT LÝ THỊ BÒ' : 'OUR BEEF PHILOSOPHY')}</p>
               <h2>{tf(philosophy, 'title', lang === 'vi' ? 'Nghệ Thuật Tuyển Chọn' : 'The Art of Selection')}</h2>
               <div className={styles.goldDivider}></div>
-              {philosophyParagraphs.map((p, i) => (
-                <p key={i}>{p}</p>
-              ))}
-              <div className={styles.philosophyFeatures}>
-                {features.map((f, i) => (
-                  <div key={i} className={styles.feature}>
-                    <span className={styles.featureIcon}>{f.icon}</span>
-                    <div>
-                      <h4>{lang === 'vi' ? f.title_vi : f.title_en}</h4>
-                      <p>{lang === 'vi' ? f.desc_vi : f.desc_en}</p>
-                    </div>
-                  </div>
-                ))}
-              </div>
+              {philContent ? (
+                <div className="richTextContent" dangerouslySetInnerHTML={{ __html: philContent }} />
+              ) : (
+                philFallback.map((p, i) => <p key={i}>{p}</p>)
+              )}
             </div>
             <div className={styles.philosophyImageCol}>
               <div className={styles.philosophyImage}>

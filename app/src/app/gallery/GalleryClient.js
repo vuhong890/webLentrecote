@@ -80,7 +80,7 @@ export default function GalleryClient({ initialImages = [], initialPageSections 
         <div className={styles.heroContent}>
           <p className={styles.label}>{tm(hero, 'label') || 'GALLERY'}</p>
           <h1>{tf(hero, 'title') || 'Visual Stories'}</h1>
-          <p className={styles.subtitle} dangerouslySetInnerHTML={{ __html: tf(hero, 'content') || 'A curated glimpse into the L\'Entrecôte experience' }}></p>
+          <div className={`${styles.subtitle} richTextSubtitle`} dangerouslySetInnerHTML={{ __html: tf(hero, 'content') || 'A curated glimpse into the L\'Entrecôte experience' }}></div>
         </div>
       </section>
 

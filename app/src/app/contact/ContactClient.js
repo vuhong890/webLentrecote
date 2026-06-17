@@ -55,7 +55,7 @@ export default function ContactClient({ initialPageSections = {} }) {
         <div className={styles.heroContent}>
           <p className={styles.label}>{tm(hero, 'label', t('contact').toUpperCase())}</p>
           <h1>{tf(hero, 'title', t('contact'))}</h1>
-          <p className={styles.subtitle} dangerouslySetInnerHTML={{ __html: tf(hero, 'content', lang === 'vi' ? "Chúng tôi rất mong nhận được phản hồi từ bạn." : "We'd love to hear from you.") }}></p>
+          <div className={`${styles.subtitle} richTextSubtitle`} dangerouslySetInnerHTML={{ __html: tf(hero, 'content', lang === 'vi' ? "Chúng tôi rất mong nhận được phản hồi từ bạn." : "We'd love to hear from you.") }}></div>
         </div>
       </section>
 
