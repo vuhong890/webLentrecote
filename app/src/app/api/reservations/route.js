@@ -143,11 +143,12 @@ export async function DELETE(request) {
   const { searchParams } = new URL(request.url);
   const id = searchParams.get('id');
 
-  const { error } = await getAuthClient(token)
+  const { error, count } = await getAuthClient(token)
     .from('reservations')
-    .delete()
+    .delete({ count: 'exact' })
     .eq('id', id);
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+  if (count === 0) return NextResponse.json({ error: 'Reservation not found or RLS blocked delete' }, { status: 403 });
   return NextResponse.json({ success: true });
 }
