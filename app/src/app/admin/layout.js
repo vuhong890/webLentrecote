@@ -12,6 +12,25 @@ export default function AdminLayout({ children }) {
   const router = useRouter();
   const pathname = usePathname();
 
+  // Apply full screen styles to hide public layout artifacts (padding top & background)
+  useEffect(() => {
+    const mainEl = document.querySelector('main');
+    if (mainEl) {
+      mainEl.style.paddingTop = '0';
+    }
+    document.body.style.margin = '0';
+    document.body.style.padding = '0';
+    document.body.style.overflow = 'hidden'; // Stop body scrolling
+    document.body.style.backgroundColor = '#0a0a0a'; // Match admin theme
+
+    return () => {
+      // Cleanup when leaving admin
+      if (mainEl) mainEl.style.paddingTop = 'var(--nav-height)';
+      document.body.style.overflow = 'auto';
+      document.body.style.backgroundColor = 'var(--color-bg)';
+    };
+  }, []);
+
   // Skip auth check on login page
   const isLoginPage = pathname === '/admin/login';
 
