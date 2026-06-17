@@ -346,6 +346,8 @@ textarea.form-input {
   font-family: var(--font-body);
   font-size: 1.15rem;
   line-height: 1.8;
+  word-break: break-word;
+  white-space: pre-wrap;
 }
 
 .richTextContent p {

@@ -202,10 +202,35 @@ select.formInput {
 .infoItem {
   display: flex;
   justify-content: space-between;
-  align-items: flex-start;
-  padding: 0.6rem 0;
-  font-size: 0.9rem;
-  color: rgba(255, 255, 255, 0.8);
+  margin-bottom: 0.75rem;
+  font-size: 1.125rem;
+}
+
+.bistroRichText p {
+  position: relative;
+  padding-left: 140px;
+  min-height: 1.5rem;
+  margin-bottom: 0.75rem;
+  font-size: 1.125rem;
+  text-align: right;
+}
+
+.bistroRichText strong {
+  position: absolute;
+  left: 0;
+  top: 0;
+  font-family: var(--font-headline);
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--color-gold);
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.bistroRichText hr {
+  margin: var(--space-md) 0;
+  border: none;
+  border-top: 1px solid rgba(255,255,255,0.1);
 }
 
 .infoLabel {

@@ -68,31 +68,37 @@ export default function ContactClient({ initialPageSections = {} }) {
               <h2>{tm(details, 'label', lang === 'vi' ? 'Vị Trí Của Chúng Tôi' : 'Our Location')}</h2>
               <div className={styles.goldDivider}></div>
 
-              <div className={styles.infoBlock}>
-                <h4>📍 {tf(details, 'title', "L'Entrecôte Saigon")}</h4>
-                <div dangerouslySetInnerHTML={{ __html: tf(details, 'content', lang === 'vi' 
-                  ? "<p>L'Entrecôte Social Meating</p><p>Tầng 2, Đồng Du</p><p>Phường Sài Gòn, TP. Hồ Chí Minh</p>" 
-                  : "<p>L'Entrecôte Social Meating</p><p>Level 2, Dong Du</p><p>Saigon Ward, Ho Chi Minh City</p>") 
-                }}></div>
-              </div>
+              {tf(details, 'content') ? (
+                <div className={`${styles.contactRichText} richTextContent`} dangerouslySetInnerHTML={{ __html: tf(details, 'content') }} />
+              ) : (
+                <>
+                  <div className={styles.infoBlock}>
+                    <h4>📍 {tf(details, 'title', "L'Entrecôte Saigon")}</h4>
+                    <div dangerouslySetInnerHTML={{ __html: lang === 'vi' 
+                      ? "<p>L'Entrecôte Social Meating</p><p>Tầng 2, Đồng Du</p><p>Phường Sài Gòn, TP. Hồ Chí Minh</p>" 
+                      : "<p>L'Entrecôte Social Meating</p><p>Level 2, Dong Du</p><p>Saigon Ward, Ho Chi Minh City</p>" 
+                    }}></div>
+                  </div>
 
-              <div className={styles.infoBlock}>
-                <h4>⏰ {t('openingHours')}</h4>
-                <p><strong>{t('lunch')}:</strong> 11:30 AM – 2:00 PM</p>
-                <p><strong>{t('dinner')}:</strong> 4:00 PM – 11:00 PM</p>
-                <p><strong>{t('lastOrder')}:</strong> 10:00 PM</p>
-                <p style={{ fontStyle: 'italic', marginTop: '0.25rem', opacity: 0.7 }}>{t('openDaily')}</p>
-              </div>
+                  <div className={styles.infoBlock}>
+                    <h4>⏰ {t('openingHours')}</h4>
+                    <p><strong>{t('lunch')}:</strong> 11:30 AM – 2:00 PM</p>
+                    <p><strong>{t('dinner')}:</strong> 4:00 PM – 11:00 PM</p>
+                    <p><strong>{t('lastOrder')}:</strong> 10:00 PM</p>
+                    <p style={{ fontStyle: 'italic', marginTop: '0.25rem', opacity: 0.7 }}>{t('openDaily')}</p>
+                  </div>
 
-              <div className={styles.infoBlock}>
-                <h4>📞 {t('hotline')}</h4>
-                <p><a href="tel:+84327157002">(+84) 32 7157 002</a></p>
-              </div>
+                  <div className={styles.infoBlock}>
+                    <h4>📞 {t('hotline')}</h4>
+                    <p><a href="tel:+84327157002">(+84) 32 7157 002</a></p>
+                  </div>
 
-              <div className={styles.infoBlock}>
-                <h4>📧 {t('email')}</h4>
-                <p><a href="mailto:booking@lentrecotevietnam.com">booking@lentrecotevietnam.com</a></p>
-              </div>
+                  <div className={styles.infoBlock}>
+                    <h4>📧 {t('email')}</h4>
+                    <p><a href="mailto:booking@lentrecotevietnam.com">booking@lentrecotevietnam.com</a></p>
+                  </div>
+                </>
+              )}
 
               <div className={styles.socialLinks}>
                 <a href="https://facebook.com" target="_blank" rel="noopener noreferrer" className={styles.socialBtn}>

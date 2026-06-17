@@ -175,27 +175,33 @@ export default function ReservationClient({ initialPageSections = {} }) {
                 <div className={styles.infoCardBody}>
                   <h3>{tf(bookingInfo, 'title') || 'The Bistro Experience'}</h3>
                   <div className={styles.goldDivider}></div>
-                  <div className={styles.infoItem}>
-                    <span className={styles.infoLabel}>{t('lunch').toUpperCase()}</span>
-                    <span>11:30 AM – 2:00 PM</span>
-                  </div>
-                  <div className={styles.infoItem}>
-                    <span className={styles.infoLabel}>{t('dinner').toUpperCase()}</span>
-                    <span>4:00 PM – 11:00 PM</span>
-                  </div>
-                  <div className={styles.infoItem}>
-                    <span className={styles.infoLabel}>{t('lastOrder').toUpperCase()}</span>
-                    <span>10:00 PM</span>
-                  </div>
-                  <div className={styles.infoDivider}></div>
-                  <div className={styles.infoItem}>
-                    <span className={styles.infoLabel}>{t('dressCode').toUpperCase()}</span>
-                    <span>{t('smartCasual')}</span>
-                  </div>
-                  <div className={styles.infoItem}>
-                    <span className={styles.infoLabel}>{t('location').toUpperCase()}</span>
-                    <span>Level 2, Dong Du,<br/>Saigon Ward, HCMC</span>
-                  </div>
+                  {tf(bookingInfo, 'content') ? (
+                    <div className={`${styles.bistroRichText} richTextContent`} dangerouslySetInnerHTML={{ __html: tf(bookingInfo, 'content') }} />
+                  ) : (
+                    <>
+                      <div className={styles.infoItem}>
+                        <span className={styles.infoLabel}>{t('lunch').toUpperCase()}</span>
+                        <span>11:30 AM – 2:00 PM</span>
+                      </div>
+                      <div className={styles.infoItem}>
+                        <span className={styles.infoLabel}>{t('dinner').toUpperCase()}</span>
+                        <span>4:00 PM – 11:00 PM</span>
+                      </div>
+                      <div className={styles.infoItem}>
+                        <span className={styles.infoLabel}>{t('lastOrder').toUpperCase()}</span>
+                        <span>10:00 PM</span>
+                      </div>
+                      <div className={styles.infoDivider}></div>
+                      <div className={styles.infoItem}>
+                        <span className={styles.infoLabel}>{t('dressCode').toUpperCase()}</span>
+                        <span>{t('smartCasual')}</span>
+                      </div>
+                      <div className={styles.infoItem}>
+                        <span className={styles.infoLabel}>{t('location').toUpperCase()}</span>
+                        <span>Level 2, Dong Du,<br/>Saigon Ward, HCMC</span>
+                      </div>
+                    </>
+                  )}
                 </div>
               </div>
             </div>

@@ -90,6 +90,42 @@
   color: var(--color-text-secondary);
 }
 
+.contactRichText h4 {
+  font-family: var(--font-headline);
+  font-size: 1.35rem;
+  color: var(--color-gold);
+  margin-bottom: 0.75rem;
+  font-weight: 400;
+}
+
+.contactRichText p {
+  color: var(--color-text-secondary);
+  font-size: 1.15rem;
+  line-height: 1.8;
+  margin-bottom: 0.25rem;
+}
+
+.contactRichText a {
+  color: #fff;
+  text-decoration: none;
+  transition: color 0.3s;
+}
+
+.contactRichText a:hover {
+  color: var(--color-gold);
+}
+
+.contactRichText strong {
+  font-weight: 700;
+  color: var(--color-text-primary);
+}
+
+.contactRichText br {
+  display: block;
+  margin-bottom: var(--space-md);
+  content: "";
+}
+
 .infoBlock a {
   color: var(--color-gold);
   font-size: 1.28rem;
