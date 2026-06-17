@@ -96,7 +96,7 @@ export async function PATCH(request) {
   const body = await request.json();
   const { id, status } = body;
 
-  if (!['pending', 'confirmed', 'cancelled'].includes(status)) {
+  if (!['pending', 'confirmed', 'cancelled', 'arrived'].includes(status)) {
     return NextResponse.json({ error: 'Invalid status' }, { status: 400 });
   }
 
@@ -108,4 +108,46 @@ export async function PATCH(request) {
     .single();
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
   return NextResponse.json(data);
+}
+
+// PUT update reservation (admin edit all fields)
+export async function PUT(request) {
+  const token = request.headers.get('authorization')?.replace('Bearer ', '');
+  if (!token) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+
+  const { data: { user }, error: authError } = await authClient.auth.getUser(token);
+  if (authError || !user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+
+  const body = await request.json();
+  const { id, ...updateData } = body;
+
+  const { data, error } = await getAuthClient(token)
+    .from('reservations')
+    .update(updateData)
+    .eq('id', id)
+    .select()
+    .single();
+
+  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+  return NextResponse.json(data);
+}
+
+// DELETE reservation (admin)
+export async function DELETE(request) {
+  const token = request.headers.get('authorization')?.replace('Bearer ', '');
+  if (!token) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+
+  const { data: { user }, error: authError } = await authClient.auth.getUser(token);
+  if (authError || !user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+
+  const { searchParams } = new URL(request.url);
+  const id = searchParams.get('id');
+
+  const { error } = await getAuthClient(token)
+    .from('reservations')
+    .delete()
+    .eq('id', id);
+
+  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+  return NextResponse.json({ success: true });
 }
