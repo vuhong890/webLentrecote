@@ -12,6 +12,7 @@ export default function AdminReservations() {
   const [editingRes, setEditingRes] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [form, setForm] = useState({});
+  const [deleteConfirmId, setDeleteConfirmId] = useState(null);
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -45,9 +46,13 @@ export default function AdminReservations() {
     loadReservations();
   }
 
-  async function handleDelete(id) {
-    if (!confirm('Are you sure you want to delete this reservation?')) return;
-    const res = await fetch(`/api/reservations?id=${id}`, {
+  function confirmDelete(id) {
+    setDeleteConfirmId(id);
+  }
+
+  async function executeDelete() {
+    if (!deleteConfirmId) return;
+    const res = await fetch(`/api/reservations?id=${deleteConfirmId}`, {
       method: 'DELETE',
       headers: { Authorization: `Bearer ${token}` }
     });
@@ -55,6 +60,7 @@ export default function AdminReservations() {
       const data = await res.json();
       alert('Error: ' + (data.error || 'Failed to delete'));
     }
+    setDeleteConfirmId(null);
     loadReservations();
   }
 
@@ -172,7 +178,7 @@ export default function AdminReservations() {
                   {r.status !== 'cancelled' && <button title="Cancel" style={s.btn('cancelled')} onClick={() => updateStatus(r.id, 'cancelled')}>✕</button>}
                   {r.status !== 'pending' && <button title="Pending" style={s.btn('pending')} onClick={() => updateStatus(r.id, 'pending')}>↺</button>}
                   <button title="Edit" style={{...s.btn('pending'), background: '#333', color: '#fff', marginLeft: '0.5rem'}} onClick={() => openEdit(r)}>✎</button>
-                  <button title="Delete" style={{...s.btn('cancelled'), background: '#333'}} onClick={() => handleDelete(r.id)}>🗑</button>
+                  <button title="Delete" style={{...s.btn('cancelled'), background: '#333'}} onClick={() => confirmDelete(r.id)}>🗑</button>
                 </div>
               </td>
             </tr>
@@ -216,6 +222,19 @@ export default function AdminReservations() {
                 <button type="submit" style={{ flex: 1, padding: '0.75rem', background: '#F0C75E', color: '#000', border: 'none', cursor: 'pointer', fontWeight: 'bold' }}>Save</button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+      {/* Delete Confirmation Modal */}
+      {deleteConfirmId && (
+        <div style={s.overlay} onClick={() => setDeleteConfirmId(null)}>
+          <div style={{ ...s.modal, maxWidth: '400px', textAlign: 'center' }} onClick={e => e.stopPropagation()}>
+            <h2 style={{ fontFamily: 'var(--font-headline)', color: '#fff', marginBottom: '1rem' }}>Delete Reservation?</h2>
+            <p style={{ color: 'rgba(255,255,255,0.7)', marginBottom: '2rem' }}>This action cannot be undone. Are you sure you want to delete this reservation?</p>
+            <div style={{ display: 'flex', gap: '1rem' }}>
+              <button onClick={() => setDeleteConfirmId(null)} style={{ flex: 1, padding: '0.75rem', background: '#333', color: '#fff', border: 'none', cursor: 'pointer' }}>Cancel</button>
+              <button onClick={executeDelete} style={{ flex: 1, padding: '0.75rem', background: '#ef4444', color: '#fff', border: 'none', cursor: 'pointer', fontWeight: 'bold' }}>Delete</button>
+            </div>
           </div>
         </div>
       )}
