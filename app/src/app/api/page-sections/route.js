@@ -35,6 +35,10 @@ export async function PUT(request) {
   const body = await request.json();
   const { id, ...updates } = body;
 
+  // Sanitize content to remove non-breaking spaces that cause ugly word breaks
+  if (updates.content_en) updates.content_en = updates.content_en.replace(/&nbsp;/g, ' ');
+  if (updates.content_vi) updates.content_vi = updates.content_vi.replace(/&nbsp;/g, ' ');
+
   const { data, error } = await authClient(token)
     .from('page_sections')
     .update({ ...updates, updated_at: new Date().toISOString() })
@@ -51,6 +55,10 @@ export async function POST(request) {
   if (!token) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
   const body = await request.json();
+  
+  if (body.content_en) body.content_en = body.content_en.replace(/&nbsp;/g, ' ');
+  if (body.content_vi) body.content_vi = body.content_vi.replace(/&nbsp;/g, ' ');
+
   const { data, error } = await authClient(token)
     .from('page_sections')
     .insert(body)

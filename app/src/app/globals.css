@@ -85,6 +85,25 @@ ul, ol {
   list-style: none;
 }
 
+.richTextSubtitle {
+  max-width: 600px;
+  margin: 0 auto;
+  line-height: 1.6;
+}
+
+.richTextContent p {
+  margin-bottom: 1.25rem;
+  line-height: 1.8;
+  text-align: justify;
+  hyphens: auto;
+  -webkit-hyphens: auto;
+  word-spacing: -0.05em;
+}
+
+.richTextContent p:last-child {
+  margin-bottom: 0;
+}
+
 img {
   max-width: 100%;
   height: auto;
