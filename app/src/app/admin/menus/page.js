@@ -63,7 +63,11 @@ export default function AdminMenus() {
     fd.append('bucket', 'menu-images');
     const res = await fetch('/api/upload', { method: 'POST', headers: { Authorization: `Bearer ${token}` }, body: fd });
     const data = await res.json();
-    if (data.url) setForm(prev => ({ ...prev, image_url: data.url }));
+    if (data.url) {
+      setForm(prev => ({ ...prev, image_url: data.url }));
+    } else {
+      alert('Upload failed: ' + (data.error || 'Unknown error'));
+    }
     setUploading(false);
   }
 
