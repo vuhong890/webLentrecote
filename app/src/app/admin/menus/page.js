@@ -11,6 +11,7 @@ export default function AdminMenus() {
   const [form, setForm] = useState({ name_en: '', name_vi: '', description_en: '', description_vi: '', price: '', image_url: '', badge: '', category_id: '', is_available: true });
   const [uploading, setUploading] = useState(false);
   const [token, setToken] = useState('');
+  const [deleteConfirmId, setDeleteConfirmId] = useState(null);
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -82,9 +83,18 @@ export default function AdminMenus() {
     loadItems();
   }
 
-  async function handleDelete(id) {
-    if (!confirm('Delete this item?')) return;
-    await fetch(`/api/menu-items?id=${id}`, { method: 'DELETE', headers: { Authorization: `Bearer ${token}` } });
+  function confirmDelete(id) {
+    setDeleteConfirmId(id);
+  }
+
+  async function executeDelete() {
+    if (!deleteConfirmId) return;
+    const res = await fetch(`/api/menu-items?id=${deleteConfirmId}`, { method: 'DELETE', headers: { Authorization: `Bearer ${token}` } });
+    if (!res.ok) {
+      const data = await res.json();
+      alert('Delete failed: ' + (data.error || 'Unknown error'));
+    }
+    setDeleteConfirmId(null);
     loadItems();
   }
 
@@ -162,7 +172,7 @@ export default function AdminMenus() {
               <td style={s.td}>
                 <div style={s.actions}>
                   <button style={s.editBtn} onClick={() => openEdit(item)}>Edit</button>
-                  <button style={s.delBtn} onClick={() => handleDelete(item.id)}>Delete</button>
+                  <button style={s.delBtn} onClick={() => confirmDelete(item.id)}>Delete</button>
                 </div>
               </td>
             </tr>
@@ -233,6 +243,20 @@ export default function AdminMenus() {
             <div style={s.formActions}>
               <button style={s.saveBtn} onClick={handleSave}>SAVE</button>
               <button style={s.cancelBtn} onClick={() => setShowForm(false)}>CANCEL</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Delete Confirmation Modal */}
+      {deleteConfirmId && (
+        <div style={s.overlay} onClick={() => setDeleteConfirmId(null)}>
+          <div style={{ ...s.modal, maxWidth: '400px', textAlign: 'center' }} onClick={e => e.stopPropagation()}>
+            <h2 style={{ fontFamily: 'var(--font-headline)', color: '#fff', marginBottom: '1rem' }}>Delete Item?</h2>
+            <p style={{ color: 'rgba(255,255,255,0.7)', marginBottom: '2rem', fontSize: '0.9rem' }}>This action cannot be undone. Are you sure you want to delete this menu item?</p>
+            <div style={{ display: 'flex', gap: '1rem' }}>
+              <button onClick={() => setDeleteConfirmId(null)} style={{ flex: 1, padding: '0.75rem', background: '#333', color: '#fff', border: 'none', cursor: 'pointer', fontWeight: 700 }}>CANCEL</button>
+              <button onClick={executeDelete} style={{ flex: 1, padding: '0.75rem', background: '#ef4444', color: '#fff', border: 'none', cursor: 'pointer', fontWeight: 700 }}>DELETE</button>
             </div>
           </div>
         </div>

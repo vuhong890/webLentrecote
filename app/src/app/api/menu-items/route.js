@@ -70,7 +70,8 @@ export async function DELETE(request) {
 
   const { searchParams } = new URL(request.url);
   const id = searchParams.get('id');
-  const { error } = await authClient(token).from('menu_items').delete().eq('id', id);
+  const { error, count } = await authClient(token).from('menu_items').delete({ count: 'exact' }).eq('id', id);
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+  if (count === 0) return NextResponse.json({ error: 'Item not found or RLS blocked delete' }, { status: 403 });
   return NextResponse.json({ success: true });
 }
