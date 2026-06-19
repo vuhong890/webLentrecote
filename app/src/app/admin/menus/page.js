@@ -95,7 +95,7 @@ export default function AdminMenus() {
     addBtn: { padding: '0.6rem 1.25rem', background: '#F0C75E', color: '#1a1a1a', border: 'none', fontWeight: 700, fontSize: '0.8rem', letterSpacing: '0.1em', cursor: 'pointer' },
     catBar: { display: 'flex', gap: '0.5rem', marginBottom: '1.5rem', flexWrap: 'wrap' },
     catBtn: { padding: '0.5rem 1rem', background: '#1a1a1a', border: '1px solid rgba(255,255,255,0.1)', color: 'rgba(255,255,255,0.6)', fontSize: '0.75rem', fontWeight: 700, cursor: 'pointer', textTransform: 'uppercase', letterSpacing: '0.1em' },
-    catActive: { background: '#F0C75E', color: '#1a1a1a', borderColor: '#F0C75E' },
+    catActive: { background: '#F0C75E', color: '#1a1a1a', border: '1px solid #F0C75E' },
     table: { width: '100%', borderCollapse: 'collapse' },
     th: { textAlign: 'left', padding: '0.75rem', fontSize: '0.7rem', fontWeight: 700, color: 'rgba(255,255,255,0.5)', textTransform: 'uppercase', letterSpacing: '0.1em', borderBottom: '1px solid rgba(255,255,255,0.06)' },
     td: { padding: '0.75rem', fontSize: '0.875rem', borderBottom: '1px solid rgba(255,255,255,0.06)' },
