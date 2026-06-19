@@ -111,7 +111,7 @@ export default function MenusClient({ initialCategories = [], allMenuItems = [],
           {activeSlug === 'drinks' ? (
             <div className={styles.drinkMenuImage}>
               <Image
-                src="/drink_menu_wine_list.png"
+                src={lang === 'vi' ? '/drink_vn.png' : '/drink_en.png'}
                 alt="Drink Menu & Wine List"
                 width={1035}
                 height={1300}
