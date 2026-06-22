@@ -31,23 +31,14 @@ export default function HeritageClient({ initialSections = {} }) {
   const philosophy = s.beef_philosophy || {};
 
   // Parse timeline items
-  const defaultTimeline = [
-    { year: '1959', text_en: "L'Entrecôte opens its doors in Paris, serving one perfect dish.", text_vi: "L'Entrecôte mở cửa tại Paris, phục vụ một món ăn hoàn hảo duy nhất." },
-    { year: '1980', text_en: 'Expansion across France — Geneva, Bordeaux, and beyond.', text_vi: 'Mở rộng khắp nước Pháp — Geneva, Bordeaux, và nhiều nơi khác.' },
-    { year: '2000', text_en: 'International presence grows with locations across Europe.', text_vi: 'Hiện diện quốc tế phát triển với các chi nhánh khắp châu Âu.' },
-    { year: '2024', text_en: "L'Entrecôte Social Meating arrives in Saigon, Ho Chi Minh City.", text_vi: "L'Entrecôte Social Meating đến Sài Gòn, TP. Hồ Chí Minh." },
-  ];
-
-  let timelineItems = defaultTimeline;
-  const timelineContent = tf(timeline, 'content');
-  if (timelineContent) {
-    const parsed = timelineContent.match(/(\d{4}):\s*([^.]+\.)/g);
-    if (parsed && parsed.length > 0) {
-      timelineItems = parsed.map(item => {
-        const match = item.match(/(\d{4}):\s*(.+)/);
-        return match ? { year: match[1], [`text_${lang}`]: match[2].trim() } : null;
-      }).filter(Boolean);
-    }
+  let timelineItems = timeline?.metadata?.items;
+  if (!timelineItems || timelineItems.length === 0) {
+    timelineItems = [
+      { icon_url: '/globe.svg', title: 'BORN IN PARIS', text_en: "A timeless recipe is created in Paris, built on a simple idea: the finest cuts, a signature sauce, and a complete experience served with warmth and consistency.", text_vi: "Một công thức vượt thời gian ra đời tại Paris, dựa trên một ý tưởng đơn giản: những lát cắt hảo hạng nhất, nước sốt đặc trưng, và một trải nghiệm trọn vẹn phục vụ với sự ấm áp và nhất quán." },
+      { icon_url: '/globe.svg', title: 'AN ICON IS BORN', text_en: "The Steak Frites ritual becomes a beloved tradition, welcoming locals and visitors alike to enjoy the same experience, every time.", text_vi: "Nghi thức Bít tết khoai tây chiên trở thành một truyền thống được yêu thích, chào đón người dân địa phương và du khách tận hưởng cùng một trải nghiệm, mỗi lần." },
+      { icon_url: '/globe.svg', title: 'LOVED AROUND THE WORLD', text_en: "From Paris to major cities across the globe, the tradition travels, bringing people together around perfectly cooked steak, crispy fries and good company.", text_vi: "Từ Paris đến các thành phố lớn trên toàn cầu, truyền thống du ngoạn, gắn kết mọi người xung quanh món bít tết nấu hoàn hảo, khoai tây chiên giòn và những người bạn đồng hành tốt." },
+      { icon_url: '/globe.svg', title: 'HERE IN SAIGON', text_en: "Today, we carry this heritage forward in the heart of Ho Chi Minh City — staying true to the original spirit while embracing the vibrant energy of Saigon.", text_vi: "Hôm nay, chúng tôi mang di sản này về trung tâm Thành phố Hồ Chí Minh — trung thành với tinh thần nguyên bản trong khi nắm bắt năng lượng sôi động của Sài Gòn." },
+    ];
   }
 
   // Parse paragraphs
@@ -82,19 +73,10 @@ export default function HeritageClient({ initialSections = {} }) {
         </div>
       </section>
 
-      {/* Our Story */}
+      {/* Our Story & Timeline */}
       <section className={styles.storySection}>
         <div className="container">
           <div className={styles.storyGrid}>
-            <div className={styles.storyImageCol}>
-              <div className={styles.storyImage}>
-                {story.image_url ? (
-                  <Image src={story.image_url} alt="Our Story" fill sizes="(max-width: 768px) 100vw, 50vw" quality={75} placeholder="blur" blurDataURL={BLUR_PLACEHOLDER} style={{ objectFit: 'cover', objectPosition: 'center' }} />
-                ) : (
-                  <div className={styles.placeholderEmoji}>🏰</div>
-                )}
-              </div>
-            </div>
             <div className={styles.storyTextCol}>
               <p className={styles.label}>{tm(story, 'label', lang === 'vi' ? 'CÂU CHUYỆN CỦA CHÚNG TÔI' : 'OUR STORY')}</p>
               <h2>{tf(story, 'title', lang === 'vi' ? 'Khởi Nguồn Tại Paris, 1959' : 'Born in Paris, 1959')}</h2>
@@ -104,24 +86,39 @@ export default function HeritageClient({ initialSections = {} }) {
               ) : (
                 storyFallback.map((p, i) => <p key={i}>{p}</p>)
               )}
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Timeline */}
-      <section className={styles.timelineSection}>
-        <div className="container">
-          <p className={styles.label} style={{ textAlign: 'center' }}>{tm(timeline, 'label', lang === 'vi' ? 'HÀNH TRÌNH' : 'THE JOURNEY')}</p>
-          <h2 className={styles.timelineTitle}>{tf(timeline, 'title', lang === 'vi' ? 'Cột Mốc Qua Thời Gian' : 'Milestones Through Time')}</h2>
-          <div className={styles.timeline}>
-            {timelineItems.map((item, i) => (
-              <div key={i} className={styles.timelineItem}>
-                <div className={styles.timelineYear}>{item.year}</div>
-                <div className={styles.timelineDot}></div>
-                <div className={styles.timelineText}>{item[`text_${lang}`] || item.text_en || item.text}</div>
+              
+              {/* Timeline Items directly below story text */}
+              <div className={styles.miniTimeline}>
+                {timelineItems.map((item, i) => (
+                  <div key={i} className={styles.miniTimelineItem}>
+                    <div className={styles.miniTimelineIconWrap}>
+                      {item.icon_url && <Image src={item.icon_url} alt={item.title || "Timeline icon"} width={60} height={60} className={styles.miniTimelineIcon} />}
+                    </div>
+                    <div className={styles.miniTimelineContent}>
+                      <span className={styles.miniTimelineTitle}>{item[`title_${lang}`] || item.title_en || item.title}</span>
+                      <span className={styles.miniTimelineText}>{item[`text_${lang}`] || item.text_en || item.text}</span>
+                    </div>
+                  </div>
+                ))}
               </div>
-            ))}
+            </div>
+            
+            <div className={styles.storyImageCol}>
+              <div className={styles.storyImageTop}>
+                <Image src={story.metadata?.images?.[0] || story.image_url || "/placeholder1.jpg"} alt="Our Story Main" fill sizes="(max-width: 768px) 100vw, 50vw" quality={80} placeholder="blur" blurDataURL={BLUR_PLACEHOLDER} style={{ objectFit: 'cover', objectPosition: 'center' }} />
+              </div>
+              <div className={styles.storyImageBottomRow}>
+                <div className={styles.storyImageSmall}>
+                   <Image src={story.metadata?.images?.[1] || "/placeholder2.jpg"} alt="Story 1" fill sizes="(max-width: 768px) 33vw, 16vw" quality={75} style={{ objectFit: 'cover', objectPosition: 'center' }} />
+                </div>
+                <div className={styles.storyImageSmall}>
+                   <Image src={story.metadata?.images?.[2] || "/placeholder3.jpg"} alt="Story 2" fill sizes="(max-width: 768px) 33vw, 16vw" quality={75} style={{ objectFit: 'cover', objectPosition: 'center' }} />
+                </div>
+                <div className={styles.storyImageSmall}>
+                   <Image src={story.metadata?.images?.[3] || "/placeholder4.jpg"} alt="Story 3" fill sizes="(max-width: 768px) 33vw, 16vw" quality={75} style={{ objectFit: 'cover', objectPosition: 'center' }} />
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </section>

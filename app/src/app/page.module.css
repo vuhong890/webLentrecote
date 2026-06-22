@@ -126,19 +126,19 @@
 
 /* ===== SECTION 2: HERITAGE ===== */
 .heritageSection {
-  padding: var(--space-3xl) 0;
+  padding: var(--space-xl) 0;
   background: var(--color-bg-section);
 }
 
 .heritageGrid {
   display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: var(--space-2xl);
+  grid-template-columns: 4.5fr 5.5fr;
+  gap: var(--space-xl);
   align-items: center;
 }
 
 .heritageTextCol {
-  padding-right: var(--space-lg);
+  padding-right: 0;
 }
 
 .heritageTextCol .sectionTitle {
@@ -154,67 +154,98 @@
 
 .heritageImageCol {
   position: relative;
-  height: 500px;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
 }
 
-.heritageImageLarge {
+.heritageImageTop {
+  position: relative;
   width: 100%;
-  height: 100%;
+  aspect-ratio: 16 / 9;
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.heritageImageBottomRow {
   display: flex;
-  align-items: center;
-  justify-content: center;
+  gap: 0.75rem;
+  width: 100%;
+}
+
+.heritageImageSmall {
+  position: relative;
+  flex: 1;
+  aspect-ratio: 1 / 1;
+  border-radius: 4px;
+  overflow: hidden;
 }
 
 /* Mini Timeline */
 .miniTimeline {
   display: flex;
   flex-direction: column;
-  gap: 0.75rem;
-  margin-bottom: var(--space-md);
-  padding-left: 0.25rem;
+  gap: 1.5rem;
+  margin-top: 2rem;
+  margin-bottom: 2rem;
 }
 
 .miniTimelineItem {
   display: flex;
-  align-items: center;
-  gap: 0.75rem;
-}
-
-.miniTimelineYear {
-  font-family: var(--font-headline);
-  font-size: 1.5rem;
-  font-weight: 700;
-  color: var(--color-gold);
-  min-width: 48px;
-  text-align: right;
-}
-
-.miniTimelineDot {
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  background: var(--color-gold);
-  flex-shrink: 0;
+  align-items: flex-start;
+  gap: 1.5rem;
   position: relative;
 }
 
-.miniTimelineDot::after {
+.miniTimelineItem:not(:last-child)::after {
   content: '';
   position: absolute;
-  top: 8px;
-  left: 50%;
-  transform: translateX(-50%);
+  top: 60px;
+  left: 30px;
+  bottom: -1.5rem;
   width: 1px;
-  height: 20px;
-  background: rgba(240, 199, 94, 0.2);
+  background: rgba(175, 128, 0, 0.3);
 }
 
-.miniTimelineItem:last-child .miniTimelineDot::after {
-  display: none;
+.miniTimelineIconWrap {
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  border: 1px solid rgba(175, 128, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  background: var(--color-bg-section);
+  position: relative;
+  z-index: 2;
+  overflow: hidden;
+}
+
+.miniTimelineIcon {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.miniTimelineContent {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  padding-top: 0.25rem;
+}
+
+.miniTimelineTitle {
+  font-family: var(--font-headline);
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--color-gold-dark);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
 }
 
 .miniTimelineText {
-  font-size: 1.275rem;
+  font-size: 0.95rem;
   color: var(--color-text-secondary);
   line-height: 1.5;
 }

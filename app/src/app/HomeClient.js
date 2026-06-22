@@ -94,23 +94,14 @@ export default function HomeClient({ initialHomeSections, initialHeritageSection
   const galleryPreviewMeta = galleryPreview.metadata || {};
 
   // Parse timeline items
-  const defaultTimeline = [
-    { year: '1959', text: "L'Entrecôte opens its doors in Paris." },
-    { year: '1980', text: 'Expansion across France and Europe.' },
-    { year: '2000', text: 'International presence grows worldwide.' },
-    { year: '2024', text: "L'Entrecôte arrives in Saigon." },
-  ];
-
-  let timelineItems = defaultTimeline;
-  const tContent = tf(timeline, 'content');
-  if (tContent) {
-    const parsed = tContent.match(/(\d{4}):\s*([^.]+\.)/g);
-    if (parsed && parsed.length > 0) {
-      timelineItems = parsed.map(item => {
-        const match = item.match(/(\d{4}):\s*(.+)/);
-        return match ? { year: match[1], text: match[2].trim() } : null;
-      }).filter(Boolean);
-    }
+  let timelineItems = timeline?.metadata?.items;
+  if (!timelineItems || timelineItems.length === 0) {
+    timelineItems = [
+      { icon_url: '/globe.svg', title: 'BORN IN PARIS', text: "A timeless recipe is created in Paris, built on a simple idea: the finest cuts, a signature sauce, and a complete experience served with warmth and consistency." },
+      { icon_url: '/globe.svg', title: 'AN ICON IS BORN', text: "The Steak Frites ritual becomes a beloved tradition, welcoming locals and visitors alike to enjoy the same experience, every time." },
+      { icon_url: '/globe.svg', title: 'LOVED AROUND THE WORLD', text: "From Paris to major cities across the globe, the tradition travels, bringing people together around perfectly cooked steak, crispy fries and good company." },
+      { icon_url: '/globe.svg', title: 'HERE IN SAIGON', text: "Today, we carry this heritage forward in the heart of Ho Chi Minh City — staying true to the original spirit while embracing the vibrant energy of Saigon." },
+    ];
   }
 
   return (
@@ -169,20 +160,25 @@ export default function HomeClient({ initialHomeSections, initialHeritageSection
               <p className={styles.sectionLabel}>{tm(heritagePreview, 'label') || 'OUR HERITAGE'}</p>
               <h2 className={styles.sectionTitle}>{tf(heritagePreview, 'title') || 'A Legacy of Timeless Flavour'}</h2>
               <div className={styles.goldDivider}></div>
-              <p className={styles.heritageText}>
-                {tf(heritagePreview, 'content')
-                  ? tf(heritagePreview, 'content').split(/\n\n|\n/)[0]
-                  : "Born in Paris in 1959, L'Entrecôte has captivated diners with a singular vision: one perfect dish, executed to perfection."
-                }
-              </p>
+              {tf(heritagePreview, 'content') ? (
+                <div className={`${styles.heritageText} richTextContent`} dangerouslySetInnerHTML={{ __html: tf(heritagePreview, 'content') }} />
+              ) : (
+                <p className={styles.heritageText}>
+                  Born in Paris in 1959, L'Entrecôte has captivated diners with a singular vision: one perfect dish, executed to perfection.
+                </p>
+              )}
 
               {/* Mini Timeline */}
               <div className={styles.miniTimeline}>
                 {timelineItems.slice(0, 4).map((item, i) => (
                   <div key={i} className={styles.miniTimelineItem}>
-                    <span className={styles.miniTimelineYear}>{item.year}</span>
-                    <span className={styles.miniTimelineDot}></span>
-                    <span className={styles.miniTimelineText}>{item.text}</span>
+                    <div className={styles.miniTimelineIconWrap}>
+                      {item.icon_url && <Image src={item.icon_url} alt={item.title || "Timeline icon"} width={60} height={60} className={styles.miniTimelineIcon} />}
+                    </div>
+                    <div className={styles.miniTimelineContent}>
+                      <span className={styles.miniTimelineTitle}>{item[`title_${lang}`] || item.title_en || item.title}</span>
+                      <span className={styles.miniTimelineText}>{item[`text_${lang}`] || item.text_en || item.text}</span>
+                    </div>
                   </div>
                 ))}
               </div>
@@ -192,12 +188,19 @@ export default function HomeClient({ initialHomeSections, initialHeritageSection
               </Link>
             </div>
             <div className={styles.heritageImageCol}>
-              <div className={styles.heritageImageLarge}>
-                {heritageStory.image_url || heritagePreview.image_url ? (
-                  <Image src={heritagePreview.image_url || heritageStory.image_url} alt="Heritage" fill sizes="(max-width: 768px) 100vw, 50vw" quality={75} placeholder="blur" blurDataURL={BLUR_PLACEHOLDER} style={{ objectFit: 'cover', objectPosition: 'center' }} />
-                ) : (
-                  <div className={styles.imagePlaceholderText}>🏛️</div>
-                )}
+              <div className={styles.heritageImageTop}>
+                <Image src={heritagePreviewMeta.images?.[0] || heritageStory.image_url || "/placeholder1.jpg"} alt="Heritage Main" fill sizes="(max-width: 768px) 100vw, 50vw" quality={80} placeholder="blur" blurDataURL={BLUR_PLACEHOLDER} style={{ objectFit: 'cover', objectPosition: 'center' }} />
+              </div>
+              <div className={styles.heritageImageBottomRow}>
+                <div className={styles.heritageImageSmall}>
+                   <Image src={heritagePreviewMeta.images?.[1] || galleryPicks[0]?.gallery_image?.image_url || "/placeholder2.jpg"} alt="Gallery 1" fill sizes="(max-width: 768px) 33vw, 16vw" quality={75} style={{ objectFit: 'cover', objectPosition: 'center' }} />
+                </div>
+                <div className={styles.heritageImageSmall}>
+                   <Image src={heritagePreviewMeta.images?.[2] || galleryPicks[1]?.gallery_image?.image_url || "/placeholder3.jpg"} alt="Gallery 2" fill sizes="(max-width: 768px) 33vw, 16vw" quality={75} style={{ objectFit: 'cover', objectPosition: 'center' }} />
+                </div>
+                <div className={styles.heritageImageSmall}>
+                   <Image src={heritagePreviewMeta.images?.[3] || galleryPicks[2]?.gallery_image?.image_url || "/placeholder4.jpg"} alt="Gallery 3" fill sizes="(max-width: 768px) 33vw, 16vw" quality={75} style={{ objectFit: 'cover', objectPosition: 'center' }} />
+                </div>
               </div>
             </div>
           </div>

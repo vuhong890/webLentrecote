@@ -54,31 +54,44 @@
 
 /* Story Section */
 .storySection {
-  padding: var(--space-3xl) 0;
+  padding: var(--space-xl) 0;
+  background: var(--color-bg-section);
 }
 
 .storyGrid {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
-  gap: var(--space-2xl);
+  grid-template-columns: 4.5fr 5.5fr;
+  gap: var(--space-xl);
   align-items: center;
 }
 
 .storyImageCol {
-  height: 500px;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
 }
 
-.storyImage {
+.storyImageTop {
   position: relative;
   width: 100%;
-  height: 100%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  aspect-ratio: 16 / 9;
+  border-radius: 4px;
+  overflow: hidden;
 }
 
-.placeholderEmoji {
-  font-size: 5rem;
+.storyImageBottomRow {
+  display: flex;
+  gap: 0.75rem;
+  width: 100%;
+}
+
+.storyImageSmall {
+  position: relative;
+  flex: 1;
+  aspect-ratio: 1 / 1;
+  border-radius: 4px;
+  overflow: hidden;
 }
 
 .storyTextCol h2 {
@@ -101,87 +114,72 @@
 }
 
 /* Timeline */
-.timelineSection {
-  padding: var(--space-3xl) 0;
-  background: var(--color-bg-section);
+.miniTimeline {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  margin-top: 2rem;
+  margin-bottom: 2rem;
 }
 
-.timelineTitle {
-  text-align: center;
-  font-size: 2.375rem;
-  margin-bottom: var(--space-2xl);
-}
-
-.timeline {
+.miniTimelineItem {
+  display: flex;
+  align-items: flex-start;
+  gap: 1.5rem;
   position: relative;
-  max-width: 800px;
-  margin: 0 auto;
 }
 
-.timeline::before {
+.miniTimelineItem:not(:last-child)::after {
   content: '';
   position: absolute;
-  left: 50%;
-  top: 0;
-  bottom: 0;
-  width: 2px;
-  background: var(--color-gold);
-  transform: translateX(-50%);
+  top: 60px;
+  left: 30px;
+  bottom: -1.5rem;
+  width: 1px;
+  background: rgba(175, 128, 0, 0.3);
 }
 
-.timelineItem {
+.miniTimelineIconWrap {
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  border: 1px solid rgba(175, 128, 0, 0.5);
   display: flex;
   align-items: center;
-  margin-bottom: var(--space-xl);
-  position: relative;
-}
-
-.timelineItem:nth-child(odd) {
-  flex-direction: row;
-}
-
-.timelineItem:nth-child(even) {
-  flex-direction: row-reverse;
-}
-
-.timelineYear {
-  flex: 1;
-  font-family: var(--font-headline);
-  font-size: 2rem;
-  font-weight: 700;
-  color: var(--color-gold);
-  text-align: right;
-  padding-right: var(--space-lg);
-}
-
-.timelineItem:nth-child(even) .timelineYear {
-  text-align: left;
-  padding-right: 0;
-  padding-left: var(--space-lg);
-}
-
-.timelineDot {
-  width: 16px;
-  height: 16px;
-  border-radius: 50%;
-  background: var(--color-gold);
-  border: 3px solid var(--color-bg-section);
-  z-index: 1;
+  justify-content: center;
   flex-shrink: 0;
+  background: var(--color-bg);
+  position: relative;
+  z-index: 2;
+  overflow: hidden;
 }
 
-.timelineText {
-  flex: 1;
-  font-size: 1.25rem;
-  line-height: 1.6;
+.miniTimelineIcon {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.miniTimelineContent {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  padding-top: 0.25rem;
+}
+
+.miniTimelineTitle {
+  font-family: var(--font-headline);
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--color-gold-dark);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.miniTimelineText {
+  font-size: 0.95rem;
   color: var(--color-text-secondary);
-  padding-left: var(--space-lg);
-}
-
-.timelineItem:nth-child(even) .timelineText {
-  padding-left: 0;
-  padding-right: var(--space-lg);
-  text-align: right;
+  line-height: 1.5;
 }
 
 /* Philosophy Section */

@@ -62,7 +62,13 @@ export default function AdminPages() {
       return;
     }
     setEditing(section);
-    setForm({ ...section });
+    if (section.section_key === 'timeline') {
+      const items = section.metadata?.items || [];
+      const paddedItems = [0, 1, 2, 3].map(i => items[i] || { icon_url: '', title_en: '', title_vi: '', text_en: '', text_vi: '' });
+      setForm({ ...section, metadata: { ...section.metadata, items: paddedItems } });
+    } else {
+      setForm({ ...section, metadata: section.metadata || {} });
+    }
   }
 
   async function handleSave() {
@@ -80,7 +86,7 @@ export default function AdminPages() {
   }
 
   async function uploadFile(file) {
-    if (!file) return;
+    if (!file) return null;
     setUploading(true);
     const fd = new FormData();
     fd.append('file', file);
@@ -88,15 +94,23 @@ export default function AdminPages() {
     try {
       const res = await fetch('/api/upload', { method: 'POST', headers: { Authorization: `Bearer ${token}` }, body: fd });
       const data = await res.json();
-      if (data.url) setForm(prev => ({ ...prev, image_url: data.url }));
-      else alert('Upload failed: ' + (data.error || 'Unknown error'));
-    } catch (err) { alert('Upload error: ' + err.message); }
-    setUploading(false);
+      setUploading(false);
+      if (data.url) return data.url;
+      alert('Upload failed: ' + (data.error || 'Unknown error'));
+      return null;
+    } catch (err) { 
+      setUploading(false);
+      alert('Upload error: ' + err.message); 
+      return null;
+    }
   }
 
-  function handleImageUpload(e) {
+  async function handleImageUpload(e) {
     const file = e.target.files?.[0];
-    if (file) uploadFile(file);
+    if (file) {
+      const url = await uploadFile(file);
+      if (url) setForm(prev => ({ ...prev, image_url: url }));
+    }
   }
 
   function handleDrop(e) {
@@ -105,7 +119,9 @@ export default function AdminPages() {
     setDragOver(false);
     const file = e.dataTransfer.files?.[0];
     if (file && file.type.startsWith('image/')) {
-      uploadFile(file);
+      uploadFile(file).then(url => {
+        if (url) setForm(prev => ({ ...prev, image_url: url }));
+      });
     } else {
       alert('Please drop an image file (JPG, PNG, WebP)');
     }
@@ -126,6 +142,64 @@ export default function AdminPages() {
   function handleRemoveImage() {
     setForm(prev => ({ ...prev, image_url: '' }));
     if (fileInputRef.current) fileInputRef.current.value = '';
+  }
+
+  // Multi-image upload handlers (for heritage_preview)
+  async function handleMultiImageUpload(e, index) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const url = await uploadFile(file);
+    if (url) {
+      setForm(prev => {
+        const newImages = [...(prev.metadata?.images || [])];
+        newImages[index] = url;
+        return { ...prev, metadata: { ...prev.metadata, images: newImages } };
+      });
+    }
+  }
+
+  function handleRemoveMultiImage(index) {
+    setForm(prev => {
+      const newImages = [...(prev.metadata?.images || [])];
+      newImages[index] = '';
+      return { ...prev, metadata: { ...prev.metadata, images: newImages } };
+    });
+  }
+
+  // Timeline handlers
+  function handleAddTimelineItem() {
+    setForm(prev => ({
+      ...prev,
+      metadata: {
+        ...prev.metadata,
+        items: [...(prev.metadata?.items || []), { icon_url: '', title: '', text: '' }]
+      }
+    }));
+  }
+
+  function handleUpdateTimelineItem(index, field, value) {
+    setForm(prev => {
+      const newItems = [...(prev.metadata?.items || [])];
+      newItems[index] = { ...newItems[index], [field]: value };
+      return { ...prev, metadata: { ...prev.metadata, items: newItems } };
+    });
+  }
+
+  async function handleTimelineIconUpload(e, index) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const url = await uploadFile(file);
+    if (url) handleUpdateTimelineItem(index, 'icon_url', url);
+    e.target.value = null; // Reset input to allow re-uploading same file
+  }
+
+  function handleRemoveTimelineItem(index) {
+    if (!confirm('Remove this timeline item?')) return;
+    setForm(prev => {
+      const newItems = [...(prev.metadata?.items || [])];
+      newItems.splice(index, 1);
+      return { ...prev, metadata: { ...prev.metadata, items: newItems } };
+    });
   }
 
   // ---- Signature Items ----
@@ -342,78 +416,204 @@ export default function AdminPages() {
       ))}
 
       {/* ====== SECTION EDIT MODAL (non-signature, non-gallery) ====== */}
-      {editing && !sigMode && !galleryMode && (
-        <div style={st.overlay} onClick={closeAll}>
-          <div style={st.modal} onClick={e => e.stopPropagation()}>
-            <h2 style={{ fontFamily: 'var(--font-headline)', fontSize: '1.25rem', marginBottom: '1.5rem', color: '#fff' }}>Edit Section: {editing.section_key}</h2>
+      {editing && !sigMode && !galleryMode && (() => {
+        const k = editing.section_key;
+        const isTimeline = k === 'timeline';
+        const showLabel = ['hero', 'introduction', 'heritage_preview', 'our_story', 'beef_philosophy'].includes(k);
+        const showSubtitle = ['hero'].includes(k);
+        const showTitle = !isTimeline;
+        const usePlainTextContent = ['hero', 'cta_banner'].includes(k);
+        const showContent = !isTimeline;
+        const showSingleImage = ['hero', 'cta_banner', 'beef_philosophy'].includes(k);
+        const showGridImages = ['heritage_preview', 'our_story'].includes(k);
 
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
-              <div style={st.field}><label style={st.label}>Title (EN)</label><input style={st.input} value={form.title_en || ''} onChange={e => setForm({ ...form, title_en: e.target.value })} /></div>
-              <div style={st.field}><label style={st.label}>Title (VI)</label><input style={st.input} value={form.title_vi || ''} onChange={e => setForm({ ...form, title_vi: e.target.value })} /></div>
-            </div>
+        return (
+          <div style={st.overlay} onClick={closeAll}>
+            <div style={st.modal} onClick={e => e.stopPropagation()}>
+              <h2 style={{ fontFamily: 'var(--font-headline)', fontSize: '1.25rem', marginBottom: '1.5rem', color: '#fff' }}>Edit Section: {k}</h2>
 
-            <div style={st.field}>
-              <label style={st.label}>Content (English)</label>
-              <div style={st.quillWrapper}>
-                <ReactQuill theme="snow" value={form.content_en || ''} onChange={val => { if (val !== form.content_en) setForm(prev => ({ ...prev, content_en: val })) }} />
-              </div>
-            </div>
-            <div style={st.field}>
-              <label style={st.label}>Content (Vietnamese)</label>
-              <div style={st.quillWrapper}>
-                <ReactQuill theme="snow" value={form.content_vi || ''} onChange={val => { if (val !== form.content_vi) setForm(prev => ({ ...prev, content_vi: val })) }} />
-              </div>
-            </div>
+              {showLabel && (
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginBottom: '1rem' }}>
+                  <div style={st.field}><label style={st.label}>Label (EN)</label><input style={st.input} placeholder="e.g. OUR HERITAGE" value={form.metadata?.label_en || form.metadata?.label || ''} onChange={e => setForm({ ...form, metadata: { ...form.metadata, label_en: e.target.value } })} /></div>
+                  <div style={st.field}><label style={st.label}>Label (VI)</label><input style={st.input} placeholder="e.g. DI SẢN" value={form.metadata?.label_vi || ''} onChange={e => setForm({ ...form, metadata: { ...form.metadata, label_vi: e.target.value } })} /></div>
+                </div>
+              )}
 
-            {/* Image Upload */}
-            <div style={st.field}>
-              <label style={st.label}>Section Image</label>
-              {form.image_url ? (
-                <div>
-                  <img src={form.image_url} alt="Section" style={st.imagePreview} />
-                  <div style={{ display: 'flex', gap: '0.5rem', marginTop: '0.5rem' }}>
-                    <button style={st.removeBtn} onClick={handleRemoveImage}>Remove Image</button>
-                    <label style={{ ...st.removeBtn, background: '#2980b9', display: 'inline-flex', alignItems: 'center', cursor: 'pointer' }}>
-                      Change Image
-                      <input ref={fileInputRef} type="file" accept="image/*" onChange={handleImageUpload} style={{ display: 'none' }} />
-                    </label>
+              {showSubtitle && (
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginBottom: '1rem' }}>
+                  <div style={st.field}><label style={st.label}>Subtitle (EN) - For Heritage Hero</label><input style={st.input} value={form.metadata?.subtitle_en || form.metadata?.subtitle || ''} onChange={e => setForm({ ...form, metadata: { ...form.metadata, subtitle_en: e.target.value } })} /></div>
+                  <div style={st.field}><label style={st.label}>Subtitle (VI)</label><input style={st.input} value={form.metadata?.subtitle_vi || ''} onChange={e => setForm({ ...form, metadata: { ...form.metadata, subtitle_vi: e.target.value } })} /></div>
+                </div>
+              )}
+
+              {showTitle && (
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginBottom: '1rem' }}>
+                  <div style={st.field}><label style={st.label}>Title (EN)</label><input style={st.input} value={form.title_en || ''} onChange={e => setForm({ ...form, title_en: e.target.value })} /></div>
+                  <div style={st.field}><label style={st.label}>Title (VI)</label><input style={st.input} value={form.title_vi || ''} onChange={e => setForm({ ...form, title_vi: e.target.value })} /></div>
+                </div>
+              )}
+
+              {isTimeline && (
+                <div style={{ marginBottom: '2rem' }}>
+                  <label style={{ ...st.label, fontSize: '1rem', color: '#fff', marginBottom: '1rem' }}>Timeline Items (Fixed 4)</label>
+                  {(form.metadata?.items || []).map((item, idx) => (
+                    <div key={idx} style={{ background: 'rgba(255,255,255,0.02)', padding: '1rem', border: '1px solid rgba(255,255,255,0.1)', marginBottom: '1rem', position: 'relative' }}>
+                      <div style={{ position: 'absolute', top: 0, left: 0, background: '#F0C75E', color: '#000', padding: '0.1rem 0.5rem', fontSize: '0.7rem', fontWeight: 'bold' }}>{idx + 1}</div>
+                      <div style={{ display: 'flex', gap: '1rem', alignItems: 'flex-start', marginTop: '0.5rem' }}>
+                        <div style={{ width: '80px', flexShrink: 0, textAlign: 'center' }}>
+                          {item.icon_url ? (
+                            <div style={{ position: 'relative', width: '60px', height: '60px', margin: '0 auto', border: '1px solid #F0C75E', borderRadius: '50%', padding: '10px' }}>
+                              <img src={item.icon_url} alt="icon" style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
+                            </div>
+                          ) : (
+                            <div style={{ width: '60px', height: '60px', margin: '0 auto', border: '1px dashed rgba(255,255,255,0.2)', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>?</div>
+                          )}
+                          <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'center', marginTop: '0.5rem' }}>
+                            <label style={{ fontSize: '0.7rem', color: '#F0C75E', cursor: 'pointer' }}>
+                              Upload
+                              <input type="file" accept="image/*" onChange={e => handleTimelineIconUpload(e, idx)} style={{ display: 'none' }} />
+                            </label>
+                            {item.icon_url && (
+                              <span style={{ fontSize: '0.7rem', color: '#ef4444', cursor: 'pointer' }} onClick={() => handleUpdateTimelineItem(idx, 'icon_url', '')}>
+                                Remove
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                        
+                        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.5rem' }}>
+                            <input style={st.input} placeholder="Title EN (e.g. BORN IN PARIS)" value={item.title_en || item.title || ''} onChange={e => handleUpdateTimelineItem(idx, 'title_en', e.target.value)} />
+                            <input style={st.input} placeholder="Title VI" value={item.title_vi || ''} onChange={e => handleUpdateTimelineItem(idx, 'title_vi', e.target.value)} />
+                          </div>
+                          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.5rem' }}>
+                            <textarea style={{ ...st.input, minHeight: '80px', resize: 'vertical' }} placeholder="Description EN" value={item.text_en || item.text || ''} onChange={e => handleUpdateTimelineItem(idx, 'text_en', e.target.value)} />
+                            <textarea style={{ ...st.input, minHeight: '80px', resize: 'vertical' }} placeholder="Description VI" value={item.text_vi || ''} onChange={e => handleUpdateTimelineItem(idx, 'text_vi', e.target.value)} />
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {showContent && (
+                usePlainTextContent ? (
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginBottom: '1rem' }}>
+                    <div style={st.field}>
+                      <label style={st.label}>Content / Subtitle (English) - Plain Text</label>
+                      <textarea style={{ ...st.input, minHeight: '100px', resize: 'vertical' }} value={form.content_en || ''} onChange={e => setForm(prev => ({ ...prev, content_en: e.target.value }))} />
+                    </div>
+                    <div style={st.field}>
+                      <label style={st.label}>Content / Subtitle (Vietnamese) - Plain Text</label>
+                      <textarea style={{ ...st.input, minHeight: '100px', resize: 'vertical' }} value={form.content_vi || ''} onChange={e => setForm(prev => ({ ...prev, content_vi: e.target.value }))} />
+                    </div>
+                  </div>
+                ) : (
+                  <>
+                    <div style={st.field}>
+                      <label style={st.label}>Content (English)</label>
+                      <div style={st.quillWrapper}>
+                        <ReactQuill theme="snow" value={form.content_en || ''} onChange={val => { if (val !== form.content_en) setForm(prev => ({ ...prev, content_en: val })) }} />
+                      </div>
+                    </div>
+                    <div style={st.field}>
+                      <label style={st.label}>Content (Vietnamese)</label>
+                      <div style={st.quillWrapper}>
+                        <ReactQuill theme="snow" value={form.content_vi || ''} onChange={val => { if (val !== form.content_vi) setForm(prev => ({ ...prev, content_vi: val })) }} />
+                      </div>
+                    </div>
+                  </>
+                )
+              )}
+
+              {/* Image Upload */}
+              {showGridImages && (
+                <div style={st.field}>
+                  <label style={st.label}>Heritage Grid Images (1 Large, 3 Small)</label>
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1fr', gap: '0.5rem' }}>
+                    {[0, 1, 2, 3].map(idx => {
+                      const imgUrl = form.metadata?.images?.[idx];
+                      return (
+                        <div key={idx} style={{ background: '#0a0a0a', border: '1px solid rgba(255,255,255,0.1)', padding: '0.5rem', textAlign: 'center' }}>
+                          <div style={{ fontSize: '0.7rem', color: 'rgba(255,255,255,0.5)', marginBottom: '0.5rem' }}>
+                            {idx === 0 ? 'Image 1 (Top Large)' : `Image ${idx + 1} (Small)`}
+                          </div>
+                          {imgUrl ? (
+                            <>
+                              <img src={imgUrl} alt={`Grid ${idx}`} style={{ width: '100%', height: '80px', objectFit: 'cover', marginBottom: '0.5rem' }} />
+                              <div style={{ display: 'flex', gap: '0.25rem', justifyContent: 'center' }}>
+                                <label style={{ ...st.removeBtn, background: '#2980b9', fontSize: '0.65rem', padding: '0.25rem 0.5rem', cursor: 'pointer' }}>
+                                  Change
+                                  <input type="file" accept="image/*" onChange={e => handleMultiImageUpload(e, idx)} style={{ display: 'none' }} />
+                                </label>
+                                <button style={{ ...st.removeBtn, fontSize: '0.65rem', padding: '0.25rem 0.5rem' }} onClick={() => handleRemoveMultiImage(idx)}>X</button>
+                              </div>
+                            </>
+                          ) : (
+                            <label style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '80px', border: '1px dashed rgba(255,255,255,0.2)', cursor: 'pointer', color: '#F0C75E', fontSize: '0.75rem' }}>
+                              + Upload
+                              <input type="file" accept="image/*" onChange={e => handleMultiImageUpload(e, idx)} style={{ display: 'none' }} />
+                            </label>
+                          )}
+                        </div>
+                      );
+                    })}
                   </div>
                 </div>
-              ) : (
-                <div
-                  style={{
-                    ...st.uploadArea,
-                    borderColor: dragOver ? '#F0C75E' : 'rgba(255,255,255,0.15)',
-                    background: dragOver ? 'rgba(240,199,94,0.05)' : '#0a0a0a',
-                  }}
-                  onClick={() => fileInputRef.current?.click()}
-                  onDrop={handleDrop}
-                  onDragOver={handleDragOver}
-                  onDragLeave={handleDragLeave}
-                >
-                  <input ref={fileInputRef} type="file" accept="image/*" onChange={handleImageUpload} style={{ display: 'none' }} />
-                  {uploading ? (
-                    <p style={{ color: '#F0C75E', margin: 0 }}>Uploading...</p>
+              )}
+
+              {showSingleImage && (
+                <div style={st.field}>
+                  <label style={st.label}>Section Image</label>
+                  {form.image_url ? (
+                    <div>
+                      <img src={form.image_url} alt="Section" style={st.imagePreview} />
+                      <div style={{ display: 'flex', gap: '0.5rem', marginTop: '0.5rem' }}>
+                        <button style={st.removeBtn} onClick={handleRemoveImage}>Remove Image</button>
+                        <label style={{ ...st.removeBtn, background: '#2980b9', display: 'inline-flex', alignItems: 'center', cursor: 'pointer' }}>
+                          Change Image
+                          <input ref={fileInputRef} type="file" accept="image/*" onChange={handleImageUpload} style={{ display: 'none' }} />
+                        </label>
+                      </div>
+                    </div>
                   ) : (
-                    <>
-                      <p style={{ color: dragOver ? '#F0C75E' : 'rgba(255,255,255,0.5)', margin: '0 0 0.5rem 0', fontSize: '2rem' }}>📁</p>
-                      <p style={{ color: dragOver ? '#F0C75E' : 'rgba(255,255,255,0.5)', margin: 0, fontSize: '0.85rem' }}>
-                        {dragOver ? 'Drop image here' : 'Click or drag & drop to upload an image'}
-                      </p>
-                      <p style={{ color: 'rgba(255,255,255,0.25)', margin: '0.25rem 0 0 0', fontSize: '0.7rem' }}>JPG, PNG, WebP (max 5MB)</p>
-                    </>
+                    <div
+                      style={{
+                        ...st.uploadArea,
+                        borderColor: dragOver ? '#F0C75E' : 'rgba(255,255,255,0.15)',
+                        background: dragOver ? 'rgba(240,199,94,0.05)' : '#0a0a0a',
+                      }}
+                      onClick={() => fileInputRef.current?.click()}
+                      onDrop={handleDrop}
+                      onDragOver={handleDragOver}
+                      onDragLeave={handleDragLeave}
+                    >
+                      <input ref={fileInputRef} type="file" accept="image/*" onChange={handleImageUpload} style={{ display: 'none' }} />
+                      {uploading ? (
+                        <p style={{ color: '#F0C75E', margin: 0 }}>Uploading...</p>
+                      ) : (
+                        <>
+                          <p style={{ color: dragOver ? '#F0C75E' : 'rgba(255,255,255,0.5)', margin: '0 0 0.5rem 0', fontSize: '2rem' }}>📁</p>
+                          <p style={{ color: dragOver ? '#F0C75E' : 'rgba(255,255,255,0.5)', margin: 0, fontSize: '0.85rem' }}>
+                            {dragOver ? 'Drop image here' : 'Click or drag & drop to upload an image'}
+                          </p>
+                          <p style={{ color: 'rgba(255,255,255,0.25)', margin: '0.25rem 0 0 0', fontSize: '0.7rem' }}>JPG, PNG, WebP (max 5MB)</p>
+                        </>
+                      )}
+                    </div>
                   )}
                 </div>
               )}
-            </div>
 
-            <div style={st.row}>
-              <button style={st.saveBtn} onClick={handleSave} disabled={saving}>{saving ? 'Saving...' : 'SAVE'}</button>
-              <button style={st.cancelBtn} onClick={closeAll}>CANCEL</button>
+              <div style={st.row}>
+                <button style={st.saveBtn} onClick={handleSave} disabled={saving}>{saving ? 'Saving...' : 'SAVE'}</button>
+                <button style={st.cancelBtn} onClick={closeAll}>CANCEL</button>
+              </div>
             </div>
           </div>
-        </div>
-      )}
+        );
+      })()}
 
       {/* ====== SIGNATURE ITEMS MANAGER MODAL ====== */}
       {editing && sigMode && !showMenuPicker && (
