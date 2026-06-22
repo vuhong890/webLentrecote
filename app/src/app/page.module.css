@@ -43,13 +43,16 @@
 
 .heroTitle {
   font-family: var(--font-headline);
-  font-size: 4.8rem;
+  font-size: 2.75rem;
   font-weight: 700;
   font-style: italic;
   color: #FFFFFF;
-  line-height: 1.05;
+  line-height: 1.2;
   margin-bottom: var(--space-md);
   text-shadow: 0 2px 6px rgba(0,0,0,0.9), 0 8px 24px rgba(0,0,0,0.7);
+  max-width: 900px;
+  margin-left: auto;
+  margin-right: auto;
 }
 
 .heroSubtitle {
@@ -778,6 +781,10 @@
 
 /* ===== RESPONSIVE ===== */
 @media (max-width: 900px) {
+  .heroTitle {
+    font-size: 1.9rem;
+  }
+
   .heritageGrid { grid-template-columns: 1fr; }
   .heritageTextCol { padding-right: 0; }
   .heritageImageCol { height: 300px; }
@@ -799,6 +806,10 @@
 }
 
 @media (max-width: 600px) {
+  .heroTitle {
+    font-size: 1.5rem;
+  }
+
   .galleryGrid {
     grid-template-columns: 1fr;
     max-width: 400px;

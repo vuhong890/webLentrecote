@@ -31,16 +31,7 @@ export default function Footer({ settings = {} }) {
         <div className={styles.topSection}>
           {/* Info Column */}
           <div className={styles.infoColumn}>
-            <div className={styles.brandName}>
-              <Image
-                src="/logo_text.png"
-                alt="L'Entrecôte Social Meating"
-                width={200}
-                height={50}
-                className={styles.footerLogo}
-              />
-            </div>
-            <div className={styles.divider}></div>
+            <h3 className={styles.mapTitle}>FIND US AT</h3>
             <div className={styles.details}>
               <p>Level 2, Dong Du, Saigon Ward</p>
               <p>Ho Chi Minh City</p>
