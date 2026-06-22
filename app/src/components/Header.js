@@ -39,6 +39,7 @@ export default function Header() {
 
   const isHomePage = pathname === '/';
 
+  // Basic scrolled state for header background
   useEffect(() => {
     const handleScroll = () => {
       setScrolled(window.scrollY > 50);
@@ -47,66 +48,54 @@ export default function Header() {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
-  // Scroll spy — only on home page
+  // Robust Scroll Spy for Home Page
   useEffect(() => {
     if (!isHomePage) return;
 
-    const sectionIds = Object.keys(sectionToNav);
-    const observers = [];
+    const handleScrollSpy = () => {
+      const sectionIds = ['home', 'menus', 'heritage', 'reservation', 'gallery', 'contact'];
+      let currentSection = 'home';
 
-    // Track which sections are visible and how much
-    const visibleSections = new Map();
-
-    const handleIntersect = (entries) => {
-      entries.forEach(entry => {
-        if (entry.isIntersecting) {
-          visibleSections.set(entry.target.id, entry.intersectionRatio);
-        } else {
-          visibleSections.delete(entry.target.id);
-        }
-      });
-
-      // Find the section with highest visibility
-      let maxRatio = 0;
-      let topSection = 'home';
-
-      visibleSections.forEach((ratio, id) => {
-        if (ratio > maxRatio) {
-          maxRatio = ratio;
-          topSection = id;
-        }
-      });
-
-      // If at very top of page, always show HOME
+      // If at very top, force home
       if (window.scrollY < 100) {
-        topSection = 'home';
+        setActiveSection('/');
+        return;
       }
 
-      const navHref = sectionToNav[topSection];
-      if (navHref) {
-        setActiveSection(navHref);
+      // Find the section that is currently in view
+      // We check in reverse so the lowest section on the page that crossed the threshold wins
+      for (let i = sectionIds.length - 1; i >= 0; i--) {
+        const id = sectionIds[i];
+        const el = document.getElementById(id);
+        if (el) {
+          const rect = el.getBoundingClientRect();
+          // If the top of the section is above the middle of the screen
+          if (rect.top <= window.innerHeight * 0.5) {
+            currentSection = id;
+            break;
+          }
+        }
+      }
+
+      // Check if user has scrolled to the absolute bottom of the page
+      if (window.innerHeight + window.scrollY >= document.documentElement.scrollHeight - 50) {
+        currentSection = 'contact';
+      }
+
+      if (sectionToNav[currentSection]) {
+        setActiveSection(sectionToNav[currentSection]);
       }
     };
 
-    // Create observer with multiple thresholds for precision
-    const observer = new IntersectionObserver(handleIntersect, {
-      rootMargin: '-80px 0px -40% 0px', // account for header height, focus on upper portion
-      threshold: [0, 0.1, 0.2, 0.3, 0.5, 0.7, 1],
-    });
-
-    // Observe all sections
-    sectionIds.forEach(id => {
-      const el = document.getElementById(id);
-      if (el) {
-        observer.observe(el);
-        observers.push(el);
-      }
-    });
-
+    // Run once after a short delay to ensure DOM is ready when returning from another page
+    const timeoutId = setTimeout(handleScrollSpy, 100);
+    
+    window.addEventListener('scroll', handleScrollSpy, { passive: true });
     return () => {
-      observer.disconnect();
+      clearTimeout(timeoutId);
+      window.removeEventListener('scroll', handleScrollSpy);
     };
-  }, [isHomePage]);
+  }, [isHomePage, pathname]);
 
   useEffect(() => {
     setMobileOpen(false);
@@ -129,10 +118,10 @@ export default function Header() {
   // Determine which nav link is active
   const getActiveClass = (linkHref) => {
     if (isHomePage) {
-      // On home page, use scroll spy
+      // On home page, use our scroll spy state
       return activeSection === linkHref ? styles.active : '';
     }
-    // On other pages, use pathname
+    // Simple exact match logic for other pages
     return pathname === linkHref ? styles.active : '';
   };
 

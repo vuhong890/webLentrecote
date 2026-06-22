@@ -2,6 +2,8 @@
 import { useState, useEffect, useCallback } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
+import useEmblaCarousel from 'embla-carousel-react';
+import Autoplay from 'embla-carousel-autoplay';
 import SignatureCarousel from '@/components/SignatureCarousel';
 import { useLanguage, useTranslation } from '@/lib/i18n';
 import styles from './page.module.css';
@@ -24,6 +26,8 @@ export default function HomeClient({ initialHomeSections, initialHeritageSection
   const heritageSections = initialHeritageSections || {};
   const signatureItems = initialSignatureItems || [];
   const galleryPicks = initialGalleryPicks || [];
+
+  const [testimonialsRef] = useEmblaCarousel({ loop: true, align: 'start' }, [Autoplay({ delay: 5000, stopOnInteraction: false })]);
 
   const tf = (obj, field) => obj ? obj[`${field}_${lang}`] || obj[`${field}_en`] || '' : '';
   const tm = (obj, key) => obj?.metadata ? obj.metadata[`${key}_${lang}`] || obj.metadata[`${key}_en`] || '' : '';
@@ -123,10 +127,10 @@ export default function HomeClient({ initialHomeSections, initialHeritageSection
           </p>
           <div className={styles.heroCta}>
             <Link href="/reservation" className="btn btn-primary">
-              BOOK A TABLE
+              {t('bookTable')}
             </Link>
-            <Link href="/menus" className="btn btn-outline">
-              EXPLORE MENU
+            <Link href="/menus" className="btn btn-primary">
+              {t('exploreMenu')}
             </Link>
           </div>
         </div>
@@ -146,7 +150,7 @@ export default function HomeClient({ initialHomeSections, initialHeritageSection
           />
           <div style={{ textAlign: 'center', marginTop: '2rem' }}>
             <Link href="/menus" className="btn btn-dark">
-              EXPLORE FULL MENU
+              {t('exploreFullMenu')}
             </Link>
           </div>
         </div>
@@ -184,7 +188,7 @@ export default function HomeClient({ initialHomeSections, initialHeritageSection
               </div>
 
               <Link href="/heritage" className="btn btn-dark" style={{ marginTop: '1.5rem' }}>
-                DISCOVER OUR STORY
+                {t('discoverStory')}
               </Link>
             </div>
             <div className={styles.heritageImageCol}>
@@ -243,12 +247,40 @@ export default function HomeClient({ initialHomeSections, initialHeritageSection
             </div>
           </div>
           <Link href="/reservation" className="btn btn-primary" style={{ marginTop: '2rem' }}>
-            RESERVE YOUR TABLE
+            {t('reserveTable')}
           </Link>
         </div>
       </section>
 
-      {/* ==================== SECTION 5: GALLERY PREVIEW ==================== */}
+      {/* ==================== SECTION 5: TESTIMONIALS ==================== */}
+      {homeSections.testimonials && homeSections.testimonials.metadata?.items?.length > 0 && (
+        <section className={styles.testimonialsSection}>
+          <div className="container">
+            <h2 className={styles.testimonialsTitle}>{tf(homeSections.testimonials, 'title') || 'WHAT OUR GUESTS SAY'}</h2>
+            <div className={styles.embla} ref={testimonialsRef}>
+              <div className={styles.emblaContainer}>
+                {homeSections.testimonials.metadata.items.map((item, idx) => (
+                  <div className={styles.emblaSlide} key={idx}>
+                    <div className={styles.testimonialCard}>
+                      <div className={styles.testimonialStars}>
+                        {'★'.repeat(item.stars || 5)}{'☆'.repeat(5 - (item.stars || 5))}
+                      </div>
+                      <div className={styles.testimonialText}>
+                        {item[`text_${lang}`] || item.text_en || ''}
+                      </div>
+                      <div className={styles.testimonialSource}>
+                        {item[`source_${lang}`] || item.source_en || ''}
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </section>
+      )}
+
+      {/* ==================== SECTION 6: GALLERY PREVIEW ==================== */}
       <section id="gallery" className={styles.gallerySection}>
         <div className="container">
           <p className={styles.sectionLabel}>{tm(galleryPreview, 'label') || t('gallery').toUpperCase()}</p>
@@ -285,7 +317,7 @@ export default function HomeClient({ initialHomeSections, initialHeritageSection
           )}
           <div style={{ textAlign: 'center', marginTop: '2rem' }}>
             <Link href="/gallery" className="btn btn-dark">
-              VIEW FULL GALLERY
+              {t('viewFullGallery')}
             </Link>
           </div>
         </div>

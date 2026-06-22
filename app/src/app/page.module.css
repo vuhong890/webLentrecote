@@ -15,7 +15,10 @@
 .heroOverlay {
   position: absolute;
   inset: 0;
-  background: linear-gradient(180deg, rgba(0,0,0,0.6) 0%, rgba(0,0,0,0.4) 100%), radial-gradient(ellipse at center, transparent 30%, rgba(0,0,0,0.7) 100%);
+  background: 
+    linear-gradient(to bottom, rgba(0,0,0,0.5) 0%, rgba(0,0,0,0) 20%),
+    linear-gradient(to top, rgba(0,0,0,0.4) 0%, rgba(0,0,0,0) 15%),
+    radial-gradient(circle at center, rgba(0,0,0,0.4) 0%, rgba(0,0,0,0) 45%);
 }
 
 .heroContent {
@@ -268,7 +271,10 @@
 .reservationOverlay {
   position: absolute;
   inset: 0;
-  background: radial-gradient(circle at 50% 50%, rgba(0, 0, 0, 0.4) 0%, rgba(0, 0, 0, 0.6) 100%);
+  background: 
+    linear-gradient(to bottom, rgba(0,0,0,0.5) 0%, rgba(0,0,0,0) 20%),
+    linear-gradient(to top, rgba(0,0,0,0.4) 0%, rgba(0,0,0,0) 15%),
+    radial-gradient(circle at center, rgba(0,0,0,0.4) 0%, rgba(0,0,0,0) 50%);
 }
 
 .reservationContent {
@@ -332,9 +338,93 @@
   margin: 0;
 }
 
-/* ===== SECTION 5: GALLERY PREVIEW ===== */
+/* ==================== TESTIMONIALS ==================== */
+.testimonialsSection {
+  padding: var(--space-xl) 0;
+  background: var(--color-bg);
+  text-align: center;
+}
+
+.testimonialsTitle {
+  font-family: var(--font-body);
+  font-size: 1.15rem;
+  font-weight: 700;
+  letter-spacing: 0.25em;
+  text-transform: uppercase;
+  color: var(--color-text-primary);
+  margin-bottom: var(--space-2xl);
+}
+
+.embla {
+  overflow: hidden;
+  max-width: 1300px;
+  margin: 0 auto;
+}
+
+.emblaContainer {
+  display: flex;
+}
+
+.emblaSlide {
+  flex: 0 0 25%;
+  min-width: 0;
+  padding: 0 1rem;
+}
+
+.testimonialCard {
+  background: #ffffff;
+  padding: var(--space-xl) var(--space-lg);
+  border-radius: 8px;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.03);
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  align-items: center;
+  gap: 1.25rem;
+  transition: transform 0.3s ease;
+}
+
+.testimonialCard:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 8px 24px rgba(0,0,0,0.06);
+}
+
+.testimonialStars {
+  color: #C45C4A; /* Terracotta / Red-orange stars */
+  font-size: 1.2rem;
+  letter-spacing: 4px;
+}
+
+.testimonialText {
+  color: #333333;
+  font-size: 1.05rem;
+  font-family: var(--font-headline);
+  line-height: 1.6;
+  flex-grow: 1;
+}
+
+.testimonialSource {
+  color: #7f8c8d;
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+@media (max-width: 1024px) {
+  .emblaSlide {
+    flex: 0 0 50%;
+  }
+}
+
+@media (max-width: 768px) {
+  .emblaSlide {
+    flex: 0 0 100%;
+  }
+}
+
+/* ===== SECTION 6: GALLERY PREVIEW ===== */
 .gallerySection {
-  padding: var(--space-3xl) 0;
+  padding: var(--space-xl) 0;
   background: var(--color-bg-section);
   text-align: center;
 }

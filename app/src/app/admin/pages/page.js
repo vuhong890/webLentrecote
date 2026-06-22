@@ -73,10 +73,16 @@ export default function AdminPages() {
 
   async function handleSave() {
     setSaving(true);
+    const isNew = !form.id || form.id.toString().startsWith('virtual_');
+    const method = isNew ? 'POST' : 'PUT';
+    
+    const payload = { ...form };
+    if (isNew) delete payload.id;
+
     await fetch('/api/page-sections', {
-      method: 'PUT',
+      method,
       headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-      body: JSON.stringify(form),
+      body: JSON.stringify(payload),
     });
     setSaving(false);
     setEditing(null);
@@ -198,6 +204,46 @@ export default function AdminPages() {
     setForm(prev => {
       const newItems = [...(prev.metadata?.items || [])];
       newItems.splice(index, 1);
+      return { ...prev, metadata: { ...prev.metadata, items: newItems } };
+    });
+  }
+
+  // ---- Testimonials Handlers ----
+  function handleAddTestimonial() {
+    setForm(prev => ({
+      ...prev,
+      metadata: {
+        ...prev.metadata,
+        items: [...(prev.metadata?.items || []), { stars: 5, text_en: '', text_vi: '', source_en: '', source_vi: '' }]
+      }
+    }));
+  }
+
+  function handleUpdateTestimonial(index, field, value) {
+    setForm(prev => {
+      const newItems = [...(prev.metadata?.items || [])];
+      newItems[index] = { ...newItems[index], [field]: value };
+      return { ...prev, metadata: { ...prev.metadata, items: newItems } };
+    });
+  }
+
+  function handleRemoveTestimonial(index) {
+    if (!confirm('Remove this feedback?')) return;
+    setForm(prev => {
+      const newItems = [...(prev.metadata?.items || [])];
+      newItems.splice(index, 1);
+      return { ...prev, metadata: { ...prev.metadata, items: newItems } };
+    });
+  }
+
+  function handleMoveTestimonial(index, dir) {
+    setForm(prev => {
+      const newItems = [...(prev.metadata?.items || [])];
+      if (dir === 'up' && index > 0) {
+        [newItems[index - 1], newItems[index]] = [newItems[index], newItems[index - 1]];
+      } else if (dir === 'down' && index < newItems.length - 1) {
+        [newItems[index + 1], newItems[index]] = [newItems[index], newItems[index + 1]];
+      }
       return { ...prev, metadata: { ...prev.metadata, items: newItems } };
     });
   }
@@ -374,10 +420,25 @@ export default function AdminPages() {
     setShowGalleryPicker(false);
   }
 
-  // Virtual section for Home Gallery (inject into sections list)
-  const displaySections = activePage === 'home'
-    ? [...sections, ...(sections.some(s => s.section_key === 'home_gallery') ? [] : [{ id: 'virtual_gallery', section_key: 'home_gallery', title_en: 'Home Gallery', content_en: 'Manage gallery images shown on the home page' }])]
-    : sections;
+  let displaySections = sections;
+  if (activePage === 'home') {
+    if (!sections.some(s => s.section_key === 'home_gallery')) {
+      displaySections = [...displaySections, { id: 'virtual_gallery', section_key: 'home_gallery', title_en: 'Home Gallery', content_en: 'Manage gallery images shown on the home page' }];
+    }
+    if (!sections.some(s => s.section_key === 'testimonials')) {
+      displaySections = [...displaySections, {
+        id: 'virtual_testimonials', page: 'home', section_key: 'testimonials', title_en: 'WHAT OUR GUESTS SAY', title_vi: 'KHÁCH HÀNG NÓI GÌ', sort_order: 50,
+        metadata: {
+          items: [
+            { stars: 5, text_en: 'Perfect for business lunches and client dinners.', text_vi: 'Hoàn hảo cho bữa trưa công việc và ăn tối cùng đối tác.', source_en: '- Google Review', source_vi: '- Google Review' },
+            { stars: 5, text_en: 'The steak is amazing, fries are addictive, service is excellent.', text_vi: 'Bò bít tết tuyệt vời, khoai tây chiên gây nghiện, phục vụ xuất sắc.', source_en: '- Tripadvisor', source_vi: '- Tripadvisor' },
+            { stars: 5, text_en: 'A hidden gem in District 1. Feels like a Parisian bistro.', text_vi: 'Một viên ngọc ẩn mình tại Quận 1. Cảm giác như một quán bistro ở Paris.', source_en: '- Facebook Review', source_vi: '- Đánh giá Facebook' },
+            { stars: 5, text_en: 'Best Entrecôte I have had in Asia. Highly recommended!', text_vi: 'Món Entrecôte ngon nhất tôi từng ăn ở Châu Á. Rất đáng thử!', source_en: '- Google Review', source_vi: '- Google Review' }
+          ]
+        }
+      }];
+    }
+  }
 
   function formatPrice(price) {
     if (!price || price === 0) return 'Complimentary';
@@ -419,11 +480,12 @@ export default function AdminPages() {
       {editing && !sigMode && !galleryMode && (() => {
         const k = editing.section_key;
         const isTimeline = k === 'timeline';
+        const isTestimonials = k === 'testimonials';
         const showLabel = ['hero', 'introduction', 'heritage_preview', 'our_story', 'beef_philosophy'].includes(k);
         const showSubtitle = ['hero'].includes(k);
         const showTitle = !isTimeline;
         const usePlainTextContent = ['hero', 'cta_banner'].includes(k);
-        const showContent = !isTimeline;
+        const showContent = !isTimeline && !isTestimonials;
         const showSingleImage = ['hero', 'cta_banner', 'beef_philosophy'].includes(k);
         const showGridImages = ['heritage_preview', 'our_story'].includes(k);
 
@@ -489,6 +551,42 @@ export default function AdminPages() {
                           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.5rem' }}>
                             <textarea style={{ ...st.input, minHeight: '80px', resize: 'vertical' }} placeholder="Description EN" value={item.text_en || item.text || ''} onChange={e => handleUpdateTimelineItem(idx, 'text_en', e.target.value)} />
                             <textarea style={{ ...st.input, minHeight: '80px', resize: 'vertical' }} placeholder="Description VI" value={item.text_vi || ''} onChange={e => handleUpdateTimelineItem(idx, 'text_vi', e.target.value)} />
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {isTestimonials && (
+                <div style={{ marginBottom: '2rem' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+                    <label style={{ ...st.label, fontSize: '1rem', color: '#fff', margin: 0 }}>Customer Feedbacks</label>
+                    <button style={{ ...st.removeBtn, background: '#F0C75E', color: '#1a1a1a', fontWeight: 'bold', margin: 0 }} onClick={handleAddTestimonial}>+ Add Feedback</button>
+                  </div>
+                  {(form.metadata?.items || []).map((item, idx) => (
+                    <div key={idx} style={{ background: 'rgba(255,255,255,0.02)', padding: '1rem', border: '1px solid rgba(255,255,255,0.1)', marginBottom: '1rem', position: 'relative' }}>
+                      <div style={{ position: 'absolute', top: 0, left: 0, background: '#F0C75E', color: '#000', padding: '0.1rem 0.5rem', fontSize: '0.7rem', fontWeight: 'bold' }}>{idx + 1}</div>
+                      <div style={{ position: 'absolute', top: '1rem', right: '1rem', display: 'flex', gap: '0.5rem' }}>
+                        <button style={{ background: 'transparent', color: '#fff', border: 'none', cursor: 'pointer', fontSize: '1rem' }} onClick={() => handleMoveTestimonial(idx, 'up')}>↑</button>
+                        <button style={{ background: 'transparent', color: '#fff', border: 'none', cursor: 'pointer', fontSize: '1rem' }} onClick={() => handleMoveTestimonial(idx, 'down')}>↓</button>
+                        <button style={{ background: 'transparent', color: '#ef4444', border: 'none', cursor: 'pointer', fontWeight: 'bold', marginLeft: '0.5rem' }} onClick={() => handleRemoveTestimonial(idx)}>X</button>
+                      </div>
+                      
+                      <div style={{ display: 'flex', gap: '1rem', alignItems: 'flex-start', marginTop: '1rem' }}>
+                        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                          <div style={st.field}>
+                            <label style={st.label}>Stars (1-5)</label>
+                            <input type="number" min="1" max="5" style={{ ...st.input, width: '80px' }} value={item.stars || 5} onChange={e => handleUpdateTestimonial(idx, 'stars', parseInt(e.target.value))} />
+                          </div>
+                          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.5rem' }}>
+                            <textarea style={{ ...st.input, minHeight: '60px', resize: 'vertical' }} placeholder="Review Text (EN)" value={item.text_en || item.text || ''} onChange={e => handleUpdateTestimonial(idx, 'text_en', e.target.value)} />
+                            <textarea style={{ ...st.input, minHeight: '60px', resize: 'vertical' }} placeholder="Review Text (VI)" value={item.text_vi || ''} onChange={e => handleUpdateTestimonial(idx, 'text_vi', e.target.value)} />
+                          </div>
+                          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.5rem' }}>
+                            <input style={st.input} placeholder="Source (EN) e.g. - Google Review" value={item.source_en || item.source || ''} onChange={e => handleUpdateTestimonial(idx, 'source_en', e.target.value)} />
+                            <input style={st.input} placeholder="Source (VI) e.g. - Đánh giá Google" value={item.source_vi || ''} onChange={e => handleUpdateTestimonial(idx, 'source_vi', e.target.value)} />
                           </div>
                         </div>
                       </div>
