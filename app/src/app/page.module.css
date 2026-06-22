@@ -221,7 +221,7 @@
 
 /* ===== SECTION 3: SIGNATURE / MENUS ===== */
 .signatureSection {
-  padding: var(--space-3xl) 0;
+  padding: var(--space-xl) 0;
   text-align: center;
 }
 

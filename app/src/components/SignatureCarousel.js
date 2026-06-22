@@ -66,9 +66,6 @@ export default function SignatureCarousel({ items, onItemClick }) {
             <div className={styles.cardBody}>
               <h3>{item.name_en}</h3>
               <p>{item.description_en}</p>
-              {item.price > 0 && (
-                <span className={styles.price}>{formatPrice(item.price)}</span>
-              )}
             </div>
           </div>
         ))}
