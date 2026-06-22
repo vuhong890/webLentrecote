@@ -3,29 +3,30 @@
   margin-top: var(--space-xl);
 }
 
-.grid {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: var(--space-lg);
+.embla {
+  overflow: hidden;
+  max-width: 1300px;
+  margin: 0 auto;
+}
+
+.emblaContainer {
+  display: flex;
+}
+
+.emblaSlide {
+  flex: 0 0 33.3333%;
+  min-width: 0;
+  padding: 1rem;
 }
 
 .card {
   background: #FFFFFF;
   overflow: hidden;
+  height: 100%;
   transition: transform 0.3s ease, box-shadow 0.3s ease;
-  animation: cardFadeIn 0.5s ease both;
 }
 
-@keyframes cardFadeIn {
-  from {
-    opacity: 0;
-    transform: translateX(30px);
-  }
-  to {
-    opacity: 1;
-    transform: translateX(0);
-  }
-}
+
 
 .card:hover {
   transform: translateY(-8px);
@@ -67,7 +68,7 @@
 }
 
 .cardBody {
-  padding: var(--space-md) var(--space-md) var(--space-lg);
+  padding: 1.25rem;
   text-align: left;
 }
 
@@ -76,6 +77,10 @@
   font-size: 1.375rem;
   margin-bottom: 0.5rem;
   color: var(--color-text-primary);
+}
+
+.cardBody h3:last-child {
+  margin-bottom: 0;
 }
 
 .cardBody p {
@@ -123,11 +128,9 @@
 }
 
 @media (max-width: 900px) {
-  .grid {
-    grid-template-columns: 1fr;
-    max-width: 450px;
-    margin-left: auto;
-    margin-right: auto;
+  .emblaSlide {
+    flex: 0 0 100%;
+    padding: 0.5rem;
   }
 
   .image,

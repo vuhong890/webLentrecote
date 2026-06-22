@@ -1,85 +1,78 @@
 'use client';
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import Image from 'next/image';
+import useEmblaCarousel from 'embla-carousel-react';
+import Autoplay from 'embla-carousel-autoplay';
 import styles from './SignatureCarousel.module.css';
 
-function formatPrice(price) {
-  if (!price || price === 0) return '';
-  return `${Number(price).toLocaleString()}₫`;
-}
-
 export default function SignatureCarousel({ items, onItemClick }) {
-  const [current, setCurrent] = useState(0);
-  const [isPaused, setIsPaused] = useState(false);
-  const timerRef = useRef(null);
-  const total = items.length;
+  const [emblaRef, emblaApi] = useEmblaCarousel(
+    { loop: true, align: 'start' },
+    [Autoplay({ delay: 5000, stopOnInteraction: true })]
+  );
+  
+  const [selectedIndex, setSelectedIndex] = useState(0);
+  const total = items?.length || 0;
 
-  const next = useCallback(() => {
-    setCurrent(prev => (prev + 1) % total);
-  }, [total]);
+  const onSelect = useCallback(() => {
+    if (!emblaApi) return;
+    setSelectedIndex(emblaApi.selectedScrollSnap());
+  }, [emblaApi, setSelectedIndex]);
 
-  // Autoplay every 5 seconds
   useEffect(() => {
-    if (isPaused || total <= 3) return;
-    timerRef.current = setInterval(next, 5000);
-    return () => clearInterval(timerRef.current);
-  }, [isPaused, next, total]);
+    if (!emblaApi) return;
+    onSelect();
+    emblaApi.on('select', onSelect);
+    emblaApi.on('reInit', onSelect);
+  }, [emblaApi, onSelect]);
 
-  const goTo = (idx) => setCurrent(idx);
+  const scrollTo = useCallback((index) => {
+    if (emblaApi) emblaApi.scrollTo(index);
+  }, [emblaApi]);
 
-  if (!items || items.length === 0) return null;
-
-  // Get 3 visible items (circular)
-  const visibleItems = [];
-  for (let i = 0; i < Math.min(3, total); i++) {
-    visibleItems.push({ ...items[(current + i) % total], _index: (current + i) % total });
-  }
-
-  // Number of "positions" for dots = total items
-  const dotCount = total;
+  if (!items || total === 0) return null;
 
   return (
-    <div
-      className={styles.carousel}
-      onMouseEnter={() => setIsPaused(true)}
-      onMouseLeave={() => setIsPaused(false)}
-    >
-      <div className={styles.grid}>
-        {visibleItems.map((item, i) => (
-          <div
-            key={`${current}-${i}`}
-            className={styles.card}
-            style={{ animationDelay: `${i * 0.08}s`, cursor: onItemClick ? 'pointer' : 'default' }}
-            onClick={() => onItemClick && onItemClick(item, item._index)}
-          >
-            <div className={styles.imageWrap}>
-              {item.image_url ? (
-                <Image src={item.image_url} alt={item.name_en} className={styles.image} width={400} height={300} sizes="(max-width: 768px) 100vw, 33vw" quality={75} />
-              ) : (
-                <div className={styles.imagePlaceholder}>
-                  <span className={styles.placeholderEmoji}>
-                    {['🥩', '🍷', '🥗', '🍮', '🦞'][((current + i) % total) % 5]}
-                  </span>
+    <div className={styles.carousel}>
+      <div className={styles.embla} ref={emblaRef}>
+        <div className={styles.emblaContainer}>
+          {items.map((item, i) => (
+            <div
+              key={item.id || i}
+              className={styles.emblaSlide}
+              onClick={() => onItemClick && onItemClick(item, i)}
+            >
+              <div className={styles.card}>
+                <div className={styles.imageWrap}>
+                  {item.image_url ? (
+                    <Image src={item.image_url} alt={item.name_en} className={styles.image} width={400} height={300} sizes="(max-width: 768px) 100vw, 33vw" quality={75} />
+                  ) : (
+                    <div className={styles.imagePlaceholder}>
+                      <span className={styles.placeholderEmoji}>
+                        {['🥩', '🍷', '🥗', '🍮', '🦞'][i % 5]}
+                      </span>
+                    </div>
+                  )}
                 </div>
-              )}
+                <div className={styles.cardBody}>
+                  <h3>{item.name_en}</h3>
+                  {item.description_en && <p>{item.description_en}</p>}
+                </div>
+              </div>
             </div>
-            <div className={styles.cardBody}>
-              <h3>{item.name_en}</h3>
-              <p>{item.description_en}</p>
-            </div>
-          </div>
-        ))}
+          ))}
+        </div>
       </div>
 
       {/* Dots */}
-      {total > 3 && (
+      {total > 1 && (
         <div className={styles.dots}>
-          {Array.from({ length: dotCount }).map((_, i) => (
+          {items.map((_, i) => (
             <button
               key={i}
-              className={`${styles.dot} ${i === current ? styles.dotActive : ''}`}
-              onClick={() => goTo(i)}
-              aria-label={`Go to position ${i + 1}`}
+              className={`${styles.dot} ${i === selectedIndex ? styles.dotActive : ''}`}
+              onClick={() => scrollTo(i)}
+              aria-label={`Go to slide ${i + 1}`}
             />
           ))}
         </div>

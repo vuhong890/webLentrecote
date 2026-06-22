@@ -29,8 +29,18 @@ export default function HomeClient({ initialHomeSections, initialHeritageSection
 
   const [testimonialsRef] = useEmblaCarousel({ loop: true, align: 'start' }, [Autoplay({ delay: 5000, stopOnInteraction: false })]);
 
-  const tf = (obj, field) => obj ? obj[`${field}_${lang}`] || obj[`${field}_en`] || '' : '';
-  const tm = (obj, key) => obj?.metadata ? obj.metadata[`${key}_${lang}`] || obj.metadata[`${key}_en`] || '' : '';
+  const tf = (obj, field, def = '') => {
+    if (!obj || !(`${field}_en` in obj)) return def;
+    const valLang = obj[`${field}_${lang}`];
+    const valEn = obj[`${field}_en`];
+    return (valLang !== undefined && valLang !== null && valLang !== '') ? valLang : (valEn !== undefined && valEn !== null ? valEn : def);
+  };
+  const tm = (obj, key, def = '') => {
+    if (!obj?.metadata || !(`${key}_en` in obj.metadata)) return def;
+    const valLang = obj.metadata[`${key}_${lang}`];
+    const valEn = obj.metadata[`${key}_en`];
+    return (valLang !== undefined && valLang !== null && valLang !== '') ? valLang : (valEn !== undefined && valEn !== null ? valEn : def);
+  };
 
   // Close popup on Escape
   useEffect(() => {
@@ -120,11 +130,17 @@ export default function HomeClient({ initialHomeSections, initialHeritageSection
         )}
         <div className={styles.heroOverlay}></div>
         <div className={styles.heroContent}>
-          <p className={styles.heroLabel}>{tm(hero, 'label') || 'SINCE 1959 · PARIS'}</p>
-          <h1 className={styles.heroTitle}>{tf(hero, 'title') || 'Le Seul Plat.'}</h1>
-          <p className={styles.heroSubtitle}>
-            {tf(hero, 'content') || 'The one and only dish — our legendary trimmed entrecôte steak, bathed in our secret sauce, served with crispy golden frites.'}
-          </p>
+          {tm(hero, 'label', 'SINCE 1959 · PARIS') && (
+            <p className={styles.heroLabel}>{tm(hero, 'label', 'SINCE 1959 · PARIS')}</p>
+          )}
+          {tf(hero, 'title', 'Le Seul Plat.') && (
+            <h1 className={styles.heroTitle}>{tf(hero, 'title', 'Le Seul Plat.')}</h1>
+          )}
+          {tf(hero, 'content', 'The one and only dish — our legendary trimmed entrecôte steak, bathed in our secret sauce, served with crispy golden frites.') && (
+            <p className={styles.heroSubtitle}>
+              {tf(hero, 'content', 'The one and only dish — our legendary trimmed entrecôte steak, bathed in our secret sauce, served with crispy golden frites.')}
+            </p>
+          )}
           <div className={styles.heroCta}>
             <Link href="/reservation" className="btn btn-primary">
               {t('bookTable')}

@@ -45,7 +45,8 @@ export default function Footer({ settings = {} }) {
               <p>Level 2, Dong Du, Saigon Ward</p>
               <p>Ho Chi Minh City</p>
               <p className={styles.hours}>
-                {t('openDaily')} 11:30 – 14:00 | 16:00 – 23:00
+                {t('openDaily')}<br />
+                11:30 – 14:00 | 16:00 – 23:00
               </p>
               <p>{t('lastOrder')} 22:00</p>
               <p className={styles.hotline}>

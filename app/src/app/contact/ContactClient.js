@@ -89,10 +89,9 @@ export default function ContactClient({ initialPageSections = {} }) {
                   <div className={`${styles.contactRichText} richTextContent`} dangerouslySetInnerHTML={{ __html: tf(hoursSection, 'content') }} />
                 ) : (
                   <>
-                    <p><strong>{t('lunch')}:</strong> 11:30 AM – 2:00 PM</p>
-                    <p><strong>{t('dinner')}:</strong> 4:00 PM – 11:00 PM</p>
-                    <p><strong>{t('lastOrder')}:</strong> 10:00 PM</p>
-                    <p style={{ fontStyle: 'italic', marginTop: '0.25rem', opacity: 0.7 }}>{t('openDaily')}</p>
+                    <p>{t('openDaily')}</p>
+                    <p>11:30 – 14:00 | 16:00 – 23:00</p>
+                    <p>{t('lastOrder')} 22:00</p>
                   </>
                 )}
               </div>
