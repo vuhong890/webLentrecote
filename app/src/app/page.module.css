@@ -43,9 +43,8 @@
 
 .heroTitle {
   font-family: var(--font-headline);
-  font-size: 2.75rem;
+  font-size: 2.375rem;
   font-weight: 700;
-  font-style: italic;
   color: #FFFFFF;
   line-height: 1.2;
   margin-bottom: var(--space-md);
@@ -113,7 +112,8 @@
 
 .sectionTitle {
   font-family: var(--font-headline);
-  font-size: 3.25rem;
+  font-size: 2.375rem;
+  line-height: 1.2;
   font-weight: 700;
   color: var(--color-text-primary);
   margin-bottom: var(--space-lg);
@@ -145,11 +145,6 @@
 
 .heritageTextCol {
   padding-right: 0;
-}
-
-.heritageTextCol .sectionTitle {
-  line-height: 1.2;
-  font-size: 2.375rem;
 }
 
 .heritageText {
@@ -291,7 +286,7 @@
 
 .reservationTitle {
   font-family: var(--font-headline);
-  font-size: 2.75rem;
+  font-size: 2.375rem;
   color: #FFFFFF;
   margin-bottom: var(--space-md);
   line-height: 1.2;
@@ -781,8 +776,8 @@
 
 /* ===== RESPONSIVE ===== */
 @media (max-width: 900px) {
-  .heroTitle {
-    font-size: 1.9rem;
+  .mobileCenterWrap {
+    text-align: center;
   }
 
   .heritageGrid { grid-template-columns: 1fr; }
@@ -806,10 +801,6 @@
 }
 
 @media (max-width: 600px) {
-  .heroTitle {
-    font-size: 1.5rem;
-  }
-
   .galleryGrid {
     grid-template-columns: 1fr;
     max-width: 400px;

@@ -69,6 +69,10 @@ export async function DELETE(request) {
     global: { headers: { Authorization: `Bearer ${token}` } }
   });
 
+  // Cascade delete items first
+  const { error: itemsError } = await authClient.from('menu_items').delete().eq('category_id', id);
+  if (itemsError) return NextResponse.json({ error: itemsError.message }, { status: 500 });
+
   const { error } = await authClient.from('menu_categories').delete().eq('id', id);
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
   return NextResponse.json({ success: true });

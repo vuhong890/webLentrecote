@@ -12,6 +12,10 @@ export default function AdminMenus() {
   const [uploading, setUploading] = useState(false);
   const [token, setToken] = useState('');
   const [deleteConfirmId, setDeleteConfirmId] = useState(null);
+  
+  const [showCatManager, setShowCatManager] = useState(false);
+  const [catForm, setCatForm] = useState({ id: null, name_en: '', name_vi: '' });
+  const [deleteCatId, setDeleteCatId] = useState(null);
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -32,7 +36,8 @@ export default function AdminMenus() {
   }
 
   async function loadItems() {
-    const url = activeCat ? `/api/menu-items?category_id=${activeCat}` : '/api/menu-items';
+    if (!activeCat) return;
+    const url = `/api/menu-items?category_id=${activeCat}`;
     const res = await fetch(url);
     const data = await res.json();
     if (Array.isArray(data)) setItems(data);
@@ -98,6 +103,46 @@ export default function AdminMenus() {
     loadItems();
   }
 
+  async function saveCategory() {
+    if (!catForm.name_en || !catForm.name_vi) return alert('Please enter both English and Vietnamese names.');
+    const headers = { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` };
+    if (catForm.id) {
+      await fetch('/api/menu-categories', { method: 'PUT', headers, body: JSON.stringify({ id: catForm.id, name_en: catForm.name_en, name_vi: catForm.name_vi }) });
+    } else {
+      const maxOrder = categories.reduce((max, c) => Math.max(max, c.sort_order || 0), 0);
+      await fetch('/api/menu-categories', { method: 'POST', headers, body: JSON.stringify({ name_en: catForm.name_en, name_vi: catForm.name_vi, sort_order: maxOrder + 1 }) });
+    }
+    setCatForm({ id: null, name_en: '', name_vi: '' });
+    loadCategories();
+  }
+
+  async function swapOrder(index, direction) {
+    const newCategories = [...categories];
+    const temp = newCategories[index];
+    newCategories[index] = newCategories[index + direction];
+    newCategories[index + direction] = temp;
+    
+    const updatedCats = newCategories.map((c, i) => ({ ...c, sort_order: i + 1 }));
+    setCategories(updatedCats);
+    
+    const headers = { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` };
+    await Promise.all(updatedCats.map(c => 
+      fetch('/api/menu-categories', { method: 'PUT', headers, body: JSON.stringify({ id: c.id, sort_order: c.sort_order }) })
+    ));
+  }
+
+  async function executeDeleteCategory() {
+    if (!deleteCatId) return;
+    const res = await fetch(`/api/menu-categories?id=${deleteCatId}`, { method: 'DELETE', headers: { Authorization: `Bearer ${token}` } });
+    if (!res.ok) {
+      const data = await res.json();
+      alert('Delete failed: ' + (data.error || 'Unknown error'));
+    }
+    setDeleteCatId(null);
+    loadCategories();
+    if (activeCat === deleteCatId) setActiveCat(null);
+  }
+
   const s = {
     page: { color: '#fff' },
     header: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' },
@@ -135,7 +180,10 @@ export default function AdminMenus() {
     <div style={s.page}>
       <div style={s.header}>
         <h1 style={s.title}>Menu Management</h1>
-        <button style={s.addBtn} onClick={openNew}>+ ADD ITEM</button>
+        <div style={{ display: 'flex', gap: '1rem' }}>
+          <button style={{ ...s.addBtn, background: '#1a1a1a', color: '#F0C75E', border: '1px solid #F0C75E' }} onClick={() => setShowCatManager(true)}>MANAGE CATEGORIES</button>
+          <button style={s.addBtn} onClick={openNew}>+ ADD ITEM</button>
+        </div>
       </div>
 
       {/* Category filter */}
@@ -257,6 +305,87 @@ export default function AdminMenus() {
             <div style={{ display: 'flex', gap: '1rem' }}>
               <button onClick={() => setDeleteConfirmId(null)} style={{ flex: 1, padding: '0.75rem', background: '#333', color: '#fff', border: 'none', cursor: 'pointer', fontWeight: 700 }}>CANCEL</button>
               <button onClick={executeDelete} style={{ flex: 1, padding: '0.75rem', background: '#ef4444', color: '#fff', border: 'none', cursor: 'pointer', fontWeight: 700 }}>DELETE</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Category Manager Modal */}
+      {showCatManager && (
+        <div style={s.overlay} onClick={() => setShowCatManager(false)}>
+          <div style={{ ...s.modal, maxWidth: 700 }} onClick={e => e.stopPropagation()}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '1.5rem' }}>
+              <h2 style={s.formTitle}>Manage Categories</h2>
+              <button onClick={() => setShowCatManager(false)} style={{ background: 'transparent', border: 'none', color: '#fff', fontSize: '1.5rem', cursor: 'pointer' }}>&times;</button>
+            </div>
+
+            <div style={{ background: 'rgba(255,255,255,0.05)', padding: '1rem', marginBottom: '1.5rem' }}>
+              <h3 style={{ fontSize: '0.9rem', marginBottom: '1rem', color: '#F0C75E' }}>{catForm.id ? 'Edit Category' : 'Add New Category'}</h3>
+              <div style={s.row}>
+                <div style={s.field}>
+                  <label style={s.label}>Name (EN)</label>
+                  <input style={s.input} value={catForm.name_en} onChange={e => setCatForm({...catForm, name_en: e.target.value})} />
+                </div>
+                <div style={s.field}>
+                  <label style={s.label}>Name (VI)</label>
+                  <input style={s.input} value={catForm.name_vi} onChange={e => setCatForm({...catForm, name_vi: e.target.value})} />
+                </div>
+              </div>
+              <div style={{ display: 'flex', gap: '0.5rem' }}>
+                <button style={{ padding: '0.5rem 1rem', background: '#F0C75E', color: '#000', border: 'none', fontWeight: 'bold', cursor: 'pointer' }} onClick={saveCategory}>
+                  {catForm.id ? 'UPDATE' : 'ADD CATEGORY'}
+                </button>
+                {catForm.id && (
+                  <button style={{ padding: '0.5rem 1rem', background: '#333', color: '#fff', border: 'none', cursor: 'pointer' }} onClick={() => setCatForm({ id: null, name_en: '', name_vi: '' })}>CANCEL EDIT</button>
+                )}
+              </div>
+            </div>
+
+            <table style={s.table}>
+              <thead>
+                <tr>
+                  <th style={s.th}>Name (EN)</th>
+                  <th style={s.th}>Name (VI)</th>
+                  <th style={s.th}>Order</th>
+                  <th style={s.th}>Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {categories.map((cat, index) => (
+                  <tr key={cat.id}>
+                    <td style={s.td}>{cat.name_en}</td>
+                    <td style={s.td}>{cat.name_vi}</td>
+                    <td style={s.td}>
+                      <div style={{ display: 'flex', gap: '0.25rem' }}>
+                        <button disabled={index === 0} onClick={() => swapOrder(index, -1)} style={{ padding: '0.2rem 0.5rem', cursor: index === 0 ? 'not-allowed' : 'pointer', background: 'rgba(255,255,255,0.1)', color: '#fff', border: 'none', opacity: index === 0 ? 0.3 : 1 }}>↑</button>
+                        <button disabled={index === categories.length - 1} onClick={() => swapOrder(index, 1)} style={{ padding: '0.2rem 0.5rem', cursor: index === categories.length - 1 ? 'not-allowed' : 'pointer', background: 'rgba(255,255,255,0.1)', color: '#fff', border: 'none', opacity: index === categories.length - 1 ? 0.3 : 1 }}>↓</button>
+                      </div>
+                    </td>
+                    <td style={s.td}>
+                      <div style={s.actions}>
+                        <button style={s.editBtn} onClick={() => setCatForm(cat)}>Edit</button>
+                        <button style={s.delBtn} onClick={() => setDeleteCatId(cat.id)}>Delete</button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
+
+      {/* Delete Category Confirmation */}
+      {deleteCatId && (
+        <div style={{...s.overlay, zIndex: 1100}} onClick={() => setDeleteCatId(null)}>
+          <div style={{ ...s.modal, maxWidth: '400px', textAlign: 'center' }} onClick={e => e.stopPropagation()}>
+            <h2 style={{ fontFamily: 'var(--font-headline)', color: '#ef4444', marginBottom: '1rem' }}>Warning!</h2>
+            <p style={{ color: 'rgba(255,255,255,0.7)', marginBottom: '2rem', fontSize: '0.9rem' }}>
+              Deleting this category will <strong>PERMANENTLY DELETE</strong> all menu items inside it. This cannot be undone! Are you absolutely sure?
+            </p>
+            <div style={{ display: 'flex', gap: '1rem' }}>
+              <button onClick={() => setDeleteCatId(null)} style={{ flex: 1, padding: '0.75rem', background: '#333', color: '#fff', border: 'none', cursor: 'pointer', fontWeight: 700 }}>CANCEL</button>
+              <button onClick={executeDeleteCategory} style={{ flex: 1, padding: '0.75rem', background: '#ef4444', color: '#fff', border: 'none', cursor: 'pointer', fontWeight: 700 }}>YES, DELETE</button>
             </div>
           </div>
         </div>

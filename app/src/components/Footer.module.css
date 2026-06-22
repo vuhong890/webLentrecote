@@ -185,7 +185,7 @@
 }
 
 .sendBtn {
-  align-self: flex-start;
+  align-self: center;
   padding: 0.6rem 1.5rem;
   background: var(--color-gold);
   color: var(--color-black);

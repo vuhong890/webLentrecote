@@ -203,9 +203,6 @@ export default function HomeClient({ initialHomeSections, initialHeritageSection
                 ))}
               </div>
 
-              <Link href="/heritage" className="btn btn-dark" style={{ marginTop: '1.5rem' }}>
-                {t('discoverStory')}
-              </Link>
             </div>
             <div className={styles.heritageImageCol}>
               <div className={styles.heritageImageTop}>
@@ -223,6 +220,12 @@ export default function HomeClient({ initialHomeSections, initialHeritageSection
                 </div>
               </div>
             </div>
+          </div>
+          
+          <div style={{ textAlign: 'center', marginTop: '3rem' }}>
+            <Link href="/heritage" className="btn btn-dark" style={{ display: 'inline-block' }}>
+              {t('discoverStory')}
+            </Link>
           </div>
         </div>
       </section>
