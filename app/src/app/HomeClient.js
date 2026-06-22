@@ -144,7 +144,24 @@ export default function HomeClient({ initialHomeSections, initialHeritageSection
         </div>
       </section>
 
-      {/* ==================== SECTION 2: HERITAGE ==================== */}
+      {/* ==================== SECTION 2: MENUS (Signature Offerings) ==================== */}
+      <section id="menus" className={styles.signatureSection}>
+        <div className="container">
+          <p className={styles.sectionLabel}>{tm(signature, 'label') || 'THE EXPERIENCE'}</p>
+          <h2 className={styles.sectionTitle}>{tf(signature, 'title') || 'Signature Offerings'}</h2>
+          <SignatureCarousel
+            items={signatureItems}
+            onItemClick={(item) => setPopupItem(item)}
+          />
+          <div style={{ textAlign: 'center', marginTop: '2rem' }}>
+            <Link href="/menus" className="btn btn-dark">
+              EXPLORE FULL MENU
+            </Link>
+          </div>
+        </div>
+      </section>
+
+      {/* ==================== SECTION 3: HERITAGE ==================== */}
       <section id="heritage" className={styles.heritageSection}>
         <div className="container">
           <div className={styles.heritageGrid}>
@@ -183,23 +200,6 @@ export default function HomeClient({ initialHomeSections, initialHeritageSection
                 )}
               </div>
             </div>
-          </div>
-        </div>
-      </section>
-
-      {/* ==================== SECTION 3: MENUS (Signature Offerings) ==================== */}
-      <section id="menus" className={styles.signatureSection}>
-        <div className="container">
-          <p className={styles.sectionLabel}>{tm(signature, 'label') || 'THE EXPERIENCE'}</p>
-          <h2 className={styles.sectionTitle}>{tf(signature, 'title') || 'Signature Offerings'}</h2>
-          <SignatureCarousel
-            items={signatureItems}
-            onItemClick={(item) => setPopupItem(item)}
-          />
-          <div style={{ textAlign: 'center', marginTop: '2rem' }}>
-            <Link href="/menus" className="btn btn-dark">
-              EXPLORE FULL MENU
-            </Link>
           </div>
         </div>
       </section>

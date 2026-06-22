@@ -9,8 +9,8 @@ import styles from './Header.module.css';
 // Map section IDs on home page to nav hrefs
 const sectionToNav = {
   'home': '/',
-  'heritage': '/heritage',
   'menus': '/menus',
+  'heritage': '/heritage',
   'reservation': '/reservation',
   'gallery': '/gallery',
   'contact': '/contact',
@@ -18,8 +18,8 @@ const sectionToNav = {
 
 const navLinks = [
   { href: '/', tKey: 'home' },
-  { href: '/heritage', tKey: 'heritage' },
   { href: '/menus', tKey: 'menus' },
+  { href: '/heritage', tKey: 'heritage' },
   { href: '/reservation', tKey: 'reservation' },
   { href: '/gallery', tKey: 'gallery' },
   { href: '/contact', tKey: 'contact' },
