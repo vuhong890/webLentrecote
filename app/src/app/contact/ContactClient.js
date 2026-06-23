@@ -11,14 +11,32 @@ export default function ContactClient({ initialPageSections = {} }) {
     name: '', email: '', subject: '', message: ''
   });
   const [sent, setSent] = useState(false);
-  const { lang, t: tField } = useLanguage();
+  const [loading, setLoading] = useState(false);
+  const { lang } = useLanguage();
   const t = useTranslation();
   const pageSections = initialPageSections;
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    setSent(true);
-    setTimeout(() => setSent(false), 4000);
+    setLoading(true);
+    
+    try {
+      const res = await fetch('/api/contact', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(formData),
+      });
+      
+      if (res.ok) {
+        setSent(true);
+        setFormData({ name: '', email: '', subject: '', message: '' });
+        setTimeout(() => setSent(false), 4000);
+      }
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleChange = (e) => {
@@ -182,8 +200,8 @@ export default function ContactClient({ initialPageSections = {} }) {
                     <label className={styles.formLabel}>{t('message')}</label>
                     <textarea name="message" value={formData.message} onChange={handleChange} className={styles.formInput} rows="5" required placeholder={t('messagePlaceholder')}></textarea>
                   </div>
-                  <button type="submit" className="btn btn-primary" style={{ width: '100%', marginTop: '0.5rem' }}>
-                    {t('sendBtn')}
+                  <button type="submit" className="btn btn-dark" style={{ width: '100%' }} disabled={loading}>
+                    {loading ? '...' : t('sendBtn')}
                   </button>
                 </form>
               )}

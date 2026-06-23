@@ -14,7 +14,7 @@ export default function ReservationClient({ initialPageSections = {} }) {
   const tf = (obj, field) => obj ? obj[`${field}_${lang}`] || obj[`${field}_en`] || '' : '';
   const tm = (obj, key) => obj?.metadata ? obj.metadata[`${key}_${lang}`] || obj.metadata[`${key}_en`] || '' : '';
   const [formData, setFormData] = useState({
-    name: '', email: '', phone: '', date: '', time: '', guests: '2', requests: '', branch: ''
+    name: '', email: '', phone: '', date: '', time: '', guests: '', requests: '', branch: ''
   });
   const [submitted, setSubmitted] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -148,7 +148,8 @@ export default function ReservationClient({ initialPageSections = {} }) {
                     </div>
                     <div className={styles.formGroup}>
                       <label className={styles.formLabel}>{t('guestsLabel')}</label>
-                      <select name="guests" value={formData.guests} onChange={handleChange} className={styles.formInput}>
+                      <select name="guests" value={formData.guests} onChange={handleChange} className={styles.formInput} required>
+                        <option value="">{lang === 'vi' ? 'Chọn số khách' : 'Select guests'}</option>
                         {[1,2,3,4,5,6,7,8].map(n => (
                           <option key={n} value={n}>{n} {n === 1 ? t('guest') : t('guests')}</option>
                         ))}

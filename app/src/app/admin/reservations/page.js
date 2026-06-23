@@ -20,7 +20,13 @@ export default function AdminReservations() {
     });
   }, []);
 
-  useEffect(() => { if (token) loadReservations(); }, [token, filter, search, dateFilter]);
+  useEffect(() => { 
+    if (token) {
+      loadReservations(); 
+      const interval = setInterval(loadReservations, 10000); // Tự động load lại mỗi 10 giây
+      return () => clearInterval(interval);
+    }
+  }, [token, filter, search, dateFilter]);
 
   async function loadReservations() {
     const params = new URLSearchParams();

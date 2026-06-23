@@ -1,4 +1,6 @@
+// Trigger recompile
 import { NextResponse } from 'next/server';
+import { sendEmail } from '@/lib/email';
 import { createClient } from '@supabase/supabase-js';
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -73,9 +75,56 @@ export async function POST(request) {
       .eq('key', 'notification_email')
       .single();
 
-    if (settingsRes.data?.value) {
-      // Email will be handled by edge function or external service
-      console.log(`[Reservation] New booking from ${body.full_name} — notify ${settingsRes.data.value}`);
+    const notificationEmail = settingsRes.data?.value;
+
+    if (notificationEmail) {
+      const subject = `[L'Entrecôte] Đặt bàn mới: ${body.full_name} (${body.date})`;
+      const html = `
+        <div style="font-family: Arial, sans-serif; padding: 20px; border: 1px solid #eee; border-radius: 8px; max-width: 600px;">
+          <h2 style="color: #333; border-bottom: 2px solid #F0C75E; padding-bottom: 10px;">Có Khách Đặt Bàn Mới</h2>
+          
+          <table style="width: 100%; border-collapse: collapse; margin-top: 20px;">
+            <tr>
+              <td style="padding: 10px; border-bottom: 1px solid #eee; width: 140px;"><strong>Tên khách hàng:</strong></td>
+              <td style="padding: 10px; border-bottom: 1px solid #eee;">${body.full_name}</td>
+            </tr>
+            <tr>
+              <td style="padding: 10px; border-bottom: 1px solid #eee;"><strong>Số điện thoại:</strong></td>
+              <td style="padding: 10px; border-bottom: 1px solid #eee;"><strong>${body.phone}</strong></td>
+            </tr>
+            <tr>
+              <td style="padding: 10px; border-bottom: 1px solid #eee;"><strong>Email:</strong></td>
+              <td style="padding: 10px; border-bottom: 1px solid #eee;"><a href="mailto:${body.email}">${body.email}</a></td>
+            </tr>
+            <tr>
+              <td style="padding: 10px; border-bottom: 1px solid #eee;"><strong>Ngày đặt:</strong></td>
+              <td style="padding: 10px; border-bottom: 1px solid #eee;">${body.date}</td>
+            </tr>
+            <tr>
+              <td style="padding: 10px; border-bottom: 1px solid #eee;"><strong>Giờ đặt:</strong></td>
+              <td style="padding: 10px; border-bottom: 1px solid #eee;">${body.time}</td>
+            </tr>
+            <tr>
+              <td style="padding: 10px; border-bottom: 1px solid #eee;"><strong>Số lượng khách:</strong></td>
+              <td style="padding: 10px; border-bottom: 1px solid #eee;">${body.guests} người</td>
+            </tr>
+            <tr>
+              <td style="padding: 10px; border-bottom: 1px solid #eee;"><strong>Ghi chú:</strong></td>
+              <td style="padding: 10px; border-bottom: 1px solid #eee;">${body.note || 'Không có ghi chú'}</td>
+            </tr>
+          </table>
+          
+          <p style="margin-top: 30px; font-size: 0.9em; color: #888;">Email này được gửi tự động từ hệ thống website L'Entrecôte.</p>
+        </div>
+      `;
+
+      // Không cần await để API response nhanh hơn (fire and forget)
+      sendEmail({
+        to: notificationEmail,
+        subject,
+        html,
+      }).catch(err => console.error('Error in sendEmail async:', err));
+      console.log(`[Reservation] New booking from ${body.full_name} — notify ${notificationEmail}`);
     }
   } catch (e) {
     console.error('Failed to get notification email:', e);

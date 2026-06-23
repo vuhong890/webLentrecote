@@ -12,13 +12,31 @@ export default function Footer({ settings = {} }) {
   const { lang } = useLanguage();
   const t = useTranslation();
 
+  const [loading, setLoading] = useState(false);
+
   if (pathname?.startsWith('/admin')) return null;
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    setSent(true);
-    setFormData({ name: '', email: '', message: '' });
-    setTimeout(() => setSent(false), 4000);
+    setLoading(true);
+    
+    try {
+      const res = await fetch('/api/contact', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(formData),
+      });
+      
+      if (res.ok) {
+        setSent(true);
+        setFormData({ name: '', email: '', message: '' });
+        setTimeout(() => setSent(false), 4000);
+      }
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleChange = (e) => {
@@ -31,7 +49,7 @@ export default function Footer({ settings = {} }) {
         <div className={styles.topSection}>
           {/* Info Column */}
           <div className={styles.infoColumn}>
-            <h3 className={styles.mapTitle}>{lang === 'vi' ? 'THÔNG TIN LIÊN HỆ' : 'FIND US AT'}</h3>
+            <h3 className={styles.mapTitle}>{lang === 'vi' ? 'ĐỊA CHỈ' : 'OUR ADDRESS'}</h3>
             <div className={styles.details}>
               <p>{lang === 'vi' ? 'Tầng 2, Đông Du, Phường Bến Nghé' : 'Level 2, Dong Du, Saigon Ward'}</p>
               <p>{lang === 'vi' ? 'Thành phố Hồ Chí Minh' : 'Ho Chi Minh City'}</p>
@@ -112,8 +130,8 @@ export default function Footer({ settings = {} }) {
                   rows="3"
                   required
                 ></textarea>
-                <button type="submit" className={styles.sendBtn}>
-                  {t('sendBtn')}
+                <button type="submit" className={styles.sendBtn} disabled={loading}>
+                  {loading ? '...' : t('sendBtn')}
                 </button>
               </form>
             )}
@@ -121,7 +139,7 @@ export default function Footer({ settings = {} }) {
 
           {/* Map Column */}
           <div className={styles.mapColumn}>
-            <h4 className={styles.mapTitle}>{lang === 'vi' ? 'ĐỊA CHỈ' : 'OUR ADDRESS'}</h4>
+            <h4 className={styles.mapTitle}>{lang === 'vi' ? 'TÌM CHÚNG TÔI TẠI' : 'FIND US AT'}</h4>
             <div className={styles.mapContainer}>
               <iframe
                 src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3919.5!2d106.7041782!3d10.7754419!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x31752fbba5c3008f%3A0x6f4e96e3aff8d93!2sL%E2%80%99Entrecote%20-%20Social%20Meating!5e0!3m2!1sen!2s"
