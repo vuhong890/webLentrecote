@@ -158,7 +158,6 @@ export default function HomeClient({ initialHomeSections, initialHeritageSection
       {/* ==================== SECTION 2: MENUS (Signature Offerings) ==================== */}
       <section id="menus" className={styles.signatureSection}>
         <div className="container">
-          <p className={styles.sectionLabel}>{tm(signature, 'label') || 'THE EXPERIENCE'}</p>
           <h2 className={styles.sectionTitle}>{tf(signature, 'title') || 'Signature Offerings'}</h2>
           <SignatureCarousel
             items={signatureItems}
@@ -237,7 +236,6 @@ export default function HomeClient({ initialHomeSections, initialHeritageSection
         )}
         <div className={styles.reservationOverlay}></div>
         <div className={styles.reservationContent} style={{ zIndex: 1 }}>
-          <p className={styles.sectionLabel} style={{ color: '#F0C75E' }}>{tm(ctaBanner, 'label') || 'RESERVATION'}</p>
           <h2 className={styles.reservationTitle}>{tf(ctaBanner, 'title') || 'An Evening of Timeless Elegance Awaits'}</h2>
           <p className={styles.reservationText}>
             {tf(ctaBanner, 'content') || "Join us for an unforgettable dining experience at L'Entrecôte Social Meating, Saigon."}
