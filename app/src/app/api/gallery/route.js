@@ -3,15 +3,15 @@ import { createClient } from '@supabase/supabase-js';
 
 export const dynamic = 'force-dynamic';
 
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+
 // Public client for read operations
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL,
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
-);
+const supabase = createClient(supabaseUrl, anonKey);
 
 // Auth client — uses the user's JWT so RLS treats them as 'authenticated'
 function authClient(token) {
-  return createClient(process.env.NEXT_PUBLIC_SUPABASE_URL, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY, {
+  return createClient(supabaseUrl, anonKey, {
     global: { headers: { Authorization: `Bearer ${token}` } }
   });
 }
@@ -21,7 +21,7 @@ export async function GET(request) {
   const { searchParams } = new URL(request.url);
   const category = searchParams.get('category');
 
-  let query = supabase.from('gallery_images').select('*').order('sort_order');
+  let query = supabase.from('gallery_images').select('*').order('sort_order', { ascending: true });
   if (category && category !== 'all') query = query.eq('category', category);
 
   const { data, error } = await query;
@@ -40,6 +40,7 @@ export async function POST(request) {
     .insert(body)
     .select()
     .single();
+  
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
   return NextResponse.json(data, { status: 201 });
 }
@@ -53,16 +54,12 @@ export async function DELETE(request) {
   const id = searchParams.get('id');
   if (!id) return NextResponse.json({ error: 'Missing id parameter' }, { status: 400 });
 
-  const { data, error, count } = await authClient(token)
+  const { error } = await authClient(token)
     .from('gallery_images')
     .delete()
-    .eq('id', id)
-    .select();
+    .eq('id', id);
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
-  if (!data || data.length === 0) {
-    return NextResponse.json({ error: 'Image not found or permission denied' }, { status: 404 });
-  }
   return NextResponse.json({ success: true });
 }
 
@@ -81,6 +78,7 @@ export async function PUT(request) {
     .eq('id', id)
     .select()
     .single();
+    
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
   return NextResponse.json(data);
 }

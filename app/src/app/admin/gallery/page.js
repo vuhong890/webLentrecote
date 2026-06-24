@@ -10,6 +10,8 @@ export default function AdminGallery() {
   const [form, setForm] = useState({ title_en: '', title_vi: '', category: 'food', image_url: '' });
   const [uploading, setUploading] = useState(false);
   const [dragOver, setDragOver] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [errorMsg, setErrorMsg] = useState('');
   const fileInputRef = useRef(null);
 
   useEffect(() => {
@@ -25,9 +27,13 @@ export default function AdminGallery() {
   }, []);
 
   async function loadImages() {
-    const res = await fetch('/api/gallery');
-    const data = await res.json();
-    if (Array.isArray(data)) setImages(data);
+    try {
+      const res = await fetch('/api/gallery?t=' + new Date().getTime(), { cache: 'no-store' });
+      const data = await res.json();
+      if (Array.isArray(data)) setImages(data);
+    } catch (err) {
+      console.error('Failed to load images:', err);
+    }
   }
 
   async function uploadFile(file) {
@@ -83,110 +89,74 @@ export default function AdminGallery() {
   }
 
   function closeForm() {
-    setShowForm(false);
-    setEditing(null);
-    setDragOver(false);
-    if (fileInputRef.current) fileInputRef.current.value = '';
-  }
-
-  function handleSave() {
-    console.log('[Gallery] handleSave called, editing:', !!editing, 'token:', token ? 'SET' : 'EMPTY');
-    if (editing) {
-      fetch('/api/gallery', {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-        body: JSON.stringify({ id: editing.id, ...form }),
-      })
-        .then(res => res.json())
-        .then(data => {
-          console.log('[Gallery] Update response:', data);
-          if (data.error) {
-            alert('Update failed: ' + data.error);
-          } else {
-            closeForm();
-            loadImages();
-          }
-        })
-        .catch(err => {
-          console.error('[Gallery] Update error:', err);
-          alert('Update error: ' + err.message);
-        });
-    } else {
-      fetch('/api/gallery', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-        body: JSON.stringify(form),
-      })
-        .then(res => res.json())
-        .then(data => {
-          console.log('[Gallery] Create response:', data);
-          if (data.error) {
-            alert('Create failed: ' + data.error);
-          } else {
-            closeForm();
-            loadImages();
-          }
-        })
-        .catch(err => {
-          console.error('[Gallery] Create error:', err);
-          alert('Create error: ' + err.message);
-        });
+    try {
+      setShowForm(false);
+      setEditing(null);
+      setDragOver(false);
+      setErrorMsg('');
+      setLoading(false);
+    } catch(e) {
+      console.error(e);
+      // Force hide just in case
+      setShowForm(false);
     }
   }
 
-  function handleDeleteFromCard(e, id) {
-    e.preventDefault();
-    e.stopPropagation();
-    console.log('[Gallery] handleDeleteFromCard called, id:', id);
-    const yes = window.confirm('Delete this image?');
-    if (!yes) return;
-    fetch('/api/gallery?id=' + id, {
-      method: 'DELETE',
-      headers: { Authorization: 'Bearer ' + token },
-    })
-      .then(function(res) { return res.json(); })
-      .then(function(data) {
-        console.log('[Gallery] Delete response:', data);
-        if (data.error) {
-          alert('Delete failed: ' + data.error);
-        } else {
-          loadImages();
-        }
-      })
-      .catch(function(err) {
-        console.error('[Gallery] Delete error:', err);
-        alert('Delete error: ' + err.message);
+  async function handleSave() {
+    setLoading(true);
+    setErrorMsg('');
+    try {
+      const url = '/api/gallery';
+      const method = editing ? 'PUT' : 'POST';
+      const body = editing ? { id: editing.id, ...form } : form;
+      
+      const res = await fetch(url, {
+        method,
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        body: JSON.stringify(body),
       });
+      const data = await res.json();
+      
+      if (data.error) {
+        setErrorMsg('Lỗi: ' + data.error);
+      } else {
+        closeForm();
+        loadImages();
+      }
+    } catch (err) {
+      setErrorMsg('Lỗi kết nối: ' + err.message);
+    } finally {
+      setLoading(false);
+    }
   }
 
-  function handleDeleteFromModal() {
-    console.log('[Gallery] handleDeleteFromModal called, editing:', editing?.id);
+
+
+  async function handleDeleteFromModal() {
     if (!editing) return;
-    const yes = window.confirm('Delete this image permanently?');
-    if (!yes) return;
-    fetch('/api/gallery?id=' + editing.id, {
-      method: 'DELETE',
-      headers: { Authorization: 'Bearer ' + token },
-    })
-      .then(function(res) { return res.json(); })
-      .then(function(data) {
-        console.log('[Gallery] Delete modal response:', data);
-        if (data.error) {
-          alert('Delete failed: ' + data.error);
-        } else {
-          closeForm();
-          loadImages();
-        }
-      })
-      .catch(function(err) {
-        console.error('[Gallery] Delete modal error:', err);
-        alert('Delete error: ' + err.message);
+    setLoading(true);
+    setErrorMsg('');
+    try {
+      const res = await fetch('/api/gallery?id=' + editing.id, {
+        method: 'DELETE',
+        headers: { Authorization: `Bearer ${token}` }
       });
+      const data = await res.json();
+      if (data.error) {
+        setErrorMsg('Lỗi xóa: ' + data.error);
+      } else {
+        closeForm();
+        loadImages();
+      }
+    } catch (err) {
+      setErrorMsg('Lỗi: ' + err.message);
+    } finally {
+      setLoading(false);
+    }
   }
 
   function handleRemoveImage() {
     setForm(prev => ({ ...prev, image_url: '' }));
-    if (fileInputRef.current) fileInputRef.current.value = '';
   }
 
   const s = {
@@ -232,14 +202,7 @@ export default function AdminGallery() {
             )}
             <div style={s.cardBody}>
               <div style={s.cardCat}>{img.category}</div>
-              <div style={s.cardTitle}>{img.title_en || 'Untitled'}</div>
             </div>
-            <button
-              type="button"
-              style={s.delBtn}
-              onClick={function(e) { handleDeleteFromCard(e, img.id); }}
-              title="Delete"
-            >✕</button>
           </div>
         ))}
       </div>
@@ -251,14 +214,6 @@ export default function AdminGallery() {
               {editing ? 'Edit Gallery Image' : 'Add Gallery Image'}
             </h2>
 
-            <div style={s.field}>
-              <label style={s.label}>Title (EN)</label>
-              <input style={s.input} value={form.title_en} onChange={function(e) { setForm({ ...form, title_en: e.target.value }); }} />
-            </div>
-            <div style={s.field}>
-              <label style={s.label}>Title (VI)</label>
-              <input style={s.input} value={form.title_vi} onChange={function(e) { setForm({ ...form, title_vi: e.target.value }); }} />
-            </div>
             <div style={s.field}>
               <label style={s.label}>Category</label>
               <select style={s.input} value={form.category} onChange={function(e) { setForm({ ...form, category: e.target.value }); }}>
@@ -307,14 +262,24 @@ export default function AdminGallery() {
               )}
             </div>
 
+            {errorMsg && (
+              <div style={{ padding: '0.75rem', background: 'rgba(231,76,60,0.15)', color: '#e74c3c', border: '1px solid rgba(231,76,60,0.3)', marginBottom: '1rem', fontSize: '0.85rem' }}>
+                {errorMsg}
+              </div>
+            )}
+
             <div style={s.row}>
-              <button type="button" style={s.saveBtn} onClick={handleSave}>{editing ? 'UPDATE' : 'SAVE'}</button>
-              <button type="button" style={s.cancelBtn} onClick={closeForm}>CANCEL</button>
+              <button type="button" style={{ ...s.saveBtn, opacity: loading ? 0.7 : 1 }} onClick={handleSave} disabled={loading}>
+                {loading ? 'ĐANG XỬ LÝ...' : (editing ? 'CẬP NHẬT (UPDATE)' : 'LƯU (SAVE)')}
+              </button>
+              <button type="button" style={{ ...s.cancelBtn, opacity: loading ? 0.7 : 1 }} onClick={closeForm} disabled={loading}>
+                HỦY (CANCEL)
+              </button>
             </div>
 
             {editing ? (
-              <button type="button" style={s.deleteModalBtn} onClick={handleDeleteFromModal}>
-                🗑️ DELETE THIS IMAGE
+              <button type="button" style={{ ...s.deleteModalBtn, opacity: loading ? 0.7 : 1 }} onClick={handleDeleteFromModal} disabled={loading}>
+                🗑️ XÓA ẢNH NÀY (DELETE)
               </button>
             ) : null}
           </div>

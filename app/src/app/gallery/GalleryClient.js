@@ -59,10 +59,26 @@ export default function GalleryClient({ initialImages = [], initialPageSections 
   const visibleImages = filtered.slice(0, visibleCount);
   const hasMore = filtered.length > visibleCount;
 
+  const currentIdx = lightbox ? filtered.findIndex(img => img.id === lightbox.id) : -1;
+
+  const showNext = (e) => {
+    e.stopPropagation();
+    if (currentIdx >= 0) {
+      const nextIdx = (currentIdx + 1) % filtered.length;
+      setLightbox(filtered[nextIdx]);
+    }
+  };
+
+  const showPrev = (e) => {
+    e.stopPropagation();
+    if (currentIdx >= 0) {
+      const prevIdx = (currentIdx - 1 + filtered.length) % filtered.length;
+      setLightbox(filtered[prevIdx]);
+    }
+  };
+
   const tf = (obj, field) => obj ? obj[`${field}_${lang}`] || obj[`${field}_en`] || '' : '';
   const tm = (obj, key) => obj?.metadata ? obj.metadata[`${key}_${lang}`] || obj.metadata[`${key}_en`] || '' : '';
-
-  const getTitle = (img) => tf(img, 'title') || img.title || 'Untitled';
 
   const hero = pageSections.hero || {};
   const heroMeta = hero.metadata || {};
@@ -111,13 +127,10 @@ export default function GalleryClient({ initialImages = [], initialPageSections 
               >
                 <div className={styles.gridItemInner}>
                   {img.image_url ? (
-                    <Image src={img.image_url} alt={getTitle(img)} fill sizes="(max-width: 768px) 50vw, 33vw" quality={70} placeholder="blur" blurDataURL={BLUR_PLACEHOLDER} style={{ objectFit: 'cover', objectPosition: 'center' }} />
+                    <Image src={img.image_url} alt="Gallery image" fill sizes="(max-width: 768px) 50vw, 33vw" quality={70} placeholder="blur" blurDataURL={BLUR_PLACEHOLDER} style={{ objectFit: 'cover', objectPosition: 'center' }} />
                   ) : (
                     <span className={styles.gridEmoji}>{img.emoji || '📸'}</span>
                   )}
-                  <div className={styles.gridOverlay}>
-                    <p className={styles.gridTitle}>{getTitle(img)}</p>
-                  </div>
                 </div>
               </div>
             ))}
@@ -141,15 +154,20 @@ export default function GalleryClient({ initialImages = [], initialPageSections 
       {lightbox && (
         <div className={styles.lightbox} onClick={() => setLightbox(null)}>
           <button className={styles.lightboxClose} onClick={() => setLightbox(null)}>✕</button>
-          <div className={styles.lightboxContent} onClick={e => e.stopPropagation()}>
+          {filtered.length > 1 && (
+            <>
+              <button className={styles.lightboxPrev} onClick={showPrev}>❮</button>
+              <button className={styles.lightboxNext} onClick={showNext}>❯</button>
+            </>
+          )}
+          <div className={styles.lightboxContent}>
             <div className={styles.lightboxImage}>
               {lightbox.image_url ? (
-                <Image src={lightbox.image_url} alt={getTitle(lightbox)} fill sizes="90vw" quality={85} style={{ objectFit: 'cover', objectPosition: 'center' }} />
+                <Image src={lightbox.image_url} alt="Gallery image" fill sizes="90vw" style={{ objectFit: 'contain' }} />
               ) : (
                 <span style={{ fontSize: '8rem' }}>{lightbox.emoji || '📸'}</span>
               )}
             </div>
-            <p className={styles.lightboxTitle}>{getTitle(lightbox)}</p>
           </div>
         </div>
       )}
