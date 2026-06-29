@@ -36,7 +36,11 @@ export default function AdminReservations() {
 
     const res = await fetch(`/api/reservations?${params}`, { headers: { Authorization: `Bearer ${token}` } });
     const data = await res.json();
-    if (Array.isArray(data)) setReservations(data);
+    if (Array.isArray(data)) {
+      setReservations(data);
+    } else {
+      alert("Lỗi tải dữ liệu (Vercel): " + JSON.stringify(data));
+    }
   }
 
   async function updateStatus(id, status) {
