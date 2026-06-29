@@ -1,5 +1,6 @@
 // Trigger recompile
 import { NextResponse } from 'next/server';
+export const dynamic = 'force-dynamic';
 import { sendEmail } from '@/lib/email';
 import { createClient } from '@supabase/supabase-js';
 
