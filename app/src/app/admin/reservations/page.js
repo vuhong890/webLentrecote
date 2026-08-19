@@ -148,6 +148,14 @@ export default function AdminReservations() {
     formInput: { width: '100%', padding: '0.6rem', background: '#222', border: '1px solid #333', color: '#fff', fontSize: '0.9rem' },
   };
 
+  const formatBookedDate = (dateString) => {
+    if (!dateString) return '-';
+    const d = new Date(dateString);
+    if (isNaN(d.getTime())) return '-';
+    const pad = n => n.toString().padStart(2, '0');
+    return `${pad(d.getDate())}/${pad(d.getMonth() + 1)}/${d.getFullYear()} ${pad(d.getHours())}:${pad(d.getMinutes())}`;
+  };
+
   return (
     <div>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
@@ -170,6 +178,7 @@ export default function AdminReservations() {
           <tr>
             <th style={s.th}>Name</th>
             <th style={s.th}>Phone</th>
+            <th style={s.th}>Booked On</th>
             <th style={s.th}>Email</th>
             <th style={s.th}>Date</th>
             <th style={s.th}>Time</th>
@@ -184,6 +193,7 @@ export default function AdminReservations() {
             <tr key={r.id}>
               <td style={s.td}>{r.full_name}</td>
               <td style={s.td}>{r.phone}</td>
+              <td style={s.td}>{formatBookedDate(r.created_at)}</td>
               <td style={s.td}>{r.email}</td>
               <td style={s.td}>{r.date}</td>
               <td style={s.td}>{r.time}</td>
@@ -202,7 +212,7 @@ export default function AdminReservations() {
               </td>
             </tr>
           ))}
-          {reservations.length === 0 && <tr><td colSpan={9} style={{ ...s.td, color: 'rgba(255,255,255,0.35)', textAlign: 'center', padding: '2rem' }}>No reservations found</td></tr>}
+          {reservations.length === 0 && <tr><td colSpan={10} style={{ ...s.td, color: 'rgba(255,255,255,0.35)', textAlign: 'center', padding: '2rem' }}>No reservations found</td></tr>}
         </tbody>
       </table>
 
