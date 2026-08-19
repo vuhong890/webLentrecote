@@ -119,8 +119,8 @@ export async function POST(request) {
         </div>
       `;
 
-      // Không cần await để API response nhanh hơn (fire and forget)
-      sendEmail({
+      // Đợi email gửi xong để đảm bảo không bị huỷ tác vụ ngầm (đặc biệt trên môi trường serverless như Vercel)
+      await sendEmail({
         to: notificationEmail,
         subject,
         html,
