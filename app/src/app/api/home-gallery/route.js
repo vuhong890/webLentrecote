@@ -1,3 +1,4 @@
+import { revalidatePath } from 'next/cache';
 import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 
@@ -36,6 +37,7 @@ export async function POST(request) {
     .select('*, gallery_images(*)')
     .single();
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+  revalidatePath('/', 'layout');
   return NextResponse.json(data, { status: 201 });
 }
 
@@ -48,5 +50,6 @@ export async function DELETE(request) {
   const id = searchParams.get('id');
   const { error } = await authClient(token).from('home_gallery_picks').delete().eq('id', id);
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+  revalidatePath('/', 'layout');
   return NextResponse.json({ success: true });
 }

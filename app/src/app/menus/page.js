@@ -3,7 +3,7 @@ import MenusClient from './MenusClient';
 
 const supabase = getSupabase();
 
-export const revalidate = 60;
+
 
 export const metadata = {
   title: "Menus | L'Entrecôte",

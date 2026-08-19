@@ -1,3 +1,4 @@
+import { revalidatePath } from 'next/cache';
 import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 
@@ -43,6 +44,7 @@ export async function POST(request) {
     .select('*, menu_categories(name_en, name_vi, slug)')
     .single();
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+  revalidatePath('/', 'layout');
   return NextResponse.json(data, { status: 201 });
 }
 
@@ -60,6 +62,7 @@ export async function PUT(request) {
     .select('*, menu_categories(name_en, name_vi, slug)')
     .single();
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+  revalidatePath('/', 'layout');
   return NextResponse.json(data);
 }
 
@@ -73,5 +76,6 @@ export async function DELETE(request) {
   const { error, count } = await authClient(token).from('menu_items').delete({ count: 'exact' }).eq('id', id);
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
   if (count === 0) return NextResponse.json({ error: 'Item not found or RLS blocked delete' }, { status: 403 });
+  revalidatePath('/', 'layout');
   return NextResponse.json({ success: true });
 }

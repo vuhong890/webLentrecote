@@ -3,7 +3,7 @@ import ContactClient from './ContactClient';
 
 const supabase = getSupabase();
 
-export const revalidate = 60;
+
 
 export const metadata = {
   title: "Contact | L'Entrecôte",

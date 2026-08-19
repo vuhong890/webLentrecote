@@ -4,7 +4,7 @@ import HomeClient from './HomeClient';
 const supabase = getSupabase();
 
 // Revalidate this page every 60 seconds (SSG with ISR)
-export const revalidate = 60;
+
 
 export default async function Home() {
   // Fetch data directly from Supabase

@@ -1,3 +1,4 @@
+import { revalidatePath } from 'next/cache';
 import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 
@@ -42,6 +43,7 @@ export async function POST(request) {
     .single();
   
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+  revalidatePath('/', 'layout');
   return NextResponse.json(data, { status: 201 });
 }
 
@@ -60,6 +62,7 @@ export async function DELETE(request) {
     .eq('id', id);
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+  revalidatePath('/', 'layout');
   return NextResponse.json({ success: true });
 }
 
@@ -80,5 +83,6 @@ export async function PUT(request) {
     .single();
     
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+  revalidatePath('/', 'layout');
   return NextResponse.json(data);
 }

@@ -1,7 +1,7 @@
 import { getSupabase } from '@/lib/supabase-server';
 import HeritageClient from './HeritageClient';
 
-export const revalidate = 60;
+
 
 export const metadata = {
   title: "Heritage | L'Entrecôte",

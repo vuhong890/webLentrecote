@@ -3,7 +3,7 @@ import ReservationClient from './ReservationClient';
 
 const supabase = getSupabase();
 
-export const revalidate = 60;
+
 
 export const metadata = {
   title: "Reservation | L'Entrecôte",
