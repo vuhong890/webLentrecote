@@ -33,19 +33,26 @@ export async function GET(request) {
   const status = searchParams.get('status');
   const search = searchParams.get('search');
   const date = searchParams.get('date');
+  const page = parseInt(searchParams.get('page') || '1', 10);
+  const limit = parseInt(searchParams.get('limit') || '30', 10);
+
+  // Pagination calculation
+  const start = (page - 1) * limit;
+  const end = start + limit - 1;
 
   let query = getAuthClient(token)
     .from('reservations')
-    .select('*')
-    .order('created_at', { ascending: false });
+    .select('*', { count: 'exact' })
+    .order('created_at', { ascending: false })
+    .range(start, end);
 
   if (status && status !== 'all') query = query.eq('status', status);
   if (date) query = query.eq('date', date);
   if (search) query = query.or(`full_name.ilike.%${search}%,phone.ilike.%${search}%,email.ilike.%${search}%`);
 
-  const { data, error } = await query;
+  const { data, count, error } = await query;
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
-  return NextResponse.json(data);
+  return NextResponse.json({ data, total: count });
 }
 
 // POST create reservation (public)

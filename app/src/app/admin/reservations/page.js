@@ -8,6 +8,11 @@ export default function AdminReservations() {
   const [search, setSearch] = useState('');
   const [dateFilter, setDateFilter] = useState('');
   const [token, setToken] = useState('');
+  
+  // Pagination states
+  const [page, setPage] = useState(1);
+  const [limit, setLimit] = useState(30);
+  const [total, setTotal] = useState(0);
 
   const [editingRes, setEditingRes] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -26,17 +31,25 @@ export default function AdminReservations() {
       const interval = setInterval(loadReservations, 10000); // Tự động load lại mỗi 10 giây
       return () => clearInterval(interval);
     }
-  }, [token, filter, search, dateFilter]);
+  }, [token, filter, search, dateFilter, page, limit]);
 
   async function loadReservations() {
     const params = new URLSearchParams();
     if (filter !== 'all') params.set('status', filter);
     if (search) params.set('search', search);
     if (dateFilter) params.set('date', dateFilter);
+    params.set('page', page);
+    params.set('limit', limit);
 
     const res = await fetch(`/api/reservations?${params}`, { headers: { Authorization: `Bearer ${token}` } });
-    const data = await res.json();
-    if (Array.isArray(data)) setReservations(data);
+    const json = await res.json();
+    if (json.data && Array.isArray(json.data)) {
+      setReservations(json.data);
+      setTotal(json.total || 0);
+    } else if (Array.isArray(json)) {
+      setReservations(json); // Fallback old format
+      setTotal(json.length);
+    }
   }
 
   async function updateStatus(id, status) {
@@ -144,12 +157,12 @@ export default function AdminReservations() {
 
       <div style={s.filters}>
         {['all', 'pending', 'confirmed', 'arrived', 'cancelled'].map(f => (
-          <button key={f} style={{ ...s.filterBtn, ...(filter === f ? s.filterActive : {}) }} onClick={() => setFilter(f)}>
+          <button key={f} style={{ ...s.filterBtn, ...(filter === f ? s.filterActive : {}) }} onClick={() => { setFilter(f); setPage(1); }}>
             {f === 'all' ? 'All' : f}
           </button>
         ))}
-        <input style={s.input} type="text" placeholder="Search name, phone, email..." value={search} onChange={e => setSearch(e.target.value)} />
-        <input style={s.input} type="date" value={dateFilter} onChange={e => setDateFilter(e.target.value)} />
+        <input style={s.input} type="text" placeholder="Search name, phone, email..." value={search} onChange={e => { setSearch(e.target.value); setPage(1); }} />
+        <input style={s.input} type="date" value={dateFilter} onChange={e => { setDateFilter(e.target.value); setPage(1); }} />
       </div>
 
       <table style={s.table}>
@@ -192,6 +205,22 @@ export default function AdminReservations() {
           {reservations.length === 0 && <tr><td colSpan={9} style={{ ...s.td, color: 'rgba(255,255,255,0.35)', textAlign: 'center', padding: '2rem' }}>No reservations found</td></tr>}
         </tbody>
       </table>
+
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '1.5rem', color: 'rgba(255,255,255,0.7)', fontSize: '0.85rem' }}>
+        <div>
+          Hiển thị: 
+          <select style={{ ...s.input, minWidth: 'auto', marginLeft: '0.5rem', padding: '0.2rem 0.5rem' }} value={limit} onChange={e => { setLimit(Number(e.target.value)); setPage(1); }}>
+            <option value={30}>30</option>
+            <option value={100}>100</option>
+          </select> 
+          {' '} trên tổng {total} bookings
+        </div>
+        <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+          <button style={{ ...s.filterBtn, padding: '0.4rem 1rem', opacity: page === 1 ? 0.5 : 1, cursor: page === 1 ? 'not-allowed' : 'pointer' }} disabled={page === 1} onClick={() => setPage(p => Math.max(1, p - 1))}>Previous</button>
+          <span style={{ margin: '0 0.5rem' }}>Trang {page} / {Math.max(1, Math.ceil(total / limit))}</span>
+          <button style={{ ...s.filterBtn, padding: '0.4rem 1rem', opacity: page >= Math.ceil(total / limit) ? 0.5 : 1, cursor: page >= Math.ceil(total / limit) ? 'not-allowed' : 'pointer' }} disabled={page >= Math.ceil(total / limit)} onClick={() => setPage(p => p + 1)}>Next</button>
+        </div>
+      </div>
 
       {isModalOpen && (
         <div style={s.overlay} onClick={() => setIsModalOpen(false)}>
