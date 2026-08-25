@@ -57,3 +57,31 @@ export async function replyToTelegramMessage(messageId, text) {
     return null;
   }
 }
+
+export async function answerTelegramCallbackQuery(callbackQueryId, text = null, showAlert = false) {
+  const token = process.env.TELEGRAM_BOT_TOKEN;
+
+  if (!token || !callbackQueryId) return null;
+
+  const url = `https://api.telegram.org/bot${token}/answerCallbackQuery`;
+  const payload = {
+    callback_query_id: callbackQueryId,
+  };
+  
+  if (text) {
+    payload.text = text;
+    payload.show_alert = showAlert;
+  }
+
+  try {
+    const res = await fetch(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+    return await res.json();
+  } catch (error) {
+    console.error('Error answering callback query:', error);
+    return null;
+  }
+}
