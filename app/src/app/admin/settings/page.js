@@ -38,8 +38,9 @@ export default function AdminSettings() {
   ];
 
   const testFields = [
-    { key: 'is_test_mode', label: 'Bật Chế Độ Test (Test Mode)', desc: 'Nhập "true" để bật, "false" để tắt. Khi bật, mail sẽ không gửi cho khách.', type: 'toggle' },
-    { key: 'test_email', label: 'Test Email', desc: 'Email nhận thư xác nhận/từ chối khi bật Test Mode' },
+    { key: 'telegram_test_mode', label: 'Bật Chế Độ Test Telegram', desc: 'Nhập "true" để bật, "false" để tắt. Khi bật, việc ấn nút Yes/No trên Tele sẽ gửi mail xác nhận cho Test Email thay vì khách.', type: 'toggle' },
+    { key: 'email_test_mode', label: 'Bật Chế Độ Test Email Đặt Bàn', desc: 'Nhập "true" để bật, "false" để tắt. Khi bật, form đặt bàn mới trên web sẽ gửi mail thông báo vào Test Email thay vì mail nhà hàng.', type: 'toggle' },
+    { key: 'test_email', label: 'Test Email', desc: 'Email nhận các thư liên quan đến Test Mode' },
     { key: 'google_sheet_url', label: 'Real Google Sheet URL', desc: 'Link Webhook của file Google Sheet THẬT' },
     { key: 'test_google_sheet_url', label: 'Test Google Sheet URL', desc: 'Link Webhook của file Google Sheet TEST (dùng khi bật Test Mode)' },
   ];

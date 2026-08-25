@@ -46,7 +46,7 @@ export async function POST(request) {
       if (settingsData) {
         settingsData.forEach(s => settings[s.key] = s.value);
       }
-      const IS_TEST_MODE = settings.is_test_mode === 'true';
+      const IS_TEST_MODE = settings.telegram_test_mode === 'true';
       const testEmail = settings.test_email || process.env.EMAIL_USER;
       const sheetUrl = IS_TEST_MODE ? settings.test_google_sheet_url : settings.google_sheet_url;
 

@@ -14,7 +14,7 @@ export async function GET(request) {
   
   let isTestMode = false;
   try {
-    const { data: settingsData } = await serviceClient.from('site_settings').select('key, value').eq('key', 'is_test_mode').single();
+    const { data: settingsData } = await serviceClient.from('site_settings').select('key, value').eq('key', 'telegram_test_mode').single();
     if (settingsData) {
       isTestMode = settingsData.value === 'true';
     }

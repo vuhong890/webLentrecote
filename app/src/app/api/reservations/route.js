@@ -86,10 +86,10 @@ export async function POST(request) {
       settingsData.forEach(s => settings[s.key] = s.value);
     }
     
-    const IS_TEST_MODE = settings.is_test_mode === 'true';
-    const notificationEmail = IS_TEST_MODE ? settings.test_email : settings.notification_email;
-    const testModePrefix = IS_TEST_MODE ? '[TEST MODE] ' : '';
-    const testModeWarning = IS_TEST_MODE ? '<div style="background-color: #fff1f0; border: 1px solid #ffa39e; padding: 10px; margin-bottom: 20px; color: #cf1322; border-radius: 4px;"><strong>⚠️ LƯU Ý:</strong> Đây là email gửi thử nghiệm (Test Mode). Khách hàng không có thật.</div>' : '';
+    const IS_EMAIL_TEST = settings.email_test_mode === 'true';
+    const notificationEmail = IS_EMAIL_TEST ? settings.test_email : settings.notification_email;
+    const testModePrefix = IS_EMAIL_TEST ? '[TEST MODE] ' : '';
+    const testModeWarning = IS_EMAIL_TEST ? '<div style="background-color: #fff1f0; border: 1px solid #ffa39e; padding: 10px; margin-bottom: 20px; color: #cf1322; border-radius: 4px;"><strong>⚠️ LƯU Ý:</strong> Đây là email gửi thử nghiệm (Test Mode). Khách hàng không có thật.</div>' : '';
 
     if (notificationEmail) {
       const subject = `${testModePrefix}[L'Entrecôte] Đặt bàn mới: ${body.full_name} (${body.date})`;
@@ -146,7 +146,9 @@ export async function POST(request) {
     const createdDate = new Date(data.created_at);
     const bookedOn = `${createdDate.getDate().toString().padStart(2, '0')}/${(createdDate.getMonth()+1).toString().padStart(2, '0')}/${createdDate.getFullYear()} ${createdDate.getHours().toString().padStart(2, '0')}:${createdDate.getMinutes().toString().padStart(2, '0')}`;
     
-    const text = `${testModePrefix}<b>Thông tin đặt bàn</b>
+    const IS_TELE_TEST = settings.telegram_test_mode === 'true';
+    const teleTestPrefix = IS_TELE_TEST ? '[TEST MODE] ' : '';
+    const text = `${teleTestPrefix}<b>Thông tin đặt bàn</b>
 Tên: ${data.full_name}
 SĐT: ${data.phone}
 Email: ${data.email || 'Không có'}
