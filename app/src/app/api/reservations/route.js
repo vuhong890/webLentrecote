@@ -2,6 +2,7 @@
 import { NextResponse } from 'next/server';
 export const dynamic = 'force-dynamic';
 import { sendEmail } from '@/lib/email';
+import { sendTelegramMessage } from '@/lib/telegram';
 import { createClient } from '@supabase/supabase-js';
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -71,7 +72,9 @@ export async function POST(request) {
       branch: body.branch || '',
       note: body.note || '',
       status: 'pending',
-    });
+    })
+    .select()
+    .single();
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
 
@@ -134,6 +137,33 @@ export async function POST(request) {
       }).catch(err => console.error('Error in sendEmail async:', err));
       console.log(`[Reservation] New booking from ${body.full_name} — notify ${notificationEmail}`);
     }
+
+    // Send Telegram Notification
+    const createdDate = new Date(data.created_at);
+    const bookedOn = `${createdDate.getDate().toString().padStart(2, '0')}/${(createdDate.getMonth()+1).toString().padStart(2, '0')}/${createdDate.getFullYear()} ${createdDate.getHours().toString().padStart(2, '0')}:${createdDate.getMinutes().toString().padStart(2, '0')}`;
+    
+    const text = `<b>Thông tin đặt bàn</b>
+Tên: ${data.full_name}
+SĐT: ${data.phone}
+Email: ${data.email || 'Không có'}
+Ngày: ${data.date}
+Giờ: ${data.time}
+Số khách: ${data.guests}
+Ghi chú (Sinh nhật, ...): ${data.note || 'Không có'}
+Đặt bàn tại web lúc: ${bookedOn}`;
+
+    const replyMarkup = {
+      inline_keyboard: [
+        [
+          { text: '✅ Yes', callback_data: \`confirm_\${data.id}\` },
+          { text: '❌ No', callback_data: \`reject_\${data.id}\` },
+          { text: '🔄 Change', callback_data: \`change_\${data.id}\` }
+        ]
+      ]
+    };
+    
+    await sendTelegramMessage(text, replyMarkup);
+
   } catch (e) {
     console.error('Failed to get notification email:', e);
   }
