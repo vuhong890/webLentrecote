@@ -1,20 +1,33 @@
 import { NextResponse } from 'next/server';
+import { createClient } from '@supabase/supabase-js';
 import { sendTelegramMessage } from '@/lib/telegram';
 
 export const dynamic = 'force-dynamic'; // prevent caching
 
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+const serviceClient = createClient(supabaseUrl, serviceKey);
+
 export async function GET(request) {
   const token = process.env.TELEGRAM_BOT_TOKEN;
   const chatId = process.env.TELEGRAM_CHAT_ID;
-  const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
-  const isTestMode = process.env.IS_TEST_MODE;
+  
+  let isTestMode = false;
+  try {
+    const { data: settingsData } = await serviceClient.from('site_settings').select('key, value').eq('key', 'is_test_mode').single();
+    if (settingsData) {
+      isTestMode = settingsData.value === 'true';
+    }
+  } catch (e) {
+    console.error(e);
+  }
 
   let results = {
     envVars: {
       hasToken: !!token,
       hasChatId: !!chatId,
-      hasServiceKey: !!serviceKey,
-      isTestMode: isTestMode === 'true'
+      hasServiceKey: !!process.env.SUPABASE_SERVICE_ROLE_KEY,
+      isTestMode: isTestMode
     },
     telegramTest: 'Pending'
   };

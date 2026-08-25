@@ -7,9 +7,6 @@ const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 const serviceClient = createClient(supabaseUrl, serviceKey);
 
-// Test mode configuration
-const IS_TEST_MODE = process.env.IS_TEST_MODE === 'true';
-
 // Helper function to format YYYY-MM-DD to DD/MM/YYYY for Google Sheets
 function formatDateForSheet(dateStr) {
   if (!dateStr) return '';
@@ -43,6 +40,16 @@ export async function POST(request) {
         return NextResponse.json({ ok: true });
       }
 
+      // Load Settings from DB
+      const { data: settingsData } = await serviceClient.from('site_settings').select('key, value');
+      const settings = {};
+      if (settingsData) {
+        settingsData.forEach(s => settings[s.key] = s.value);
+      }
+      const IS_TEST_MODE = settings.is_test_mode === 'true';
+      const testEmail = settings.test_email || process.env.EMAIL_USER;
+      const sheetUrl = IS_TEST_MODE ? settings.test_google_sheet_url : settings.google_sheet_url;
+
       // Fetch reservation
       const { data: reservation, error: fetchError } = await serviceClient
         .from('reservations')
@@ -66,7 +73,6 @@ export async function POST(request) {
         if (IS_TEST_MODE) replyText += ' [TEST MODE]';
         
         // Push to Google Sheets
-        const sheetUrl = process.env.GOOGLE_SHEETS_WEBHOOK_URL;
         if (sheetUrl) {
           fetch(sheetUrl, {
             method: 'POST',
@@ -84,7 +90,7 @@ export async function POST(request) {
 
         // Send Email
         if (reservation.email) {
-          const emailTo = IS_TEST_MODE ? (process.env.EMAIL_USER || 'admin') : reservation.email;
+          const emailTo = IS_TEST_MODE ? testEmail : reservation.email;
           const subjectPrefix = IS_TEST_MODE ? '[TEST MODE] ' : '';
           
           await sendEmail({
@@ -112,7 +118,7 @@ export async function POST(request) {
         
         // Send Rejection Email
         if (reservation.email) {
-          const emailTo = IS_TEST_MODE ? (process.env.EMAIL_USER || 'admin') : reservation.email;
+          const emailTo = IS_TEST_MODE ? testEmail : reservation.email;
           const subjectPrefix = IS_TEST_MODE ? '[TEST MODE] ' : '';
 
           await sendEmail({
@@ -138,7 +144,6 @@ export async function POST(request) {
         if (IS_TEST_MODE) replyText += ' [TEST MODE]';
         
         // Push to Google Sheets as Change
-        const sheetUrl = process.env.GOOGLE_SHEETS_WEBHOOK_URL;
         if (sheetUrl) {
           fetch(sheetUrl, {
             method: 'POST',

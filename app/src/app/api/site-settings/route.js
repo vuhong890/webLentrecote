@@ -39,8 +39,7 @@ export async function PUT(request) {
 
   const { data, error } = await authClient(token)
     .from('site_settings')
-    .update({ value: body.value, updated_at: new Date().toISOString() })
-    .eq('key', body.key)
+    .upsert({ key: body.key, value: body.value, updated_at: new Date().toISOString() })
     .select()
     .single();
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
