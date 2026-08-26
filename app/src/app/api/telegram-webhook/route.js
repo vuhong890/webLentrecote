@@ -7,12 +7,25 @@ const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 const serviceClient = createClient(supabaseUrl, serviceKey);
 
-// Helper function to format YYYY-MM-DD to DD/MM/YYYY for Google Sheets
-function formatDateForSheet(dateStr) {
-  if (!dateStr) return '';
-  const parts = dateStr.split('-');
-  if (parts.length !== 3) return dateStr;
-  return `${parts[2]}/${parts[1]}/${parts[0]}`;
+// Helper function to format any date string/object to DD/MM/YYYY for Google Sheets
+function formatDateForSheet(dateInput) {
+  if (!dateInput) return '';
+  try {
+    const d = new Date(dateInput);
+    if (isNaN(d.getTime())) return dateInput; // fallback
+    const day = d.getDate().toString().padStart(2, '0');
+    const month = (d.getMonth() + 1).toString().padStart(2, '0');
+    const year = d.getFullYear();
+    return `${day}/${month}/${year}`;
+  } catch(e) {
+    return dateInput;
+  }
+}
+
+// Helper function to format time (e.g. 19:00:00) to 19h00 for Google Sheets
+function formatTimeForSheet(timeStr) {
+  if (!timeStr) return '';
+  return timeStr.substring(0, 5).replace(':', 'h');
 }
 
 export async function POST(request) {
@@ -81,7 +94,7 @@ export async function POST(request) {
               ngay_dat: formatDateForSheet(reservation.date),
               ten_khach: reservation.full_name,
               so_nguoi: reservation.guests,
-              gio_dat: reservation.time,
+              gio_dat: formatTimeForSheet(reservation.time),
               ghi_chu: reservation.note,
               so_dien_thoai: reservation.phone
             })
@@ -152,7 +165,7 @@ export async function POST(request) {
               ngay_dat: formatDateForSheet(reservation.date),
               ten_khach: reservation.full_name,
               so_nguoi: reservation.guests,
-              gio_dat: reservation.time,
+              gio_dat: formatTimeForSheet(reservation.time),
               ghi_chu: reservation.note,
               so_dien_thoai: reservation.phone
             })
