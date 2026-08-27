@@ -10,16 +10,18 @@ const serviceClient = createClient(supabaseUrl, serviceKey);
 // Helper function to format any date string/object to DD/MM/YYYY for Google Sheets
 function formatDateForSheet(dateInput) {
   if (!dateInput) return '';
-  try {
-    const d = new Date(dateInput);
-    if (isNaN(d.getTime())) return dateInput; // fallback
-    const day = d.getDate().toString().padStart(2, '0');
-    const month = (d.getMonth() + 1).toString().padStart(2, '0');
-    const year = d.getFullYear();
-    return `${day}/${month}/${year}`;
-  } catch(e) {
-    return dateInput;
+  const str = String(dateInput).trim();
+  // Bắt mọi định dạng YYYY-MM-DD hoặc DD/MM/YYYY
+  const match = str.match(/(\d{2,4})[-\/](\d{1,2})[-\/](\d{2,4})/);
+  if (match) {
+    let p1 = match[1], p2 = match[2], p3 = match[3];
+    let year, month, day;
+    if (p1.length === 4) { year = p1; month = p2; day = p3; } 
+    else if (p3.length === 4) { year = p3; month = p2; day = p1; }
+    else return dateInput; // fallback
+    return `${day.padStart(2, '0')}/${month.padStart(2, '0')}/${year}`;
   }
+  return dateInput;
 }
 
 // Helper function to format time (e.g. 19:00:00) to 19h00 for Google Sheets
@@ -106,7 +108,7 @@ export async function POST(request) {
           const emailTo = IS_TEST_MODE ? testEmail : reservation.email;
           const subjectPrefix = IS_TEST_MODE ? '[TEST MODE] ' : '';
           
-          await sendEmail({
+          const emailRes = await sendEmail({
             to: emailTo,
             subject: `${subjectPrefix}[L'Entrecôte] Xác nhận đặt bàn - ${formatDateForSheet(reservation.date)}`,
             html: `<div style="font-family: sans-serif; padding: 20px;">
@@ -118,10 +120,12 @@ export async function POST(request) {
               <p><strong>L'Entrecôte Saigon</strong></p>
               ${IS_TEST_MODE ? '<hr><p style="color:red">ĐÂY LÀ EMAIL THỬ NGHIỆM (TEST MODE). KHÁCH HÀNG THỰC TẾ KHÔNG NHẬN ĐƯỢC MAIL NÀY.</p>' : ''}
             </div>`
-          }).catch(err => {
-            console.error('Email error', err);
-            errorMsg = `Lỗi gửi mail xác nhận: ${err.message}`;
           });
+          
+          if (!emailRes.success) {
+            console.error('Email error', emailRes.error);
+            errorMsg = `Lỗi gửi mail xác nhận: ${emailRes.error?.message || emailRes.error}`;
+          }
         }
         
       } else if (action === 'reject') {
@@ -134,22 +138,24 @@ export async function POST(request) {
           const emailTo = IS_TEST_MODE ? testEmail : reservation.email;
           const subjectPrefix = IS_TEST_MODE ? '[TEST MODE] ' : '';
 
-          await sendEmail({
+          const emailRes = await sendEmail({
             to: emailTo,
             subject: `${subjectPrefix}[L'Entrecôte] Thông báo về đơn đặt bàn - ${formatDateForSheet(reservation.date)}`,
             html: `<div style="font-family: sans-serif; padding: 20px;">
               <h2>Xin chào ${reservation.full_name},</h2>
               <p>L'Entrecôte rất xin lỗi phải thông báo rằng chúng tôi đã kín bàn vào lúc <strong>${reservation.time}</strong> ngày <strong>${formatDateForSheet(reservation.date)}</strong>.</p>
-              <p>Mong bạn thông cảm và rất hy vọng được phục vụ bạn vào một dịp khác.</p>
+              <p>Rất mong bạn thông cảm và hẹn gặp lại bạn trong những dịp tới!</p>
               <br/>
               <p>Trân trọng,</p>
               <p><strong>L'Entrecôte Saigon</strong></p>
               ${IS_TEST_MODE ? '<hr><p style="color:red">ĐÂY LÀ EMAIL THỬ NGHIỆM (TEST MODE). KHÁCH HÀNG THỰC TẾ KHÔNG NHẬN ĐƯỢC MAIL NÀY.</p>' : ''}
             </div>`
-          }).catch(err => {
-            console.error('Email error', err);
-            errorMsg = `Lỗi gửi mail từ chối: ${err.message}`;
           });
+          
+          if (!emailRes.success) {
+            console.error('Email error', emailRes.error);
+            errorMsg = `Lỗi gửi mail từ chối: ${emailRes.error?.message || emailRes.error}`;
+          }
         }
       } else if (action === 'change') {
         newStatus = 'pending';
