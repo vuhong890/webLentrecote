@@ -157,7 +157,7 @@ export default function Footer({ settings = {} }) {
 
         {/* Bottom Bar */}
         <div className={styles.bottomBar}>
-          <p>&copy; {new Date().getFullYear()} L'Entrecôte. {lang === 'vi' ? 'Mọi quyền được bảo lưu.' : 'All rights reserved.'}</p>
+          <p>&copy; {new Date().getFullYear()} L&apos;Entrecôte. {lang === 'vi' ? 'Mọi quyền được bảo lưu.' : 'All rights reserved.'}</p>
           <div className={styles.bottomLinks}>
             <a href="#">{lang === 'vi' ? 'Chính sách bảo mật' : 'Privacy Policy'}</a>
             <a href="#">{lang === 'vi' ? 'Điều khoản dịch vụ' : 'Terms of Service'}</a>

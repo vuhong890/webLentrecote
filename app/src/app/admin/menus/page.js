@@ -8,23 +8,14 @@ export default function AdminMenus() {
   const [activeCat, setActiveCat] = useState(null);
   const [showForm, setShowForm] = useState(false);
   const [editItem, setEditItem] = useState(null);
-  const [form, setForm] = useState({ name_en: '', name_vi: '', description_en: '', description_vi: '', price: '', image_url: '', badge: '', category_id: '', is_available: true });
-  const [uploading, setUploading] = useState(false);
+  const [form, setForm] = useState({ name_en: '', name_vi: '', description_en: '', description_vi: '', price: '', image_url: '', image_vi: '', badge: '', category_id: '', is_available: true });
+  const [uploading, setUploading] = useState(null);
   const [token, setToken] = useState('');
   const [deleteConfirmId, setDeleteConfirmId] = useState(null);
   
   const [showCatManager, setShowCatManager] = useState(false);
   const [catForm, setCatForm] = useState({ id: null, name_en: '', name_vi: '' });
   const [deleteCatId, setDeleteCatId] = useState(null);
-
-  useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      if (session) setToken(session.access_token);
-    });
-    loadCategories();
-  }, []);
-
-  useEffect(() => { loadItems(); }, [activeCat]);
 
   async function loadCategories() {
     const res = await fetch('/api/menu-categories');
@@ -43,46 +34,86 @@ export default function AdminMenus() {
     if (Array.isArray(data)) setItems(data);
   }
 
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (session) setToken(session.access_token);
+    });
+    loadCategories();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  useEffect(() => { loadItems(); }, [activeCat]);
+
+  const activeCategoryObj = categories.find(c => c.id === activeCat);
+  const isDrinks = activeCategoryObj?.slug === 'drinks';
+
   function openNew() {
     setEditItem(null);
-    setForm({ name_en: '', name_vi: '', description_en: '', description_vi: '', price: '', image_url: '', badge: '', category_id: activeCat || '', is_available: true });
+    setForm({ name_en: '', name_vi: '', description_en: '', description_vi: '', price: '', image_url: '', image_vi: '', badge: '', category_id: activeCat || '', is_available: true });
     setShowForm(true);
   }
 
   function openEdit(item) {
     setEditItem(item);
+    let imageEn = item.image_url || '';
+    let imageVi = '';
+    if (isDrinks && imageEn.includes('|')) {
+      const parts = imageEn.split('|');
+      imageEn = parts[0];
+      imageVi = parts[1] || '';
+    }
     setForm({
       name_en: item.name_en, name_vi: item.name_vi,
       description_en: item.description_en, description_vi: item.description_vi,
-      price: item.price, image_url: item.image_url, badge: item.badge || '',
+      price: item.price, image_url: imageEn, image_vi: imageVi, badge: item.badge || '',
       category_id: item.category_id, is_available: item.is_available,
     });
     setShowForm(true);
   }
 
-  async function handleUpload(e) {
+  async function handleUpload(e, field = 'image_url') {
     const file = e.target.files[0];
     if (!file) return;
-    setUploading(true);
+    setUploading(field);
     const fd = new FormData();
     fd.append('file', file);
     fd.append('bucket', 'menu-images');
     const res = await fetch('/api/upload', { method: 'POST', headers: { Authorization: `Bearer ${token}` }, body: fd });
     const data = await res.json();
     if (data.url) {
-      setForm(prev => ({ ...prev, image_url: data.url }));
+      setForm(prev => ({ ...prev, [field]: data.url }));
     } else {
       alert('Upload failed: ' + (data.error || 'Unknown error'));
     }
-    setUploading(false);
+    setUploading(null);
   }
 
   async function handleSave() {
     const headers = { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` };
+    
+    let finalImageUrl = form.image_url;
+    if (isDrinks) {
+      finalImageUrl = `${form.image_url || ''}|${form.image_vi || ''}`;
+      if (finalImageUrl === '|') finalImageUrl = ''; 
+    }
+
+    const payload = { 
+      ...form, 
+      price: Number(form.price) || 0,
+      image_url: finalImageUrl 
+    };
+    
+    if (isDrinks) {
+      payload.name_en = form.name_en || `Drink Menu Page ${items.length + (editItem ? 0 : 1)}`;
+      payload.name_vi = form.name_vi || `Drink Menu Page ${items.length + (editItem ? 0 : 1)}`;
+    }
+    delete payload.image_vi;
+
     if (editItem) {
-      await fetch('/api/menu-items', { method: 'PUT', headers, body: JSON.stringify({ id: editItem.id, ...form, price: Number(form.price) }) });
+      await fetch('/api/menu-items', { method: 'PUT', headers, body: JSON.stringify({ id: editItem.id, ...payload }) });
     } else {
-      await fetch('/api/menu-items', { method: 'POST', headers, body: JSON.stringify({ ...form, price: Number(form.price) }) });
+      await fetch('/api/menu-items', { method: 'POST', headers, body: JSON.stringify(payload) });
     }
     setShowForm(false);
     loadItems();
@@ -131,6 +162,21 @@ export default function AdminMenus() {
     ));
   }
 
+  async function swapItemOrder(index, direction) {
+    const newItems = [...items];
+    const temp = newItems[index];
+    newItems[index] = newItems[index + direction];
+    newItems[index + direction] = temp;
+    
+    const updatedItems = newItems.map((c, i) => ({ ...c, sort_order: i + 1 }));
+    setItems(updatedItems);
+    
+    const headers = { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` };
+    await Promise.all(updatedItems.map(c => 
+      fetch('/api/menu-items', { method: 'PUT', headers, body: JSON.stringify({ id: c.id, sort_order: c.sort_order }) })
+    ));
+  }
+
   async function executeDeleteCategory() {
     if (!deleteCatId) return;
     const res = await fetch(`/api/menu-categories?id=${deleteCatId}`, { method: 'DELETE', headers: { Authorization: `Bearer ${token}` } });
@@ -170,7 +216,7 @@ export default function AdminMenus() {
     input: { width: '100%', padding: '0.6rem 0.75rem', background: '#0a0a0a', border: '1px solid rgba(255,255,255,0.15)', color: '#fff', fontSize: '0.9rem', fontFamily: 'var(--font-body)', outline: 'none' },
     textarea: { width: '100%', padding: '0.6rem 0.75rem', background: '#0a0a0a', border: '1px solid rgba(255,255,255,0.15)', color: '#fff', fontSize: '0.9rem', fontFamily: 'var(--font-body)', outline: 'none', minHeight: 80, resize: 'vertical' },
     row: { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' },
-    imgPrev: { width: 80, height: 80, objectFit: 'cover', marginTop: '0.5rem', background: '#2a1a0a' },
+    imgPrev: { width: 120, height: 160, objectFit: 'contain', marginTop: '0.5rem', background: '#2a1a0a' },
     formActions: { display: 'flex', gap: '0.75rem', marginTop: '1.5rem' },
     saveBtn: { flex: 1, padding: '0.75rem', background: '#F0C75E', color: '#1a1a1a', border: 'none', fontWeight: 700, fontSize: '0.8rem', cursor: 'pointer' },
     cancelBtn: { flex: 1, padding: '0.75rem', background: 'rgba(255,255,255,0.06)', color: '#fff', border: 'none', fontSize: '0.8rem', cursor: 'pointer' },
@@ -182,7 +228,7 @@ export default function AdminMenus() {
         <h1 style={s.title}>Menu Management</h1>
         <div style={{ display: 'flex', gap: '1rem' }}>
           <button style={{ ...s.addBtn, background: '#1a1a1a', color: '#F0C75E', border: '1px solid #F0C75E' }} onClick={() => setShowCatManager(true)}>MANAGE CATEGORIES</button>
-          <button style={s.addBtn} onClick={openNew}>+ ADD ITEM</button>
+          <button style={s.addBtn} onClick={openNew}>{isDrinks ? '+ ADD MENU PAGE' : '+ ADD ITEM'}</button>
         </div>
       </div>
 
@@ -196,97 +242,168 @@ export default function AdminMenus() {
       </div>
 
       {/* Items table */}
-      <table style={s.table}>
-        <thead>
-          <tr>
-            <th style={s.th}>Image</th>
-            <th style={s.th}>Name (EN)</th>
-            <th style={s.th}>Name (VI)</th>
-            <th style={s.th}>Price</th>
-            <th style={s.th}>Badge</th>
-            <th style={s.th}>Status</th>
-            <th style={s.th}>Actions</th>
-          </tr>
-        </thead>
-        <tbody>
-          {items.map(item => (
-            <tr key={item.id}>
-              <td style={s.td}>{item.image_url ? <img src={item.image_url} style={s.img} alt="" /> : <div style={{ ...s.img, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>🥩</div>}</td>
-              <td style={s.td}>{item.name_en}</td>
-              <td style={s.td}>{item.name_vi}</td>
-              <td style={{ ...s.td, ...s.price }}>{Number(item.price).toLocaleString()}₫</td>
-              <td style={s.td}>{item.badge && <span style={s.badge}>{item.badge}</span>}</td>
-              <td style={s.td}><span style={item.is_available ? s.avail : s.unavail}>{item.is_available ? '● Active' : '● Hidden'}</span></td>
-              <td style={s.td}>
-                <div style={s.actions}>
-                  <button style={s.editBtn} onClick={() => openEdit(item)}>Edit</button>
-                  <button style={s.delBtn} onClick={() => confirmDelete(item.id)}>Delete</button>
-                </div>
-              </td>
+      {!isDrinks ? (
+        <table style={s.table}>
+          <thead>
+            <tr>
+              <th style={s.th}>Image</th>
+              <th style={s.th}>Name (EN)</th>
+              <th style={s.th}>Name (VI)</th>
+              <th style={s.th}>Price</th>
+              <th style={s.th}>Badge</th>
+              <th style={s.th}>Status</th>
+              <th style={s.th}>Actions</th>
             </tr>
-          ))}
-          {items.length === 0 && <tr><td colSpan={7} style={{ ...s.td, color: 'rgba(255,255,255,0.4)', textAlign: 'center' }}>No items in this category</td></tr>}
-        </tbody>
-      </table>
+          </thead>
+          <tbody>
+            {items.map(item => (
+              <tr key={item.id}>
+                <td style={s.td}>{item.image_url ? <img src={item.image_url} style={s.img} alt="" /> : <div style={{ ...s.img, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>🥩</div>}</td>
+                <td style={s.td}>{item.name_en}</td>
+                <td style={s.td}>{item.name_vi}</td>
+                <td style={{ ...s.td, ...s.price }}>{Number(item.price).toLocaleString()}₫</td>
+                <td style={s.td}>{item.badge && <span style={s.badge}>{item.badge}</span>}</td>
+                <td style={s.td}><span style={item.is_available ? s.avail : s.unavail}>{item.is_available ? '● Active' : '● Hidden'}</span></td>
+                <td style={s.td}>
+                  <div style={s.actions}>
+                    <button style={s.editBtn} onClick={() => openEdit(item)}>Edit</button>
+                    <button style={s.delBtn} onClick={() => confirmDelete(item.id)}>Delete</button>
+                  </div>
+                </td>
+              </tr>
+            ))}
+            {items.length === 0 && <tr><td colSpan={7} style={{ ...s.td, color: 'rgba(255,255,255,0.4)', textAlign: 'center' }}>No items in this category</td></tr>}
+          </tbody>
+        </table>
+      ) : (
+        <table style={s.table}>
+          <thead>
+            <tr>
+              <th style={s.th}>Page #</th>
+              <th style={s.th}>Image (EN)</th>
+              <th style={s.th}>Image (VI)</th>
+              <th style={s.th}>Order</th>
+              <th style={s.th}>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {items.map((item, index) => {
+              const parts = (item.image_url || '').split('|');
+              const imgEn = parts[0];
+              const imgVi = parts[1] || '';
+              return (
+                <tr key={item.id}>
+                  <td style={s.td}>Page {index + 1}</td>
+                  <td style={s.td}>{imgEn ? <img src={imgEn} style={{width: 50, height: 70, objectFit: 'cover'}} alt="EN" /> : '-'}</td>
+                  <td style={s.td}>{imgVi ? <img src={imgVi} style={{width: 50, height: 70, objectFit: 'cover'}} alt="VI" /> : '-'}</td>
+                  <td style={s.td}>
+                    <div style={{ display: 'flex', gap: '0.25rem' }}>
+                      <button disabled={index === 0} onClick={() => swapItemOrder(index, -1)} style={{ padding: '0.2rem 0.5rem', cursor: index === 0 ? 'not-allowed' : 'pointer', background: 'rgba(255,255,255,0.1)', color: '#fff', border: 'none', opacity: index === 0 ? 0.3 : 1 }}>↑</button>
+                      <button disabled={index === items.length - 1} onClick={() => swapItemOrder(index, 1)} style={{ padding: '0.2rem 0.5rem', cursor: index === items.length - 1 ? 'not-allowed' : 'pointer', background: 'rgba(255,255,255,0.1)', color: '#fff', border: 'none', opacity: index === items.length - 1 ? 0.3 : 1 }}>↓</button>
+                    </div>
+                  </td>
+                  <td style={s.td}>
+                    <div style={s.actions}>
+                      <button style={s.editBtn} onClick={() => openEdit(item)}>Edit</button>
+                      <button style={s.delBtn} onClick={() => confirmDelete(item.id)}>Delete</button>
+                    </div>
+                  </td>
+                </tr>
+              );
+            })}
+            {items.length === 0 && <tr><td colSpan={5} style={{ ...s.td, color: 'rgba(255,255,255,0.4)', textAlign: 'center' }}>No images uploaded yet</td></tr>}
+          </tbody>
+        </table>
+      )}
 
       {/* Form modal */}
       {showForm && (
         <div style={s.overlay} onClick={() => setShowForm(false)}>
           <div style={s.modal} onClick={e => e.stopPropagation()}>
-            <h2 style={s.formTitle}>{editItem ? 'Edit Item' : 'Add New Item'}</h2>
+            <h2 style={s.formTitle}>{editItem ? (isDrinks ? 'Edit Menu Page' : 'Edit Item') : (isDrinks ? 'Add Menu Page' : 'Add New Item')}</h2>
 
-            <div style={s.row}>
-              <div style={s.field}>
-                <label style={s.label}>Name (English)</label>
-                <input style={s.input} value={form.name_en} onChange={e => setForm({ ...form, name_en: e.target.value })} />
-              </div>
-              <div style={s.field}>
-                <label style={s.label}>Name (Vietnamese)</label>
-                <input style={s.input} value={form.name_vi} onChange={e => setForm({ ...form, name_vi: e.target.value })} />
-              </div>
-            </div>
+            {!isDrinks ? (
+              <>
+                <div style={s.row}>
+                  <div style={s.field}>
+                    <label style={s.label}>Name (English)</label>
+                    <input style={s.input} value={form.name_en} onChange={e => setForm({ ...form, name_en: e.target.value })} />
+                  </div>
+                  <div style={s.field}>
+                    <label style={s.label}>Name (Vietnamese)</label>
+                    <input style={s.input} value={form.name_vi} onChange={e => setForm({ ...form, name_vi: e.target.value })} />
+                  </div>
+                </div>
 
-            <div style={s.field}>
-              <label style={s.label}>Description (English)</label>
-              <textarea style={s.textarea} value={form.description_en} onChange={e => setForm({ ...form, description_en: e.target.value })} />
-            </div>
-            <div style={s.field}>
-              <label style={s.label}>Description (Vietnamese)</label>
-              <textarea style={s.textarea} value={form.description_vi} onChange={e => setForm({ ...form, description_vi: e.target.value })} />
-            </div>
+                <div style={s.field}>
+                  <label style={s.label}>Description (English)</label>
+                  <textarea style={s.textarea} value={form.description_en} onChange={e => setForm({ ...form, description_en: e.target.value })} />
+                </div>
+                <div style={s.field}>
+                  <label style={s.label}>Description (Vietnamese)</label>
+                  <textarea style={s.textarea} value={form.description_vi} onChange={e => setForm({ ...form, description_vi: e.target.value })} />
+                </div>
 
-            <div style={s.row}>
-              <div style={s.field}>
-                <label style={s.label}>Price (VND)</label>
-                <input style={s.input} type="number" value={form.price} onChange={e => setForm({ ...form, price: e.target.value })} />
-              </div>
-              <div style={s.field}>
-                <label style={s.label}>Badge</label>
-                <input style={s.input} value={form.badge} onChange={e => setForm({ ...form, badge: e.target.value })} placeholder="e.g. Signature, Chef's Pick" />
-              </div>
-            </div>
+                <div style={s.row}>
+                  <div style={s.field}>
+                    <label style={s.label}>Price (VND)</label>
+                    <input style={s.input} type="number" value={form.price} onChange={e => setForm({ ...form, price: e.target.value })} />
+                  </div>
+                  <div style={s.field}>
+                    <label style={s.label}>Badge</label>
+                    <input style={s.input} value={form.badge} onChange={e => setForm({ ...form, badge: e.target.value })} placeholder="e.g. Signature, Chef's Pick" />
+                  </div>
+                </div>
 
-            <div style={s.field}>
-              <label style={s.label}>Category</label>
-              <select style={s.input} value={form.category_id} onChange={e => setForm({ ...form, category_id: e.target.value })}>
-                <option value="">Select...</option>
-                {categories.map(c => <option key={c.id} value={c.id}>{c.name_en}</option>)}
-              </select>
-            </div>
+                <div style={s.field}>
+                  <label style={s.label}>Category</label>
+                  <select style={s.input} value={form.category_id} onChange={e => setForm({ ...form, category_id: e.target.value })}>
+                    <option value="">Select...</option>
+                    {categories.map(c => <option key={c.id} value={c.id}>{c.name_en}</option>)}
+                  </select>
+                </div>
 
-            <div style={s.field}>
-              <label style={s.label}>Image</label>
-              <input type="file" accept="image/*" onChange={handleUpload} style={{ color: '#fff', fontSize: '0.85rem' }} />
-              {uploading && <p style={{ color: '#F0C75E', fontSize: '0.8rem' }}>Uploading...</p>}
-              {form.image_url && <img src={form.image_url} style={s.imgPrev} alt="" />}
-            </div>
+                <div style={s.field}>
+                  <label style={s.label}>Image</label>
+                  <input type="file" accept="image/*" onChange={e => handleUpload(e, 'image_url')} style={{ color: '#fff', fontSize: '0.85rem' }} />
+                  {uploading === 'image_url' && <p style={{ color: '#F0C75E', fontSize: '0.8rem' }}>Uploading...</p>}
+                  {form.image_url && <img src={form.image_url} style={{...s.imgPrev, width: 80, height: 80, objectFit: 'cover'}} alt="" />}
+                </div>
 
-            <div style={s.field}>
-              <label style={{ ...s.label, display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                <input type="checkbox" checked={form.is_available} onChange={e => setForm({ ...form, is_available: e.target.checked })} />
-                Available on menu
-              </label>
-            </div>
+                <div style={s.field}>
+                  <label style={{ ...s.label, display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                    <input type="checkbox" checked={form.is_available} onChange={e => setForm({ ...form, is_available: e.target.checked })} />
+                    Available on menu
+                  </label>
+                </div>
+              </>
+            ) : (
+              // Specialized Form for Drink Menu
+              <>
+                <p style={{ color: 'rgba(255,255,255,0.7)', fontSize: '0.85rem', marginBottom: '1.5rem', lineHeight: 1.5 }}>
+                  Upload images for this menu page. You can upload an English version and a Vietnamese version.<br/>
+                  If you only upload one, it will be shown for both languages.
+                </p>
+
+                <div style={s.row}>
+                  <div style={{...s.field, background: 'rgba(255,255,255,0.03)', padding: '1rem', borderRadius: '8px', position: 'relative'}}>
+                    <label style={{...s.label, color: '#F0C75E'}}>Image (English)</label>
+                    <input type="file" accept="image/*" onChange={e => handleUpload(e, 'image_url')} style={{ color: '#fff', fontSize: '0.8rem', width: '100%', marginBottom: '0.5rem' }} />
+                    {uploading === 'image_url' && <p style={{ color: '#F0C75E', fontSize: '0.8rem', marginTop: '0.5rem' }}>Uploading...</p>}
+                    {form.image_url && <img src={form.image_url} style={s.imgPrev} alt="EN" />}
+                    {form.image_url && <button onClick={() => setForm({...form, image_url: ''})} style={{...s.delBtn, marginTop: '0.5rem', display: 'block', width: '120px'}}>Remove</button>}
+                  </div>
+
+                  <div style={{...s.field, background: 'rgba(255,255,255,0.03)', padding: '1rem', borderRadius: '8px', position: 'relative'}}>
+                    <label style={{...s.label, color: '#F0C75E'}}>Image (Vietnamese)</label>
+                    <input type="file" accept="image/*" onChange={e => handleUpload(e, 'image_vi')} style={{ color: '#fff', fontSize: '0.8rem', width: '100%', marginBottom: '0.5rem' }} />
+                    {uploading === 'image_vi' && <p style={{ color: '#F0C75E', fontSize: '0.8rem', marginTop: '0.5rem' }}>Uploading...</p>}
+                    {form.image_vi && <img src={form.image_vi} style={s.imgPrev} alt="VI" />}
+                    {form.image_vi && <button onClick={() => setForm({...form, image_vi: ''})} style={{...s.delBtn, marginTop: '0.5rem', display: 'block', width: '120px'}}>Remove</button>}
+                  </div>
+                </div>
+              </>
+            )}
 
             <div style={s.formActions}>
               <button style={s.saveBtn} onClick={handleSave}>SAVE</button>

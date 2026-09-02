@@ -51,10 +51,7 @@ export default function GalleryClient({ initialImages = [], initialPageSections 
     ? images
     : images.filter(img => img.category === activeFilter);
 
-  // Reset visible count when filter changes
-  useEffect(() => {
-    setVisibleCount(12);
-  }, [activeFilter]);
+
 
   const visibleImages = filtered.slice(0, visibleCount);
   const hasMore = filtered.length > visibleCount;
@@ -109,7 +106,10 @@ export default function GalleryClient({ initialImages = [], initialPageSections 
               <button
                 key={f.id}
                 className={`${styles.filterBtn} ${activeFilter === f.id ? styles.filterActive : ''}`}
-                onClick={() => setActiveFilter(f.id)}
+                onClick={() => {
+                  setActiveFilter(f.id);
+                  setVisibleCount(12);
+                }}
               >
                 {lang === 'vi' && f.label_vi ? f.label_vi : f.label_en}
               </button>

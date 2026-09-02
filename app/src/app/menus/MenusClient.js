@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/set-state-in-effect */
 'use client';
 import { useState, useEffect } from 'react';
 import Image from 'next/image';
@@ -29,12 +30,8 @@ export default function MenusClient({ initialCategories = [], allMenuItems = [],
   const tf = (obj, field) => obj ? obj[`${field}_${lang}`] || obj[`${field}_en`] || '' : '';
   const tm = (obj, key) => obj?.metadata ? obj.metadata[`${key}_${lang}`] || obj.metadata[`${key}_en`] || '' : '';
 
-  // Load items when category changes (skip for drinks — uses static image)
+  // Load items when category changes
   useEffect(() => {
-    if (activeSlug === 'drinks') {
-      setItems([]);
-      return;
-    }
     const cat = categories.find(c => c.slug === activeSlug);
     if (cat) {
       const catItems = allMenuItems.filter(item => item.category_id === cat.id);
@@ -107,18 +104,43 @@ export default function MenusClient({ initialCategories = [], allMenuItems = [],
             ))}
           </div>
 
-          {/* Drink Menu — show static image */}
+          {/* Drink Menu — show dynamic images or fallback static image */}
           {activeSlug === 'drinks' ? (
             <div className={styles.drinkMenuImage}>
-              <Image
-                src={lang === 'vi' ? '/drink_vn.png' : '/drink_en.png'}
-                alt="Drink Menu & Wine List"
-                width={1035}
-                height={1300}
-                className={styles.drinkMenuImg}
-                sizes="(max-width: 768px) 100vw, 1035px"
-                quality={80}
-              />
+              {items.length > 0 ? (
+                items.map((item, i) => {
+                  const parts = (item.image_url || '').split('|');
+                  const imgEn = parts[0];
+                  const imgVi = parts[1] || parts[0]; // fallback to EN if VI not provided
+                  const imgSrc = lang === 'vi' && imgVi ? imgVi : imgEn;
+                  
+                  if (!imgSrc) return null;
+                  
+                  return (
+                    <Image
+                      key={item.id || i}
+                      src={imgSrc}
+                      alt={`Drink Menu & Wine List Page ${i + 1}`}
+                      width={1035}
+                      height={1300}
+                      className={styles.drinkMenuImg}
+                      sizes="(max-width: 768px) 100vw, 1035px"
+                      quality={80}
+                      style={{ marginBottom: '2rem' }}
+                    />
+                  );
+                })
+              ) : (
+                <Image
+                  src={lang === 'vi' ? '/drink_vn.png' : '/drink_en.png'}
+                  alt="Drink Menu & Wine List"
+                  width={1035}
+                  height={1300}
+                  className={styles.drinkMenuImg}
+                  sizes="(max-width: 768px) 100vw, 1035px"
+                  quality={80}
+                />
+              )}
             </div>
           ) : (
             /* Menu Items Grid */

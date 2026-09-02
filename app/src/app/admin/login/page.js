@@ -43,7 +43,7 @@ export default function AdminLogin() {
           </svg>
         </div>
         <h1>Admin Panel</h1>
-        <p className={styles.subtitle}>L'Entrecôte Management System</p>
+        <p className={styles.subtitle}>L&apos;Entrecôte Management System</p>
 
         {error && <div className={styles.error}>{error}</div>}
 

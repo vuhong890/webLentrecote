@@ -183,7 +183,7 @@ export default function HomeClient({ initialHomeSections, initialHeritageSection
                 <div className={`${styles.heritageText} richTextContent`} dangerouslySetInnerHTML={{ __html: tf(heritagePreview, 'content') }} />
               ) : (
                 <p className={styles.heritageText}>
-                  Born in Paris in 1959, L'Entrecôte has captivated diners with a singular vision: one perfect dish, executed to perfection.
+                  Born in Paris in 1959, L&apos;Entrecôte has captivated diners with a singular vision: one perfect dish, executed to perfection.
                 </p>
               )}
 

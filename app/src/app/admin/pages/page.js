@@ -38,13 +38,14 @@ export default function AdminPages() {
     supabase.auth.getSession().then(({ data: { session } }) => { if (session) setToken(session.access_token); });
   }, []);
 
-  useEffect(() => { loadSections(); }, [activePage]);
-
   async function loadSections() {
     const res = await fetch(`/api/page-sections?page=${activePage}`);
     const data = await res.json();
     if (Array.isArray(data)) setSections(data);
   }
+
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  useEffect(() => { loadSections(); }, [activePage]);
 
   function openEdit(section) {
     if (section.section_key === 'signature') {

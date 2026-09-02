@@ -25,14 +25,6 @@ export default function AdminReservations() {
     });
   }, []);
 
-  useEffect(() => { 
-    if (token) {
-      loadReservations(); 
-      const interval = setInterval(loadReservations, 10000); // Tự động load lại mỗi 10 giây
-      return () => clearInterval(interval);
-    }
-  }, [token, filter, search, dateFilter, page, limit]);
-
   async function loadReservations() {
     const params = new URLSearchParams();
     if (filter !== 'all') params.set('status', filter);
@@ -51,6 +43,17 @@ export default function AdminReservations() {
       setTotal(json.length);
     }
   }
+
+  useEffect(() => { 
+    if (token) {
+      loadReservations(); 
+      const interval = setInterval(loadReservations, 10000); // Tự động load lại mỗi 10 giây
+      return () => clearInterval(interval);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [token, filter, search, dateFilter, page, limit]);
+
+
 
   async function updateStatus(id, status) {
     const res = await fetch('/api/reservations', {

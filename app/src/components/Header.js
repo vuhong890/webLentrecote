@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/set-state-in-effect */
 'use client';
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
@@ -33,9 +34,7 @@ export default function Header() {
   const { lang, setLang } = useLanguage();
   const t = useTranslation();
 
-  // Hide header on admin pages
   const isAdmin = pathname?.startsWith('/admin');
-  if (isAdmin) return null;
 
   const isHomePage = pathname === '/';
 
@@ -124,6 +123,8 @@ export default function Header() {
     // Simple exact match logic for other pages
     return pathname === linkHref ? styles.active : '';
   };
+
+  if (isAdmin) return null;
 
   return (
     <header className={`${styles.header} ${scrolled ? styles.scrolled : ''} ${mobileOpen ? styles.mobileMenuActive : ''}`}>

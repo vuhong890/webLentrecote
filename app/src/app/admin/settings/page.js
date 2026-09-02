@@ -7,16 +7,19 @@ export default function AdminSettings() {
   const [token, setToken] = useState('');
   const [saving, setSaving] = useState('');
 
-  useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => { if (session) setToken(session.access_token); });
-    loadSettings();
-  }, []);
-
   async function loadSettings() {
     const res = await fetch('/api/site-settings');
     const data = await res.json();
     setSettings(data);
   }
+
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data: { session } }) => { if (session) setToken(session.access_token); });
+    loadSettings();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+
 
   async function saveSetting(key) {
     setSaving(key);
