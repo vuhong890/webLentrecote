@@ -200,7 +200,8 @@
 /* Drink Menu Image */
 .drinkMenuImage {
   display: flex;
-  justify-content: center;
+  flex-direction: column;
+  align-items: center;
   animation: fadeInUp 0.5s ease both;
 }
 
