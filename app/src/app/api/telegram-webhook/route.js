@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
-import { replyToTelegramMessage, answerTelegramCallbackQuery, sendTelegramMessage } from '@/lib/telegram';
+import { replyToTelegramMessage, answerTelegramCallbackQuery, sendTelegramMessage, sendForceReplyMessage } from '@/lib/telegram';
 import { sendEmail } from '@/lib/email';
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -37,8 +37,70 @@ export async function POST(request) {
 
   try {
     const body = await request.json();
-    
-    // Check if this is a Telegram callback_query
+
+    // 1. Check if this is a normal text message (replying to force reply for Reschedule)
+    if (body.message && body.message.reply_to_message) {
+      const repliedMsg = body.message.reply_to_message.text;
+      if (repliedMsg && repliedMsg.includes('Vui lòng nhập giờ muốn đổi cho đơn #')) {
+        const match = repliedMsg.match(/đơn #(\d+)/);
+        if (match) {
+          const reservationId = match[1];
+          const newTime = body.message.text;
+
+          // Fetch reservation
+          const { data: reservation, error: fetchError } = await serviceClient
+            .from('reservations')
+            .select('*')
+            .eq('id', reservationId)
+            .single();
+
+          if (fetchError || !reservation) {
+            await sendTelegramMessage(`❌ Lỗi: Không tìm thấy đơn hàng ID ${reservationId}`);
+            return NextResponse.json({ ok: true });
+          }
+
+          // Send Email to customer
+          const { data: settingsData } = await serviceClient.from('site_settings').select('key, value');
+          const settings = {};
+          if (settingsData) {
+            settingsData.forEach(s => settings[s.key] = s.value);
+          }
+          const IS_TEST_MODE = settings.telegram_test_mode === 'true';
+          const testEmail = settings.test_email || process.env.EMAIL_USER;
+
+          if (reservation.email) {
+            const emailTo = IS_TEST_MODE ? testEmail : reservation.email;
+            const subjectPrefix = IS_TEST_MODE ? '[TEST MODE] ' : '';
+
+            const emailRes = await sendEmail({
+              to: emailTo,
+              subject: `${subjectPrefix}[L'Entrecôte] Gợi ý đổi giờ đặt bàn - ${formatDateForSheet(reservation.date)}`,
+              html: `<div style="font-family: sans-serif; padding: 20px;">
+                <h2>Xin chào ${reservation.full_name},</h2>
+                <p>L'Entrecôte rất xin lỗi phải thông báo rằng chúng tôi đã kín bàn vào lúc <strong>${reservation.time}</strong> ngày <strong>${formatDateForSheet(reservation.date)}</strong>.</p>
+                <p>Bạn có thể đổi sang giờ <strong>${newTime}</strong> được không?</p>
+                <p>Nếu bạn đồng ý, xin vui lòng liên hệ lại với số điện thoại <strong>(+84) 32 7157 002</strong> hoặc <a href="https://weblentrecote.vercel.app/reservation">đặt lại bàn trên website của chúng tôi</a>.</p>
+                <br/>
+                <p>Rất mong bạn thông cảm và hẹn gặp lại bạn!</p>
+                <br/>
+                <p>Trân trọng,</p>
+                <p><strong>L'Entrecôte Saigon</strong></p>
+                ${IS_TEST_MODE ? '<hr><p style="color:red">ĐÂY LÀ EMAIL THỬ NGHIỆM (TEST MODE). KHÁCH HÀNG THỰC TẾ KHÔNG NHẬN ĐƯỢC MAIL NÀY.</p>' : ''}
+              </div>`
+            });
+
+            if (!emailRes.success) {
+              await sendTelegramMessage(`⚠️ Lỗi gửi mail đổi giờ: ${emailRes.error?.message || emailRes.error}`);
+            } else {
+              await replyToTelegramMessage(body.message.message_id, `✅ Đã gửi email gợi ý đổi sang ${newTime} cho khách hàng.`);
+            }
+          }
+        }
+      }
+      return NextResponse.json({ ok: true });
+    }
+
+    // 2. Check if this is a Telegram callback_query (button click)
     if (body.callback_query) {
       const cb = body.callback_query;
       cbQueryId = cb.id; // Important: for answering the callback
@@ -133,63 +195,17 @@ export async function POST(request) {
           }
         }
         
-      } else if (action === 'reject') {
-        newStatus = 'cancelled';
-        replyText = `---------------------------\nTình trạng xử lý: ❌ No\n(Bởi: ${userFullName})`;
-        if (IS_TEST_MODE) replyText += ' [TEST MODE]';
-        
-        // Send Rejection Email
-        if (reservation.email) {
-          const emailTo = IS_TEST_MODE ? testEmail : reservation.email;
-          const subjectPrefix = IS_TEST_MODE ? '[TEST MODE] ' : '';
-
-          const emailRes = await sendEmail({
-            to: emailTo,
-            subject: `${subjectPrefix}[L'Entrecôte] Thông báo về đơn đặt bàn - ${formatDateForSheet(reservation.date)}`,
-            html: `<div style="font-family: sans-serif; padding: 20px;">
-              <h2>Xin chào ${reservation.full_name},</h2>
-              <p>L'Entrecôte rất xin lỗi phải thông báo rằng chúng tôi đã kín bàn vào lúc <strong>${reservation.time}</strong> ngày <strong>${formatDateForSheet(reservation.date)}</strong>.</p>
-              <p>Rất mong bạn thông cảm và hẹn gặp lại bạn trong những dịp tới!</p>
-              <br/>
-              <p>Trân trọng,</p>
-              <p><strong>L'Entrecôte Saigon</strong></p>
-              ${IS_TEST_MODE ? '<hr><p style="color:red">ĐÂY LÀ EMAIL THỬ NGHIỆM (TEST MODE). KHÁCH HÀNG THỰC TẾ KHÔNG NHẬN ĐƯỢC MAIL NÀY.</p>' : ''}
-            </div>`
-          });
-          
-          if (!emailRes.success) {
-            console.error('Email error', emailRes.error);
-            errorMsg = `Lỗi gửi mail từ chối: ${emailRes.error?.message || emailRes.error}`;
-          }
+      } else if (action === 'reschedule') {
+        const promptText = `Vui lòng nhập giờ muốn đổi cho đơn #${reservationId} (Reply tin nhắn này):`;
+        await sendForceReplyMessage(messageId, promptText);
+        if (cbQueryId) {
+          await answerTelegramCallbackQuery(cbQueryId, "Đang chờ nhập giờ...");
         }
-      } else if (action === 'change') {
-        newStatus = 'pending';
-        replyText = `---------------------------\nTình trạng xử lý: 🔄 Change\n(Bởi: ${userFullName})`;
-        if (IS_TEST_MODE) replyText += ' [TEST MODE]';
-        
-        // Push to Google Sheets as Change
-        if (sheetUrl) {
-          try {
-            await fetch(sheetUrl, {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({
-                loai_xu_ly: "Change",
-                ngay_dat: formatDateForSheet(reservation.date),
-                ten_khach: reservation.full_name,
-                so_nguoi: reservation.guests,
-                gio_dat: formatTimeForSheet(reservation.time),
-                ghi_chu: reservation.note,
-                so_dien_thoai: reservation.phone
-              })
-            });
-          } catch (err) {
-            console.error('Error pushing to sheet', err);
-          }
-        }
+        // Do not update DB or push to Google Sheets for reschedule yet.
+        return NextResponse.json({ ok: true });
       }
 
-      // Update Database
+      // Update Database (only for Yes/Confirm since Reschedule returns early)
       const { error: updateError } = await serviceClient.from('reservations').update({ status: newStatus }).eq('id', reservationId);
       if (updateError) {
         errorMsg = `Lỗi cập nhật CSDL: ${updateError.message}`;

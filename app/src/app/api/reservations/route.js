@@ -162,8 +162,7 @@ Ghi chú (Sinh nhật, ...): ${data.note || 'Không có'}
       inline_keyboard: [
         [
           { text: '✅ Yes', callback_data: `confirm_${data.id}` },
-          { text: '❌ No', callback_data: `reject_${data.id}` },
-          { text: '🔄 Change', callback_data: `change_${data.id}` }
+          { text: '🔄 Reschedule', callback_data: `reschedule_${data.id}` }
         ]
       ]
     };
