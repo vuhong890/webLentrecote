@@ -89,18 +89,23 @@ export async function POST(request) {
         
         // Push to Google Sheets
         if (sheetUrl) {
-          fetch(sheetUrl, {
-            method: 'POST',
-            body: JSON.stringify({
-              loai_xu_ly: "Yes",
-              ngay_dat: formatDateForSheet(reservation.date),
-              ten_khach: reservation.full_name,
-              so_nguoi: reservation.guests,
-              gio_dat: formatTimeForSheet(reservation.time),
-              ghi_chu: reservation.note,
-              so_dien_thoai: reservation.phone
-            })
-          }).catch(err => console.error('Error pushing to sheet', err));
+          try {
+            await fetch(sheetUrl, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                loai_xu_ly: "Yes",
+                ngay_dat: formatDateForSheet(reservation.date),
+                ten_khach: reservation.full_name,
+                so_nguoi: reservation.guests,
+                gio_dat: formatTimeForSheet(reservation.time),
+                ghi_chu: reservation.note,
+                so_dien_thoai: reservation.phone
+              })
+            });
+          } catch (err) {
+            console.error('Error pushing to sheet', err);
+          }
         }
 
         // Send Email
@@ -164,18 +169,23 @@ export async function POST(request) {
         
         // Push to Google Sheets as Change
         if (sheetUrl) {
-          fetch(sheetUrl, {
-            method: 'POST',
-            body: JSON.stringify({
-              loai_xu_ly: "Change",
-              ngay_dat: formatDateForSheet(reservation.date),
-              ten_khach: reservation.full_name,
-              so_nguoi: reservation.guests,
-              gio_dat: formatTimeForSheet(reservation.time),
-              ghi_chu: reservation.note,
-              so_dien_thoai: reservation.phone
-            })
-          }).catch(err => console.error('Error pushing to sheet', err));
+          try {
+            await fetch(sheetUrl, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                loai_xu_ly: "Change",
+                ngay_dat: formatDateForSheet(reservation.date),
+                ten_khach: reservation.full_name,
+                so_nguoi: reservation.guests,
+                gio_dat: formatTimeForSheet(reservation.time),
+                ghi_chu: reservation.note,
+                so_dien_thoai: reservation.phone
+              })
+            });
+          } catch (err) {
+            console.error('Error pushing to sheet', err);
+          }
         }
       }
 
