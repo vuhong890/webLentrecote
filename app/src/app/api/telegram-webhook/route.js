@@ -42,7 +42,8 @@ export async function POST(request) {
     if (body.message && body.message.reply_to_message) {
       const repliedMsg = body.message.reply_to_message.text;
       if (repliedMsg && repliedMsg.includes('Vui lòng nhập giờ muốn đổi cho đơn #')) {
-        const match = repliedMsg.match(/đơn #(\d+)/);
+        // Match a UUID or any non-whitespace string after "đơn #"
+        const match = repliedMsg.match(/đơn #([a-f0-9\-]+)/i);
         if (match) {
           const reservationId = match[1];
           const newTime = body.message.text;
