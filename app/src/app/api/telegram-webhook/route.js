@@ -38,69 +38,6 @@ export async function POST(request) {
   try {
     const body = await request.json();
 
-    // 1. Check if this is a normal text message (replying to force reply for Reschedule)
-    if (body.message && body.message.reply_to_message) {
-      const repliedMsg = body.message.reply_to_message.text;
-      if (repliedMsg && repliedMsg.includes('Vui lòng nhập giờ muốn đổi cho đơn #')) {
-        // Match a UUID or any non-whitespace string after "đơn #"
-        const match = repliedMsg.match(/đơn #([a-f0-9\-]+)/i);
-        if (match) {
-          const reservationId = match[1];
-          const newTime = body.message.text;
-
-          // Fetch reservation
-          const { data: reservation, error: fetchError } = await serviceClient
-            .from('reservations')
-            .select('*')
-            .eq('id', reservationId)
-            .single();
-
-          if (fetchError || !reservation) {
-            await sendTelegramMessage(`❌ Lỗi: Không tìm thấy đơn hàng ID ${reservationId}`);
-            return NextResponse.json({ ok: true });
-          }
-
-          // Send Email to customer
-          const { data: settingsData } = await serviceClient.from('site_settings').select('key, value');
-          const settings = {};
-          if (settingsData) {
-            settingsData.forEach(s => settings[s.key] = s.value);
-          }
-          const IS_TEST_MODE = settings.telegram_test_mode === 'true';
-          const testEmail = settings.test_email || process.env.EMAIL_USER;
-
-          if (reservation.email) {
-            const emailTo = IS_TEST_MODE ? testEmail : reservation.email;
-            const subjectPrefix = IS_TEST_MODE ? '[TEST MODE] ' : '';
-
-            const emailRes = await sendEmail({
-              to: emailTo,
-              subject: `${subjectPrefix}[L'Entrecôte] Gợi ý đổi giờ đặt bàn - ${formatDateForSheet(reservation.date)}`,
-              html: `<div style="font-family: sans-serif; padding: 20px;">
-                <h2>Xin chào ${reservation.full_name},</h2>
-                <p>L'Entrecôte rất xin lỗi phải thông báo rằng chúng tôi đã kín bàn vào lúc <strong>${reservation.time}</strong> ngày <strong>${formatDateForSheet(reservation.date)}</strong>.</p>
-                <p>Bạn có thể đổi sang giờ <strong>${newTime}</strong> được không?</p>
-                <p>Nếu bạn đồng ý, xin vui lòng liên hệ lại với số điện thoại <strong>(+84) 32 7157 002</strong> hoặc <a href="https://weblentrecote.vercel.app/reservation">đặt lại bàn trên website của chúng tôi</a>.</p>
-                <br/>
-                <p>Rất mong bạn thông cảm và hẹn gặp lại bạn!</p>
-                <br/>
-                <p>Trân trọng,</p>
-                <p><strong>L'Entrecôte Saigon</strong></p>
-                ${IS_TEST_MODE ? '<hr><p style="color:red">ĐÂY LÀ EMAIL THỬ NGHIỆM (TEST MODE). KHÁCH HÀNG THỰC TẾ KHÔNG NHẬN ĐƯỢC MAIL NÀY.</p>' : ''}
-              </div>`
-            });
-
-            if (!emailRes.success) {
-              await sendTelegramMessage(`⚠️ Lỗi gửi mail đổi giờ: ${emailRes.error?.message || emailRes.error}`);
-            } else {
-              await replyToTelegramMessage(body.message.message_id, `✅ Đã gửi email gợi ý đổi sang ${newTime} cho khách hàng.`);
-            }
-          }
-        }
-      }
-      return NextResponse.json({ ok: true });
-    }
-
     // 2. Check if this is a Telegram callback_query (button click)
     if (body.callback_query) {
       const cb = body.callback_query;
@@ -111,7 +48,22 @@ export async function POST(request) {
       const messageId = cb.message?.message_id;
       const userFullName = `${cb.from.first_name || ''} ${cb.from.last_name || ''}`.trim() || cb.from.username || 'Admin';
       
-      const [action, reservationId] = data.split('_');
+      let action = '';
+      let reservationId = '';
+      let newTime = '';
+
+      if (data.startsWith('confirm_')) {
+        action = 'confirm';
+        reservationId = data.substring(8);
+      } else if (data.startsWith('reschedule_')) {
+        action = 'reschedule';
+        reservationId = data.substring(11);
+      } else if (data.startsWith('newtime_')) {
+        action = 'newtime';
+        const parts = data.split('_');
+        reservationId = parts[1];
+        newTime = parts[2];
+      }
       
       if (!reservationId) {
         if (cbQueryId) await answerTelegramCallbackQuery(cbQueryId, "Dữ liệu nút bấm không hợp lệ!");
@@ -197,12 +149,57 @@ export async function POST(request) {
         }
         
       } else if (action === 'reschedule') {
-        const promptText = `Vui lòng nhập giờ muốn đổi cho đơn #${reservationId} (Reply tin nhắn này):`;
-        await sendForceReplyMessage(messageId, promptText);
+        const times = ["11:30 AM", "12:00 PM", "12:30 PM", "1:00 PM", "1:30 PM", "4:00 PM", "5:00 PM", "6:00 PM", "6:30 PM", "7:00 PM", "7:30 PM", "8:00 PM", "8:30 PM", "9:00 PM", "9:30 PM"];
+        const inline_keyboard = [];
+        for (let i = 0; i < times.length; i += 3) {
+          const row = times.slice(i, i + 3).map(time => ({
+            text: time,
+            callback_data: `newtime_${reservationId}_${time}`
+          }));
+          inline_keyboard.push(row);
+        }
+        await sendTelegramMessage(`Vui lòng chọn khung giờ muốn đổi cho đơn #${reservationId}:`, { inline_keyboard });
         if (cbQueryId) {
-          await answerTelegramCallbackQuery(cbQueryId, "Đang chờ nhập giờ...");
+          await answerTelegramCallbackQuery(cbQueryId, "Vui lòng chọn giờ bên dưới");
         }
         // Do not update DB or push to Google Sheets for reschedule yet.
+        return NextResponse.json({ ok: true });
+      } else if (action === 'newtime') {
+        replyText = `✅ Đã gửi mail đề xuất đổi sang ${newTime} cho khách hàng.\n(Bởi: ${userFullName})`;
+        if (IS_TEST_MODE) replyText += ' [TEST MODE]';
+        
+        // Send Email to customer
+        if (reservation.email) {
+          const emailTo = IS_TEST_MODE ? testEmail : reservation.email;
+          const subjectPrefix = IS_TEST_MODE ? '[TEST MODE] ' : '';
+
+          const emailRes = await sendEmail({
+            to: emailTo,
+            subject: `${subjectPrefix}[L'Entrecôte] Gợi ý đổi giờ đặt bàn - ${formatDateForSheet(reservation.date)}`,
+            html: `<div style="font-family: sans-serif; padding: 20px;">
+              <h2>Xin chào ${reservation.full_name},</h2>
+              <p>L'Entrecôte rất xin lỗi phải thông báo rằng chúng tôi đã kín bàn vào lúc <strong>${reservation.time}</strong> ngày <strong>${formatDateForSheet(reservation.date)}</strong>.</p>
+              <p>Bạn có thể đổi sang giờ <strong>${newTime}</strong> được không?</p>
+              <p>Nếu bạn đồng ý, xin vui lòng liên hệ lại với số điện thoại <strong>(+84) 32 7157 002</strong> hoặc <a href="https://www.lentrecotevietnam.com/reservation">đặt lại bàn trên website của chúng tôi</a>.</p>
+              <br/>
+              <p>Rất mong bạn thông cảm và hẹn gặp lại bạn!</p>
+              <br/>
+              <p>Trân trọng,</p>
+              <p><strong>L'Entrecôte Saigon</strong></p>
+              ${IS_TEST_MODE ? '<hr><p style="color:red">ĐÂY LÀ EMAIL THỬ NGHIỆM (TEST MODE). KHÁCH HÀNG THỰC TẾ KHÔNG NHẬN ĐƯỢC MAIL NÀY.</p>' : ''}
+            </div>`
+          });
+
+          if (!emailRes.success) {
+            errorMsg = `Lỗi gửi mail đổi giờ: ${emailRes.error?.message || emailRes.error}`;
+          }
+        }
+
+        // Do not update DB or push to Google Sheets for newtime (still pending)
+        if (cbQueryId) await answerTelegramCallbackQuery(cbQueryId, `Đã báo đổi sang ${newTime}!`);
+        if (messageId) await replyToTelegramMessage(messageId, replyText);
+        if (errorMsg && chatId) await sendTelegramMessage(`⚠️ <b>Cảnh báo lỗi:</b>\nQuá trình xử lý đơn ${reservationId} bị lỗi:\n<code>${errorMsg}</code>`);
+        
         return NextResponse.json({ ok: true });
       }
 
