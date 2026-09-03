@@ -86,6 +86,33 @@ export async function POST(request) {
       settingsData.forEach(s => settings[s.key] = s.value);
     }
     
+    // Send Telegram Notification FIRST (because SMTP email can hang on Vercel)
+    const createdDate = new Date(data.created_at);
+    const bookedOn = `${createdDate.getDate().toString().padStart(2, '0')}/${(createdDate.getMonth()+1).toString().padStart(2, '0')}/${createdDate.getFullYear()} ${createdDate.getHours().toString().padStart(2, '0')}:${createdDate.getMinutes().toString().padStart(2, '0')}`;
+    
+    const IS_TELE_TEST = settings.telegram_test_mode === 'true';
+    const teleTestPrefix = IS_TELE_TEST ? '[TEST MODE] ' : '';
+    const text = `${teleTestPrefix}<b>Thông tin đặt bàn</b>
+Tên: ${data.full_name}
+SĐT: ${data.phone}
+Email: ${data.email || 'Không có'}
+Ngày: ${data.date}
+Giờ: ${data.time}
+Số khách: ${data.guests}
+Ghi chú (Sinh nhật, ...): ${data.note || 'Không có'}
+Đặt bàn tại web lúc: ${bookedOn}`;
+
+    const replyMarkup = {
+      inline_keyboard: [
+        [
+          { text: '✅ Yes', callback_data: `confirm_${data.id}` },
+          { text: '🔄 Reschedule', callback_data: `reschedule_${data.id}` }
+        ]
+      ]
+    };
+    
+    await sendTelegramMessage(text, replyMarkup);
+
     const IS_EMAIL_TEST = settings.email_test_mode === 'true';
     const notificationEmail = IS_EMAIL_TEST ? settings.test_email : settings.notification_email;
     const testModePrefix = IS_EMAIL_TEST ? '[TEST MODE] ' : '';
@@ -134,7 +161,8 @@ export async function POST(request) {
       `;
 
       // Đợi email gửi xong để đảm bảo không bị huỷ tác vụ ngầm (đặc biệt trên môi trường serverless như Vercel)
-      await sendEmail({
+      // Chạy không await để Telegram chắc chắn gửi được ngay cả khi email bị Vercel timeout
+      sendEmail({
         to: notificationEmail,
         subject,
         html,
@@ -142,32 +170,7 @@ export async function POST(request) {
       console.log(`[Reservation] New booking from ${body.full_name} — notify ${notificationEmail}`);
     }
 
-    // Send Telegram Notification
-    const createdDate = new Date(data.created_at);
-    const bookedOn = `${createdDate.getDate().toString().padStart(2, '0')}/${(createdDate.getMonth()+1).toString().padStart(2, '0')}/${createdDate.getFullYear()} ${createdDate.getHours().toString().padStart(2, '0')}:${createdDate.getMinutes().toString().padStart(2, '0')}`;
-    
-    const IS_TELE_TEST = settings.telegram_test_mode === 'true';
-    const teleTestPrefix = IS_TELE_TEST ? '[TEST MODE] ' : '';
-    const text = `${teleTestPrefix}<b>Thông tin đặt bàn</b>
-Tên: ${data.full_name}
-SĐT: ${data.phone}
-Email: ${data.email || 'Không có'}
-Ngày: ${data.date}
-Giờ: ${data.time}
-Số khách: ${data.guests}
-Ghi chú (Sinh nhật, ...): ${data.note || 'Không có'}
-Đặt bàn tại web lúc: ${bookedOn}`;
 
-    const replyMarkup = {
-      inline_keyboard: [
-        [
-          { text: '✅ Yes', callback_data: `confirm_${data.id}` },
-          { text: '🔄 Reschedule', callback_data: `reschedule_${data.id}` }
-        ]
-      ]
-    };
-    
-    await sendTelegramMessage(text, replyMarkup);
 
   } catch (e) {
     console.error('Failed to get notification email:', e);
