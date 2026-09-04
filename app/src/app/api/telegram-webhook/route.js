@@ -131,14 +131,62 @@ export async function POST(request) {
           const emailRes = await sendEmail({
             to: emailTo,
             subject: `${subjectPrefix}[L'Entrecôte] Xác nhận đặt bàn - ${formatDateForSheet(reservation.date)}`,
-            html: `<div style="font-family: sans-serif; padding: 20px;">
-              <h2>Xin chào ${reservation.full_name},</h2>
-              <p>L'Entrecôte xin xác nhận đơn đặt bàn của bạn vào lúc <strong>${reservation.time}</strong> ngày <strong>${formatDateForSheet(reservation.date)}</strong> cho <strong>${reservation.guests}</strong> người đã được xác nhận thành công.</p>
-              <p>Rất mong được đón tiếp bạn tại nhà hàng!</p>
-              <br/>
-              <p>Trân trọng,</p>
-              <p><strong>L'Entrecôte Saigon</strong></p>
-              ${IS_TEST_MODE ? '<hr><p style="color:red">ĐÂY LÀ EMAIL THỬ NGHIỆM (TEST MODE). KHÁCH HÀNG THỰC TẾ KHÔNG NHẬN ĐƯỢC MAIL NÀY.</p>' : ''}
+            html: `<div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; color: #333; line-height: 1.6;">
+              <div style="text-align: center; margin-bottom: 20px;">
+                <h2 style="color: #c9a756; text-transform: uppercase;">L'Entrecôte - Social Meating</h2>
+              </div>
+
+              <p>Xin chào <strong>${reservation.full_name}</strong>,</p>
+              <p>Cảm ơn anh/chị đã lựa chọn L’Entrecôte – Social Meating.<br/>
+              Nhà hàng xác nhận thông tin đặt bàn của anh/chị như sau:</p>
+              
+              <table style="width: 100%; border-collapse: collapse; margin: 20px 0; background: #f9f9f9;">
+                <tr><td style="padding: 10px; border: 1px solid #ddd; width: 40%;"><strong>Tên khách:</strong></td><td style="padding: 10px; border: 1px solid #ddd;">${reservation.full_name}</td></tr>
+                <tr><td style="padding: 10px; border: 1px solid #ddd;"><strong>Ngày:</strong></td><td style="padding: 10px; border: 1px solid #ddd;">${formatDateForSheet(reservation.date)}</td></tr>
+                <tr><td style="padding: 10px; border: 1px solid #ddd;"><strong>Giờ:</strong></td><td style="padding: 10px; border: 1px solid #ddd;">${reservation.time}</td></tr>
+                <tr><td style="padding: 10px; border: 1px solid #ddd;"><strong>Số lượng khách:</strong></td><td style="padding: 10px; border: 1px solid #ddd;">${reservation.guests}</td></tr>
+                <tr><td style="padding: 10px; border: 1px solid #ddd;"><strong>Yêu cầu đặc biệt (không đảm bảo):</strong></td><td style="padding: 10px; border: 1px solid #ddd;">${reservation.note || 'Không có'}</td></tr>
+              </table>
+
+              <p><strong>Thông tin gửi xe:</strong><br/>
+              Chỗ đậu xe máy tùy thuộc vào tình trạng chỗ trống:</p>
+              <ul style="margin-top: 5px;">
+                <li>55 Đông Du: 10.000 VNĐ / xe máy</li>
+                <li>63 Đông Du: 20.000 VNĐ / xe máy</li>
+                <li>Ô tô: khoảng 25.000–40.000 VNĐ / giờ</li>
+              </ul>
+              
+              <p>Anh/chị có thêm yêu cầu hoặc cần thay đổi thông tin đặt bàn, vui lòng liên hệ với nhà hàng qua số <strong>032 7157002</strong>.</p>
+              <p>Rất mong được chào đón quý khách tại L’Entrecôte – Social Meating.</p>
+              <p>Trân trọng,<br/><strong>L’Entrecôte – Social Meating</strong></p>
+
+              <hr style="border: none; border-top: 1px solid #eee; margin: 30px 0;" />
+
+              <p>Dear <strong>${reservation.full_name}</strong>,</p>
+              <p>Thank you for choosing L’Entrecôte – Social Meating.<br/>
+              We are pleased to confirm your reservation with the following details:</p>
+              
+              <table style="width: 100%; border-collapse: collapse; margin: 20px 0; background: #f9f9f9;">
+                <tr><td style="padding: 10px; border: 1px solid #ddd; width: 40%;"><strong>Guest Name:</strong></td><td style="padding: 10px; border: 1px solid #ddd;">${reservation.full_name}</td></tr>
+                <tr><td style="padding: 10px; border: 1px solid #ddd;"><strong>Date:</strong></td><td style="padding: 10px; border: 1px solid #ddd;">${formatDateForSheet(reservation.date)}</td></tr>
+                <tr><td style="padding: 10px; border: 1px solid #ddd;"><strong>Time:</strong></td><td style="padding: 10px; border: 1px solid #ddd;">${reservation.time}</td></tr>
+                <tr><td style="padding: 10px; border: 1px solid #ddd;"><strong>Number of Guests:</strong></td><td style="padding: 10px; border: 1px solid #ddd;">${reservation.guests}</td></tr>
+                <tr><td style="padding: 10px; border: 1px solid #ddd;"><strong>Special Request (not guaranteed):</strong></td><td style="padding: 10px; border: 1px solid #ddd;">${reservation.note || 'None'}</td></tr>
+              </table>
+
+              <p><strong>Parking Information:</strong><br/>
+              Scooter parking is subject to availability:</p>
+              <ul style="margin-top: 5px;">
+                <li>55 Dong Du: 10,000 VND / motorbike</li>
+                <li>63 Dong Du: 20,000 VND / motorbike</li>
+                <li>Car parking: approximately 25,000–40,000 VND / hour</li>
+              </ul>
+              
+              <p>If you have any additional requests or need to make changes to your reservation, please feel free to contact us at <strong>032 7157002</strong>.</p>
+              <p>We look forward to welcoming you soon.</p>
+              <p>Thank you and Best regards,<br/><strong>L’Entrecôte – Social Meating</strong></p>
+
+              ${IS_TEST_MODE ? '<hr><p style="color:red; text-align:center;">ĐÂY LÀ EMAIL THỬ NGHIỆM (TEST MODE). KHÁCH HÀNG THỰC TẾ KHÔNG NHẬN ĐƯỢC MAIL NÀY.</p>' : ''}
             </div>`
           });
           
@@ -176,17 +224,30 @@ export async function POST(request) {
           const emailRes = await sendEmail({
             to: emailTo,
             subject: `${subjectPrefix}[L'Entrecôte] Gợi ý đổi giờ đặt bàn - ${formatDateForSheet(reservation.date)}`,
-            html: `<div style="font-family: sans-serif; padding: 20px;">
-              <h2>Xin chào ${reservation.full_name},</h2>
-              <p>L'Entrecôte rất xin lỗi phải thông báo rằng chúng tôi đã kín bàn vào lúc <strong>${reservation.time}</strong> ngày <strong>${formatDateForSheet(reservation.date)}</strong>.</p>
-              <p>Bạn có thể đổi sang giờ <strong>${newTime}</strong> được không?</p>
-              <p>Nếu bạn đồng ý, xin vui lòng liên hệ lại với số điện thoại <strong>(+84) 32 7157 002</strong> hoặc <a href="https://www.lentrecotevietnam.com/reservation">đặt lại bàn trên website của chúng tôi</a>.</p>
-              <br/>
-              <p>Rất mong bạn thông cảm và hẹn gặp lại bạn!</p>
-              <br/>
-              <p>Trân trọng,</p>
-              <p><strong>L'Entrecôte Saigon</strong></p>
-              ${IS_TEST_MODE ? '<hr><p style="color:red">ĐÂY LÀ EMAIL THỬ NGHIỆM (TEST MODE). KHÁCH HÀNG THỰC TẾ KHÔNG NHẬN ĐƯỢC MAIL NÀY.</p>' : ''}
+            html: `<div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; color: #333; line-height: 1.6;">
+              <div style="text-align: center; margin-bottom: 20px;">
+                <h2 style="color: #c9a756; text-transform: uppercase;">L'Entrecôte - Social Meating</h2>
+              </div>
+
+              <p>Xin chào <strong>${reservation.full_name}</strong>,</p>
+              <p>Cảm ơn anh/chị đã lựa chọn L’Entrecôte – Social Meating.</p>
+              <p>Nhà hàng rất tiếc rằng khung giờ <strong>${reservation.time}</strong> vào ngày <strong>${formatDateForSheet(reservation.date)}</strong> hiện đã kín bàn. Tuy nhiên, nhà hàng đề xuất khung giờ còn bàn trống lúc <strong>${newTime}</strong>.</p>
+              <p>Nếu khung giờ trên phù hợp, anh/chị có thể <a href="https://www.lentrecotevietnam.com/reservation" style="color: #c9a756; text-decoration: none; font-weight: bold;">đặt bàn mới trực tiếp trên website của nhà hàng</a>, hoặc liên hệ hotline <strong>032 7157002</strong> để được hỗ trợ đặt bàn mới.</p>
+              <p>L’Entrecôte - Social Meating thành thật xin lỗi vì sự bất tiện này.</p>
+              <p>Rất mong sớm được chào đón anh/chị tại L’Entrecôte - Social Meating.</p>
+              <p>Trân trọng,<br/><strong>L’Entrecôte – Social Meating</strong></p>
+
+              <hr style="border: none; border-top: 1px solid #eee; margin: 30px 0;" />
+
+              <p>Dear <strong>${reservation.full_name}</strong>,</p>
+              <p>Thank you for choosing L’Entrecôte – Social Meating.</p>
+              <p>We are sorry to inform you that the requested time <strong>${reservation.time}</strong> on <strong>${formatDateForSheet(reservation.date)}</strong> is currently fully booked. However, we would be pleased to offer you an available alternative time at <strong>${newTime}</strong>.</p>
+              <p>If the suggested time works for you, you may <a href="https://www.lentrecotevietnam.com/reservation" style="color: #c9a756; text-decoration: none; font-weight: bold;">make a new reservation directly through our website</a>, or contact our hotline at <strong>032 7157002</strong> for assistance with making a new reservation.</p>
+              <p>L’Entrecôte – Social Meating sincerely apologizes for any inconvenience caused.</p>
+              <p>We very much look forward to welcoming you soon at L’Entrecôte – Social Meating.</p>
+              <p>Thank you and Best regards,<br/><strong>L’Entrecôte – Social Meating</strong></p>
+
+              ${IS_TEST_MODE ? '<hr><p style="color:red; text-align:center;">ĐÂY LÀ EMAIL THỬ NGHIỆM (TEST MODE). KHÁCH HÀNG THỰC TẾ KHÔNG NHẬN ĐƯỢC MAIL NÀY.</p>' : ''}
             </div>`
           });
 
