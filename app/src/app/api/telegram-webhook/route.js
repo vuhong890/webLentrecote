@@ -197,7 +197,7 @@ export async function POST(request) {
         }
         
       } else if (action === 'reschedule') {
-        const times = ["11:30 AM", "12:00 PM", "12:30 PM", "1:00 PM", "1:30 PM", "4:00 PM", "5:00 PM", "6:00 PM", "6:30 PM", "7:00 PM", "7:30 PM", "8:00 PM", "8:30 PM", "9:00 PM", "9:30 PM"];
+        const times = ["11:30 AM", "12:00 PM", "12:30 PM", "1:00 PM", "1:30 PM", "4:00 PM", "4:30 PM", "5:00 PM", "5:30 PM", "6:00 PM", "6:30 PM", "7:00 PM", "7:30 PM", "8:00 PM", "8:30 PM", "9:00 PM", "9:30 PM"];
         const inline_keyboard = [];
         for (let i = 0; i < times.length; i += 3) {
           const row = times.slice(i, i + 3).map(time => ({
