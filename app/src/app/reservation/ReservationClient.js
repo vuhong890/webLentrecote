@@ -129,6 +129,7 @@ export default function ReservationClient({ initialPageSections = {} }) {
                       <label className={styles.formLabel}>{t('time')}</label>
                       <select name="time" value={formData.time} onChange={handleChange} className={styles.formInput} required>
                         <option value="">{t('selectTime')}</option>
+                        <option value="11:00">11:00 AM</option>
                         <option value="11:30">11:30 AM</option>
                         <option value="12:00">12:00 PM</option>
                         <option value="12:30">12:30 PM</option>
