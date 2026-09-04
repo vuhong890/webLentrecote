@@ -87,7 +87,13 @@ export async function POST(request) {
       }
 
       if (!reservationId) {
+        if (cbQueryId) await answerTelegramCallbackQuery(cbQueryId, "Dữ liệu nút bấm không hợp lệ!");
         return NextResponse.json({ ok: true });
+      }
+
+      // Ngăn Telegram retry và tắt spinner trên nút bấm ngay lập tức
+      if (cbQueryId) {
+        await answerTelegramCallbackQuery(cbQueryId, "Đang xử lý...");
       }
 
       // Fetch reservation
@@ -111,6 +117,19 @@ export async function POST(request) {
       let errorMsg = null;
 
       if (action === 'confirm') {
+        // Khóa đơn hàng ngay lập tức để chống double-click (Race condition)
+        const { data: updatedRes, error: updateError } = await serviceClient
+          .from('reservations')
+          .update({ status: 'confirmed' })
+          .eq('id', reservationId)
+          .eq('status', 'pending')
+          .select();
+          
+        if (updateError || !updatedRes || updatedRes.length === 0) {
+          // Nếu không update được tức là luồng khác đã xử lý rồi
+          return NextResponse.json({ ok: true });
+        }
+
         replyText = `✅ Đã xác nhận đơn đặt bàn. Đã gửi tin nhắn Facebook cho khách.\n(Xác nhận bởi: ${userFullName})`;
         
         if (reservation.psid) {
@@ -141,9 +160,7 @@ export async function POST(request) {
         } else {
           errorMsg = "Không tìm thấy mã PSID của khách hàng này.";
         }
-
-        // Update DB
-        const { error: updateError } = await serviceClient.from('reservations').update({ status: 'confirmed' }).eq('id', reservationId);
+        // Đã update DB ở đầu block confirm
         if (updateError) errorMsg = `Lỗi cập nhật CSDL: ${updateError.message}`;
 
       } else if (action === 'newtime') {
@@ -176,7 +193,7 @@ export async function POST(request) {
         return NextResponse.json({ ok: true });
       }
 
-      if (cbQueryId) await answerTelegramCallbackQuery(cbQueryId, "Đã ghi nhận!");
+      // if (cbQueryId) await answerTelegramCallbackQuery(cbQueryId, "Đã ghi nhận!"); // Đã gọi ở trên
       if (messageId && chatId) await replyToTelegramMessage(messageId, replyText, chatId);
       if (errorMsg && chatId) await sendTelegramMessage(`⚠️ <b>Cảnh báo lỗi:</b>\nQuá trình xử lý đơn ${reservationId} bị lỗi:\n<code>${errorMsg}</code>`, chatId);
     }

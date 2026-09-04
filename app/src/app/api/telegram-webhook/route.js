@@ -70,6 +70,12 @@ export async function POST(request) {
         return NextResponse.json({ ok: true });
       }
 
+      // Ngăn Telegram retry và tắt spinner trên nút bấm ngay lập tức
+      if (cbQueryId && action !== 'reschedule') {
+        // Trừ reschedule vì nó hiện menu chọn giờ, ta sẽ answer sau
+        await answerTelegramCallbackQuery(cbQueryId, "Đang xử lý...");
+      }
+
       // Load Settings from DB
       const { data: settingsData } = await serviceClient.from('site_settings').select('key, value');
       const settings = {};
@@ -98,6 +104,19 @@ export async function POST(request) {
       let replyText = '';
       
       if (action === 'confirm') {
+        // Khóa đơn hàng ngay lập tức để chống double-click (Race condition)
+        const { data: updatedRes, error: updateError } = await serviceClient
+          .from('reservations')
+          .update({ status: 'confirmed' })
+          .eq('id', reservationId)
+          .eq('status', 'pending')
+          .select();
+          
+        if (updateError || !updatedRes || updatedRes.length === 0) {
+          // Nếu không update được tức là luồng khác đã xử lý rồi
+          return NextResponse.json({ ok: true });
+        }
+
         newStatus = 'confirmed';
         replyText = `---------------------------\nTình trạng xử lý: ✅ Yes\n(Bởi: ${userFullName})`;
         if (IS_TEST_MODE) replyText += ' [TEST MODE]';
@@ -264,16 +283,10 @@ export async function POST(request) {
         return NextResponse.json({ ok: true });
       }
 
-      // Update Database (only for Yes/Confirm since Reschedule returns early)
-      const { error: updateError } = await serviceClient.from('reservations').update({ status: newStatus }).eq('id', reservationId);
-      if (updateError) {
-        errorMsg = `Lỗi cập nhật CSDL: ${updateError.message}`;
-      }
+      // Đã update Database ở phía trên đối với confirm, nên không cần update lại ở đây nữa
+      // (Đối với newtime thì không update DB)
       
-      // Stop the loading icon on the button
-      if (cbQueryId) {
-        await answerTelegramCallbackQuery(cbQueryId, "Đã ghi nhận!");
-      }
+      // Stop the loading icon on the button (đã gọi ở trên, nhưng gọi lại cũng không sao hoặc bỏ đi)
 
       // Reply to Telegram
       if (messageId) {
