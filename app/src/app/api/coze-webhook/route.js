@@ -100,7 +100,6 @@ export async function POST(request) {
       const message = `<b>Thông tin đặt bàn</b>\n`
         + `Tên: ${data.ten_khach || 'Không rõ'}\n`
         + `SĐT: ${data.so_dien_thoai || 'Không rõ'}\n`
-        + `Email: Không có\n`
         + `Ngày: ${data.ngay_dat || 'Không rõ'}\n`
         + `Giờ: ${data.gio_dat || 'Không rõ'}\n`
         + `Số khách: ${data.so_nguoi || 'Không rõ'}\n`
