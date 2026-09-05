@@ -94,29 +94,26 @@ export async function POST(request) {
 
     // 3. Send to Telegram
     if (botToken && chatId) {
-      const message = `🔔 *CÓ YÊU CẦU ĐẶT BÀN MỚI TỪ FACEBOOK* 🔔\n\n`
-        + `👤 Tên: ${data.ten_khach || 'Không rõ'}\n`
-        + `📞 SĐT: ${data.so_dien_thoai || 'Không rõ'}\n`
-        + `📅 Ngày: ${data.ngay_dat || 'Không rõ'}\n`
-        + `⏰ Giờ: ${data.gio_dat || 'Không rõ'}\n`
-        + `👥 Số lượng: ${data.so_nguoi || 'Không rõ'}\n`
-        + `📝 Ghi chú: ${data.ghi_chu || 'Không'}\n\n`
-        + `🔍 PSID: ${psid || 'Không tìm thấy'}`;
+      const createdDate = new Date();
+      const bookedOn = `${createdDate.getDate().toString().padStart(2, '0')}/${(createdDate.getMonth()+1).toString().padStart(2, '0')}/${createdDate.getFullYear()} ${createdDate.getHours().toString().padStart(2, '0')}:${createdDate.getMinutes().toString().padStart(2, '0')}`;
 
-      const times = ["11:00 AM", "11:30 AM", "12:00 PM", "12:30 PM", "1:00 PM", "1:30 PM", "4:00 PM", "4:30 PM", "5:00 PM", "5:30 PM", "6:00 PM", "6:30 PM", "7:00 PM", "7:30 PM", "8:00 PM", "8:30 PM", "9:00 PM", "9:30 PM"];
+      const message = `<b>Thông tin đặt bàn</b>\n`
+        + `Tên: ${data.ten_khach || 'Không rõ'}\n`
+        + `SĐT: ${data.so_dien_thoai || 'Không rõ'}\n`
+        + `Email: Không có\n`
+        + `Ngày: ${data.ngay_dat || 'Không rõ'}\n`
+        + `Giờ: ${data.gio_dat || 'Không rõ'}\n`
+        + `Số khách: ${data.so_nguoi || 'Không rõ'}\n`
+        + `Ghi chú (Sinh nhật, ...): ${data.ghi_chu || 'Không có'}\n`
+        + `PSID: ${psid || 'Không tìm thấy'}\n`
+        + `Đặt bàn tại facebook lúc: ${bookedOn}`;
+
       const inline_keyboard = [
         [
-          { text: "✅ Yes", callback_data: `confirm_${reservationId}` }
+          { text: "✅ Yes", callback_data: `confirm_${reservationId}` },
+          { text: "🔄 Reschedule", callback_data: `reschedule_${reservationId}` }
         ]
       ];
-      
-      for (let i = 0; i < times.length; i += 3) {
-        const row = times.slice(i, i + 3).map(time => ({
-          text: time,
-          callback_data: `newtime_${reservationId}_${time}`
-        }));
-        inline_keyboard.push(row);
-      }
 
       const telegramUrl = `https://api.telegram.org/bot${botToken}/sendMessage`;
       await fetch(telegramUrl, {
@@ -125,7 +122,7 @@ export async function POST(request) {
         body: JSON.stringify({
           chat_id: chatId,
           text: message,
-          parse_mode: 'Markdown',
+          parse_mode: 'HTML',
           reply_markup: {
             inline_keyboard: inline_keyboard
           }

@@ -38,11 +38,11 @@ export async function POST(request) {
     const pageAccessToken = process.env.FACEBOOK_PAGE_ACCESS_TOKEN;
 
     // Helper functions for Telegram
-    const sendTelegramMessage = async (text, chatId) => {
+    const sendTelegramMessage = async (text, chatId, extraOptions = {}) => {
       await fetch(`https://api.telegram.org/bot${botToken}/sendMessage`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ chat_id: chatId, text, parse_mode: 'HTML' })
+        body: JSON.stringify({ chat_id: chatId, text, parse_mode: 'HTML', ...extraOptions })
       });
     };
 
@@ -79,6 +79,9 @@ export async function POST(request) {
       if (cbData.startsWith('confirm_')) {
         action = 'confirm';
         reservationId = cbData.replace('confirm_', '');
+      } else if (cbData.startsWith('reschedule_')) {
+        action = 'reschedule';
+        reservationId = cbData.replace('reschedule_', '');
       } else if (cbData.startsWith('newtime_')) {
         action = 'newtime';
         const parts = cbData.split('_');
@@ -162,6 +165,22 @@ export async function POST(request) {
         }
         // Đã update DB ở đầu block confirm
         if (updateError) errorMsg = `Lỗi cập nhật CSDL: ${updateError.message}`;
+
+      } else if (action === 'reschedule') {
+        const times = ["11:00 AM", "11:30 AM", "12:00 PM", "12:30 PM", "1:00 PM", "1:30 PM", "4:00 PM", "4:30 PM", "5:00 PM", "5:30 PM", "6:00 PM", "6:30 PM", "7:00 PM", "7:30 PM", "8:00 PM", "8:30 PM", "9:00 PM", "9:30 PM"];
+        const inline_keyboard = [];
+        for (let i = 0; i < times.length; i += 3) {
+          const row = times.slice(i, i + 3).map(time => ({
+            text: time,
+            callback_data: `newtime_${reservationId}_${time}`
+          }));
+          inline_keyboard.push(row);
+        }
+        await sendTelegramMessage(`Vui lòng chọn khung giờ muốn đổi cho đơn #${reservationId}:`, chatId, { reply_markup: { inline_keyboard } });
+        if (cbQueryId) {
+          await answerTelegramCallbackQuery(cbQueryId, "Vui lòng chọn giờ bên dưới");
+        }
+        return NextResponse.json({ ok: true });
 
       } else if (action === 'newtime') {
         replyText = `✅ Đã báo khách đổi giờ sang ${newTime} qua Facebook.\n(Bởi: ${userFullName})`;
