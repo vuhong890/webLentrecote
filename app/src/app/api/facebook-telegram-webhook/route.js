@@ -98,6 +98,7 @@ export async function POST(request) {
       // Ngăn Telegram retry và tắt spinner trên nút bấm ngay lập tức
       if (cbQueryId) {
         await answerTelegramCallbackQuery(cbQueryId, "Đang xử lý...");
+        if (chatId) await sendTelegramMessage(`DEBUG: Bắt đầu xử lý đơn ${reservationId}, action: ${action}`, chatId);
       }
 
       // Fetch reservation
@@ -117,9 +118,11 @@ export async function POST(request) {
       }
 
       if (fetchError || !reservation) {
+        if (chatId) await sendTelegramMessage(`DEBUG: Không tìm thấy đơn hàng. Lỗi: ${fetchError?.message || 'reservation is null'}`, chatId);
         if (cbQueryId) await answerTelegramCallbackQuery(cbQueryId, "Không tìm thấy đơn hàng!");
         return NextResponse.json({ ok: true });
       }
+      if (chatId) await sendTelegramMessage(`DEBUG: Đã tìm thấy đơn hàng. Trạng thái hiện tại: ${reservation.status}`, chatId);
 
       if (reservation.status !== 'pending' && action !== 'newtime') {
         if (cbQueryId) await answerTelegramCallbackQuery(cbQueryId, `Đơn này đã được xử lý (${reservation.status})`);
@@ -139,9 +142,11 @@ export async function POST(request) {
           .select();
           
         if (updateError || !updatedRes || updatedRes.length === 0) {
+          if (chatId) await sendTelegramMessage(`DEBUG: Không update được. Error: ${updateError?.message}. Length: ${updatedRes?.length}`, chatId);
           // Nếu không update được tức là luồng khác đã xử lý rồi
           return NextResponse.json({ ok: true });
         }
+        if (chatId) await sendTelegramMessage(`DEBUG: Đã update thành confirmed. Đang gửi FB...`, chatId);
 
         replyText = `✅ Đã xác nhận đơn đặt bàn. Đã gửi tin nhắn Facebook cho khách.\n(Xác nhận bởi: ${userFullName})`;
         if (isTestMode) replyText += ' [TEST FB]';
@@ -167,15 +172,19 @@ export async function POST(request) {
             
           try {
             await sendFacebookMessage(reservation.psid, fbMessage, pageAccessToken);
+            if (chatId) await sendTelegramMessage(`DEBUG: Gửi FB thành công!`, chatId);
           } catch (err) {
             console.error('FB Send Error:', err);
             errorMsg = `Lỗi gửi tin nhắn FB: ${err.message}`;
+            if (chatId) await sendTelegramMessage(`DEBUG: Gửi FB thất bại: ${err.message}`, chatId);
           }
         } else {
           errorMsg = "Không tìm thấy mã PSID của khách hàng này.";
+          if (chatId) await sendTelegramMessage(`DEBUG: Thiếu PSID`, chatId);
         }
         // Đã update DB ở đầu block confirm
         if (updateError) errorMsg = `Lỗi cập nhật CSDL: ${updateError.message}`;
+        if (chatId) await sendTelegramMessage(`DEBUG: Chuẩn bị reply Telegram`, chatId);
 
       } else if (action === 'reschedule') {
         const times = ["11:00 AM", "11:30 AM", "12:00 PM", "12:30 PM", "1:00 PM", "1:30 PM", "4:00 PM", "4:30 PM", "5:00 PM", "5:30 PM", "6:00 PM", "6:30 PM", "7:00 PM", "7:30 PM", "8:00 PM", "8:30 PM", "9:00 PM", "9:30 PM"];
