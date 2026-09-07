@@ -106,6 +106,15 @@ export async function POST(request) {
         .eq('id', reservationId)
         .single();
 
+      // Load Settings from DB
+      let isTestMode = false;
+      const { data: settingsData } = await serviceClient.from('site_settings').select('key, value');
+      if (settingsData) {
+        const settings = {};
+        settingsData.forEach(s => settings[s.key] = s.value);
+        isTestMode = settings.facebook_test_mode === 'true';
+      }
+
       if (fetchError || !reservation) {
         if (cbQueryId) await answerTelegramCallbackQuery(cbQueryId, "Không tìm thấy đơn hàng!");
         return NextResponse.json({ ok: true });
@@ -134,6 +143,7 @@ export async function POST(request) {
         }
 
         replyText = `✅ Đã xác nhận đơn đặt bàn. Đã gửi tin nhắn Facebook cho khách.\n(Xác nhận bởi: ${userFullName})`;
+        if (isTestMode) replyText += ' [TEST FB]';
         
         if (reservation.psid) {
           const formattedDate = formatDateForSheet(reservation.date);
@@ -184,6 +194,7 @@ export async function POST(request) {
 
       } else if (action === 'newtime') {
         replyText = `✅ Đã báo khách đổi giờ sang ${newTime} qua Facebook.\n(Bởi: ${userFullName})`;
+        if (isTestMode) replyText += ' [TEST FB]';
 
         if (reservation.psid) {
           const formattedDate = formatDateForSheet(reservation.date);

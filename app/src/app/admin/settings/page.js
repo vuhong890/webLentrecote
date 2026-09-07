@@ -42,6 +42,8 @@ export default function AdminSettings() {
 
   const testFields = [
     { key: 'telegram_test_mode', label: 'Bật Chế Độ Test Telegram', desc: 'Nhập "true" để bật, "false" để tắt. Khi bật, việc ấn nút Yes/No trên Tele sẽ gửi mail xác nhận cho Test Email thay vì khách.', type: 'toggle' },
+    { key: 'facebook_test_mode', label: 'Bật Chế Độ Test Facebook Bot', desc: 'Nhập "true" để bật. Khi bật, đơn đặt bàn từ Facebook sẽ gửi về Group Test thay vì Group chính.', type: 'toggle' },
+    { key: 'facebook_test_chat_id', label: 'Facebook Test Chat ID', desc: 'ID của Group Telegram dùng để Test (Bắt đầu bằng dấu âm, ví dụ: -100xxx)' },
     { key: 'email_test_mode', label: 'Bật Chế Độ Test Email Đặt Bàn', desc: 'Nhập "true" để bật, "false" để tắt. Khi bật, form đặt bàn mới trên web sẽ gửi mail thông báo vào Test Email thay vì mail nhà hàng.', type: 'toggle' },
     { key: 'test_email', label: 'Test Email', desc: 'Email nhận các thư liên quan đến Test Mode' },
     { key: 'google_sheet_url', label: 'Real Google Sheet URL', desc: 'Link Webhook của file Google Sheet THẬT' },

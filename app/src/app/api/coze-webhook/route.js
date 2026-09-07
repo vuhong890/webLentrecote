@@ -16,7 +16,22 @@ export async function POST(request) {
     let psid = null;
     const pageAccessToken = process.env.FACEBOOK_PAGE_ACCESS_TOKEN;
     const botToken = process.env.FACEBOOK_TELEGRAM_BOT_TOKEN;
-    const chatId = process.env.TELEGRAM_CHAT_ID; // Can reuse existing chat ID
+    let chatId = process.env.TELEGRAM_CHAT_ID;
+    let isTestMode = false;
+
+    try {
+      const { data: settingsData } = await supabase.from('site_settings').select('key, value');
+      if (settingsData) {
+        const settings = {};
+        settingsData.forEach(s => settings[s.key] = s.value);
+        isTestMode = settings.facebook_test_mode === 'true';
+        if (isTestMode && settings.facebook_test_chat_id) {
+          chatId = settings.facebook_test_chat_id;
+        }
+      }
+    } catch (err) {
+      console.error('Error fetching settings:', err);
+    }
 
     // 1. Find PSID via Facebook Graph API
     if (pageAccessToken && data.so_dien_thoai) {
@@ -96,8 +111,9 @@ export async function POST(request) {
     if (botToken && chatId) {
       const createdDate = new Date();
       const bookedOn = `${createdDate.getDate().toString().padStart(2, '0')}/${(createdDate.getMonth()+1).toString().padStart(2, '0')}/${createdDate.getFullYear()} ${createdDate.getHours().toString().padStart(2, '0')}:${createdDate.getMinutes().toString().padStart(2, '0')}`;
+      const testPrefix = isTestMode ? '[TEST FB] ' : '';
 
-      const message = `<b>Thông tin đặt bàn</b>\n`
+      const message = `<b>${testPrefix}Thông tin đặt bàn</b>\n`
         + `Tên: ${data.ten_khach || 'Không rõ'}\n`
         + `SĐT: ${data.so_dien_thoai || 'Không rõ'}\n`
         + `Ngày: ${data.ngay_dat || 'Không rõ'}\n`
