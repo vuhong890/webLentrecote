@@ -11,6 +11,23 @@ function normalizeString(str) {
   return str.replace(/[\s\.\-\+]/g, '').toLowerCase();
 }
 
+function parseVietnameseDateToISO(dateStr) {
+  if (!dateStr) return new Date().toISOString().split('T')[0];
+  // Already ISO format YYYY-MM-DD
+  if (/^\d{4}-\d{2}-\d{2}$/.test(dateStr)) return dateStr;
+  
+  // Parse DD/MM/YYYY or D/M/YY
+  const parts = dateStr.split(/[\/\-\.]/);
+  if (parts.length >= 2) {
+    const day = parts[0].padStart(2, '0');
+    const month = parts[1].padStart(2, '0');
+    let year = parts.length >= 3 ? parts[2] : new Date().getFullYear().toString();
+    if (year.length === 2) year = '20' + year;
+    return `${year}-${month}-${day}`;
+  }
+  return new Date().toISOString().split('T')[0];
+}
+
 export async function POST(request) {
   try {
     const data = await request.json();
@@ -91,7 +108,9 @@ export async function POST(request) {
         .insert([{
           full_name: data.ten_khach || 'Khách Facebook',
           phone: data.so_dien_thoai || '',
-          date: data.ngay_dat || new Date().toISOString().split('T')[0],
+          email: '',
+          branch: '',
+          date: parseVietnameseDateToISO(data.ngay_dat),
           time: data.gio_dat || '19:00',
           guests: parseInt(data.so_nguoi) || 2,
           note: data.ghi_chu || '',
@@ -106,6 +125,18 @@ export async function POST(request) {
         reservationId = insertedData.id;
       } else {
         console.error('Error insert Supabase:', error);
+        // Báo lỗi cho admin qua Telegram nếu Insert DB thất bại
+        if (botToken && chatId) {
+          const telegramUrl = `https://api.telegram.org/bot${botToken}/sendMessage`;
+          await fetch(telegramUrl, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              chat_id: chatId,
+              text: `⚠️ Lỗi lưu đơn hàng từ Facebook vào DB: ${error?.message}`
+            })
+          });
+        }
       }
     } catch (dbErr) {
       console.error('DB Error:', dbErr);
