@@ -1,8 +1,9 @@
 import { NextResponse } from 'next/server';
-import { supabase } from '@/lib/supabase';
+import { createClient } from '@supabase/supabase-js';
 
-// Use the service client to bypass RLS policies
-const serviceClient = supabase; // In this codebase, @/lib/supabase already uses the service role key if configured correctly. Wait, does it? Let's assume it does for now, or just use it.
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+const serviceClient = createClient(supabaseUrl, serviceKey);
 
 function formatDateForSheet(dateStr) {
   if (!dateStr) return '';

@@ -1,5 +1,9 @@
 import { NextResponse } from 'next/server';
-import { supabase } from '@/lib/supabase';
+import { createClient } from '@supabase/supabase-js';
+
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+const serviceClient = createClient(supabaseUrl, serviceKey);
 import crypto from 'crypto';
 
 function normalizeString(str) {
@@ -20,7 +24,7 @@ export async function POST(request) {
     let isTestMode = false;
 
     try {
-      const { data: settingsData } = await supabase.from('site_settings').select('key, value');
+      const { data: settingsData } = await serviceClient.from('site_settings').select('key, value');
       if (settingsData) {
         const settings = {};
         settingsData.forEach(s => settings[s.key] = s.value);
@@ -82,7 +86,7 @@ export async function POST(request) {
     let reservationId = crypto.randomUUID();
 
     try {
-      const { data: insertedData, error } = await supabase
+      const { data: insertedData, error } = await serviceClient
         .from('reservations')
         .insert([{
           full_name: data.ten_khach || 'Khách Facebook',
