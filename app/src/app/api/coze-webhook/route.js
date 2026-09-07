@@ -28,6 +28,24 @@ function parseVietnameseDateToISO(dateStr) {
   return new Date().toISOString().split('T')[0];
 }
 
+function formatTime(timeStr) {
+  if (!timeStr) return '19:00';
+  let formatted = timeStr.toLowerCase().replace('h', ':');
+  formatted = formatted.replace(/[^0-9:]/g, '');
+  const parts = formatted.split(':');
+  if (parts.length > 0) {
+    const hours = parts[0].padStart(2, '0');
+    const minutes = (parts[1] || '00').padStart(2, '0');
+    // Ensure hours is valid (00-23) and minutes (00-59)
+    const h = parseInt(hours);
+    const m = parseInt(minutes);
+    if (!isNaN(h) && !isNaN(m) && h >= 0 && h <= 23 && m >= 0 && m <= 59) {
+      return `${hours}:${minutes}`;
+    }
+  }
+  return '19:00';
+}
+
 export async function POST(request) {
   try {
     const data = await request.json();
@@ -111,7 +129,7 @@ export async function POST(request) {
           email: '',
           branch: '',
           date: parseVietnameseDateToISO(data.ngay_dat),
-          time: data.gio_dat || '19:00',
+          time: formatTime(data.gio_dat),
           guests: parseInt(data.so_nguoi) || 2,
           note: data.ghi_chu || '',
           source: 'facebook',
