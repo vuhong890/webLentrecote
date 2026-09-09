@@ -1,5 +1,7 @@
 'use client';
 import { useEffect, useState, useRef } from 'react';
+import imageCompression from 'browser-image-compression';
+import Image from 'next/image';
 import { supabase } from '@/lib/supabase';
 
 export default function AdminGallery() {
@@ -39,6 +41,12 @@ export default function AdminGallery() {
   async function uploadFile(file) {
     if (!file) return;
     setUploading(true);
+    try {
+      const options = { maxSizeMB: 0.5, maxWidthOrHeight: 1920, useWebWorker: true, fileType: 'image/webp' };
+      file = await imageCompression(file, options);
+    } catch (e) {
+      console.warn('Compression error:', e);
+    }
     const fd = new FormData();
     fd.append('file', file);
     fd.append('bucket', 'gallery');
@@ -196,7 +204,7 @@ export default function AdminGallery() {
         {images.map(img => (
           <div key={img.id} style={s.card} onClick={() => openEdit(img)}>
             {img.image_url ? (
-              <img src={img.image_url} style={s.cardImg} alt={img.title_en || ''} />
+              <Image src={img.image_url} width={400} height={300} style={s.cardImg} alt={img.title_en || ''} />
             ) : (
               <div style={{ ...s.cardImg, display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#2a2a2a', color: '#666', fontSize: '0.8rem' }}>No image</div>
             )}
@@ -227,7 +235,7 @@ export default function AdminGallery() {
               <label style={s.label}>Image</label>
               {form.image_url ? (
                 <div>
-                  <img src={form.image_url} alt="Preview" style={s.imagePreview} />
+                  <Image src={form.image_url} width={800} height={600} alt="Preview" style={s.imagePreview} />
                   <div style={{ display: 'flex', gap: '0.5rem', marginTop: '0.5rem' }}>
                     <button type="button" style={s.removeBtn} onClick={handleRemoveImage}>Remove</button>
                     <label style={{ ...s.removeBtn, background: '#2980b9', display: 'inline-flex', alignItems: 'center', cursor: 'pointer' }}>

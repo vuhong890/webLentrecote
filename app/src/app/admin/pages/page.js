@@ -1,6 +1,8 @@
 'use client';
 import { useEffect, useState, useRef } from 'react';
 import { supabase } from '@/lib/supabase';
+import imageCompression from 'browser-image-compression';
+import Image from 'next/image';
 import dynamic from 'next/dynamic';
 import 'react-quill-new/dist/quill.snow.css';
 
@@ -95,6 +97,12 @@ export default function AdminPages() {
   async function uploadFile(file) {
     if (!file) return null;
     setUploading(true);
+    try {
+      const options = { maxSizeMB: 0.5, maxWidthOrHeight: 1920, useWebWorker: true, fileType: 'image/webp' };
+      file = await imageCompression(file, options);
+    } catch (e) {
+      console.warn('Compression error:', e);
+    }
     const fd = new FormData();
     fd.append('file', file);
     fd.append('bucket', 'page-assets');
@@ -526,7 +534,7 @@ export default function AdminPages() {
                         <div style={{ width: '80px', flexShrink: 0, textAlign: 'center' }}>
                           {item.icon_url ? (
                             <div style={{ position: 'relative', width: '60px', height: '60px', margin: '0 auto', border: '1px solid #F0C75E', borderRadius: '50%', padding: '10px' }}>
-                              <img src={item.icon_url} alt="icon" style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
+                              <Image src={item.icon_url} alt="icon" width={100} height={100} style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
                             </div>
                           ) : (
                             <div style={{ width: '60px', height: '60px', margin: '0 auto', border: '1px dashed rgba(255,255,255,0.2)', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>?</div>
@@ -640,7 +648,7 @@ export default function AdminPages() {
                           </div>
                           {imgUrl ? (
                             <>
-                              <img src={imgUrl} alt={`Grid ${idx}`} style={{ width: '100%', height: '80px', objectFit: 'cover', marginBottom: '0.5rem' }} />
+                              <Image src={imgUrl} alt={`Grid ${idx}`} width={200} height={100} style={{ width: '100%', height: '80px', objectFit: 'cover', marginBottom: '0.5rem' }} />
                               <div style={{ display: 'flex', gap: '0.25rem', justifyContent: 'center' }}>
                                 <label style={{ ...st.removeBtn, background: '#2980b9', fontSize: '0.65rem', padding: '0.25rem 0.5rem', cursor: 'pointer' }}>
                                   Change
@@ -667,7 +675,7 @@ export default function AdminPages() {
                   <label style={st.label}>Section Image</label>
                   {form.image_url ? (
                     <div>
-                      <img src={form.image_url} alt="Section" style={st.imagePreview} />
+                      <Image src={form.image_url} width={800} height={400} alt="Section" style={st.imagePreview} />
                       <div style={{ display: 'flex', gap: '0.5rem', marginTop: '0.5rem' }}>
                         <button style={st.removeBtn} onClick={handleRemoveImage}>Remove Image</button>
                         <label style={{ ...st.removeBtn, background: '#2980b9', display: 'inline-flex', alignItems: 'center', cursor: 'pointer' }}>
@@ -738,7 +746,7 @@ export default function AdminPages() {
               <div key={item.id} style={st.sigItem}>
                 <div style={st.sigOrder}>{item.display_order}</div>
                 {item.image_url ? (
-                  <img src={item.image_url} alt={item.name_en} style={st.sigThumb} />
+                  <Image src={item.image_url} width={300} height={200} alt={item.name_en} style={st.sigThumb} />
                 ) : (
                   <div style={{ ...st.sigThumb, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.5rem' }}>🍽️</div>
                 )}
@@ -808,7 +816,7 @@ export default function AdminPages() {
                     onMouseLeave={e => { e.currentTarget.style.borderColor = 'rgba(255,255,255,0.1)'; e.currentTarget.style.transform = 'none'; }}
                   >
                     {item.image_url ? (
-                      <img src={item.image_url} alt={item.name_en} style={st.pickerImg} />
+                      <Image src={item.image_url} width={100} height={100} alt={item.name_en} style={st.pickerImg} />
                     ) : (
                       <div style={st.pickerImgPlaceholder}>🍽️</div>
                     )}
@@ -856,7 +864,7 @@ export default function AdminPages() {
                 return (
                   <div key={pick.id} style={st.gpCard}>
                     {img?.image_url ? (
-                      <img src={img.image_url} alt={img.title_en || ''} style={st.gpImg} />
+                      <Image src={img.image_url} width={400} height={300} alt={img.title_en || ''} style={st.gpImg} />
                     ) : (
                       <div style={{ ...st.gpImg, display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#2a2a2a', fontSize: '2rem' }}>🖼️</div>
                     )}
@@ -901,7 +909,7 @@ export default function AdminPages() {
                     onMouseLeave={e => { e.currentTarget.style.borderColor = 'rgba(255,255,255,0.1)'; e.currentTarget.style.transform = 'none'; }}
                   >
                     {image.image_url ? (
-                      <img src={image.image_url} alt={image.title_en || ''} style={st.pickerImg} />
+                      <Image src={image.image_url} width={200} height={150} alt={image.title_en || ''} style={st.pickerImg} />
                     ) : (
                       <div style={st.pickerImgPlaceholder}>📸</div>
                     )}

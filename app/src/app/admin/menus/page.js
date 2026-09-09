@@ -1,6 +1,8 @@
 'use client';
 import { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase';
+import imageCompression from 'browser-image-compression';
+import Image from 'next/image';
 
 export default function AdminMenus() {
   const [categories, setCategories] = useState([]);
@@ -73,9 +75,15 @@ export default function AdminMenus() {
   }
 
   async function handleUpload(e, field = 'image_url') {
-    const file = e.target.files[0];
+    let file = e.target.files[0];
     if (!file) return;
     setUploading(field);
+    try {
+      const options = { maxSizeMB: 0.5, maxWidthOrHeight: 1920, useWebWorker: true, fileType: 'image/webp' };
+      file = await imageCompression(file, options);
+    } catch (err) {
+      console.warn('Compression error:', err);
+    }
     const fd = new FormData();
     fd.append('file', file);
     fd.append('bucket', 'menu-images');
@@ -258,7 +266,7 @@ export default function AdminMenus() {
           <tbody>
             {items.map(item => (
               <tr key={item.id}>
-                <td style={s.td}>{item.image_url ? <img src={item.image_url} style={s.img} alt="" /> : <div style={{ ...s.img, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>🥩</div>}</td>
+                <td style={s.td}>{item.image_url ? <Image src={item.image_url} width={50} height={50} style={s.img} alt="" /> : <div style={{ ...s.img, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>🥩</div>}</td>
                 <td style={s.td}>{item.name_en}</td>
                 <td style={s.td}>{item.name_vi}</td>
                 <td style={{ ...s.td, ...s.price }}>{Number(item.price).toLocaleString()}₫</td>
@@ -294,8 +302,8 @@ export default function AdminMenus() {
               return (
                 <tr key={item.id}>
                   <td style={s.td}>Page {index + 1}</td>
-                  <td style={s.td}>{imgEn ? <img src={imgEn} style={{width: 50, height: 70, objectFit: 'cover'}} alt="EN" /> : '-'}</td>
-                  <td style={s.td}>{imgVi ? <img src={imgVi} style={{width: 50, height: 70, objectFit: 'cover'}} alt="VI" /> : '-'}</td>
+                  <td style={s.td}>{imgEn ? <Image src={imgEn} width={50} height={70} style={{width: 50, height: 70, objectFit: 'cover'}} alt="EN" /> : '-'}</td>
+                  <td style={s.td}>{imgVi ? <Image src={imgVi} width={50} height={70} style={{width: 50, height: 70, objectFit: 'cover'}} alt="VI" /> : '-'}</td>
                   <td style={s.td}>
                     <div style={{ display: 'flex', gap: '0.25rem' }}>
                       <button disabled={index === 0} onClick={() => swapItemOrder(index, -1)} style={{ padding: '0.2rem 0.5rem', cursor: index === 0 ? 'not-allowed' : 'pointer', background: 'rgba(255,255,255,0.1)', color: '#fff', border: 'none', opacity: index === 0 ? 0.3 : 1 }}>↑</button>
@@ -367,7 +375,7 @@ export default function AdminMenus() {
                   <label style={s.label}>Image</label>
                   <input type="file" accept="image/*" onChange={e => handleUpload(e, 'image_url')} style={{ color: '#fff', fontSize: '0.85rem' }} />
                   {uploading === 'image_url' && <p style={{ color: '#F0C75E', fontSize: '0.8rem' }}>Uploading...</p>}
-                  {form.image_url && <img src={form.image_url} style={{...s.imgPrev, width: 80, height: 80, objectFit: 'cover'}} alt="" />}
+                  {form.image_url && <Image src={form.image_url} width={80} height={80} style={{...s.imgPrev, width: 80, height: 80, objectFit: 'cover'}} alt="" />}
                 </div>
 
                 <div style={s.field}>
@@ -390,7 +398,7 @@ export default function AdminMenus() {
                     <label style={{...s.label, color: '#F0C75E'}}>Image (English)</label>
                     <input type="file" accept="image/*" onChange={e => handleUpload(e, 'image_url')} style={{ color: '#fff', fontSize: '0.8rem', width: '100%', marginBottom: '0.5rem' }} />
                     {uploading === 'image_url' && <p style={{ color: '#F0C75E', fontSize: '0.8rem', marginTop: '0.5rem' }}>Uploading...</p>}
-                    {form.image_url && <img src={form.image_url} style={s.imgPrev} alt="EN" />}
+                    {form.image_url && <Image src={form.image_url} width={200} height={200} style={s.imgPrev} alt="EN" />}
                     {form.image_url && <button onClick={() => setForm({...form, image_url: ''})} style={{...s.delBtn, marginTop: '0.5rem', display: 'block', width: '120px'}}>Remove</button>}
                   </div>
 
@@ -398,7 +406,7 @@ export default function AdminMenus() {
                     <label style={{...s.label, color: '#F0C75E'}}>Image (Vietnamese)</label>
                     <input type="file" accept="image/*" onChange={e => handleUpload(e, 'image_vi')} style={{ color: '#fff', fontSize: '0.8rem', width: '100%', marginBottom: '0.5rem' }} />
                     {uploading === 'image_vi' && <p style={{ color: '#F0C75E', fontSize: '0.8rem', marginTop: '0.5rem' }}>Uploading...</p>}
-                    {form.image_vi && <img src={form.image_vi} style={s.imgPrev} alt="VI" />}
+                    {form.image_vi && <Image src={form.image_vi} width={200} height={200} style={s.imgPrev} alt="VI" />}
                     {form.image_vi && <button onClick={() => setForm({...form, image_vi: ''})} style={{...s.delBtn, marginTop: '0.5rem', display: 'block', width: '120px'}}>Remove</button>}
                   </div>
                 </div>
