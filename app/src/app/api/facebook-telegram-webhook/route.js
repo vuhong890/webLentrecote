@@ -185,7 +185,7 @@ export async function POST(request) {
                   method: 'POST',
                   headers: { 'Content-Type': 'application/json' },
                   body: JSON.stringify({
-                    loai_xu_ly: "Yes (FB)",
+                    loai_xu_ly: "Yes",
                     ngay_dat: formatDateForSheet(reservation.date),
                     ten_khach: reservation.full_name,
                     so_nguoi: reservation.guests,
