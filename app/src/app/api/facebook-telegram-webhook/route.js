@@ -12,6 +12,19 @@ function formatDateForSheet(dateStr) {
   return `${day}/${month}/${year}`;
 }
 
+function formatTimeForSheet(timeStr) {
+  if (!timeStr) return '';
+  let formatted = timeStr.toLowerCase().replace('h', ':');
+  formatted = formatted.replace(/[^0-9:]/g, '');
+  const parts = formatted.split(':');
+  if (parts.length > 0) {
+    const hours = parts[0].padStart(2, '0');
+    const minutes = (parts[1] || '00').padStart(2, '0');
+    return `${hours}h${minutes}`;
+  }
+  return timeStr;
+}
+
 async function sendFacebookMessage(psid, messageText, pageAccessToken) {
   const url = `https://graph.facebook.com/v20.0/me/messages?access_token=${pageAccessToken}`;
   const response = await fetch(url, {
@@ -110,11 +123,13 @@ export async function POST(request) {
 
       // Load Settings from DB
       let isTestMode = false;
+      let sheetUrl = null;
       const { data: settingsData } = await serviceClient.from('site_settings').select('key, value');
       if (settingsData) {
         const settings = {};
         settingsData.forEach(s => settings[s.key] = s.value);
         isTestMode = settings.facebook_test_mode === 'true';
+        sheetUrl = isTestMode ? settings.test_google_sheet_url : settings.google_sheet_url;
       }
 
       if (fetchError || !reservation) {
@@ -162,6 +177,27 @@ export async function POST(request) {
           try {
             await sendFacebookMessage(reservation.psid, fbMessage, pageAccessToken);
             if (chatId) await sendTelegramMessage(`DEBUG: Gửi FB thành công!`, chatId);
+            
+            // Push to Google Sheets
+            if (sheetUrl) {
+              try {
+                await fetch(sheetUrl, {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({
+                    loai_xu_ly: "Yes (FB)",
+                    ngay_dat: formatDateForSheet(reservation.date),
+                    ten_khach: reservation.full_name,
+                    so_nguoi: reservation.guests,
+                    gio_dat: formatTimeForSheet(reservation.time),
+                    ghi_chu: reservation.note,
+                    so_dien_thoai: reservation.phone
+                  })
+                });
+              } catch (err) {
+                console.error('Error pushing to sheet:', err);
+              }
+            }
           } catch (err) {
             console.error('FB Send Error:', err);
             errorMsg = `Lỗi gửi tin nhắn FB: ${err.message}`;
