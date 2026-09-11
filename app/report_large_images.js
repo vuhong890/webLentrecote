@@ -55,7 +55,7 @@ async function generateReport() {
     if (error) return;
 
     for (const file of files) {
-      if (file.metadata && file.metadata.size > 2 * 1024 * 1024) { // > 2MB
+      if (file.metadata && file.metadata.size > 0.5 * 1024 * 1024) { // > 0.5MB
         const { data: { publicUrl } } = supabase.storage.from(bucket).getPublicUrl(file.name);
         
         // Find if this URL is used
@@ -80,12 +80,12 @@ async function generateReport() {
   // Sort by size descending
   largeFiles.sort((a, b) => parseFloat(b.sizeMB) - parseFloat(a.sizeMB));
 
-  let md = `# Báo Cáo: Các Hình Ảnh Đang Sử Dụng Có Dung Lượng Lớn (>2MB)\n\n`;
+  let md = `# Báo Cáo: Các Hình Ảnh Đang Sử Dụng Có Dung Lượng Lớn (>0.5MB)\n\n`;
   md += `Dưới đây là danh sách các bức ảnh đang được sử dụng trực tiếp trên website nhưng có dung lượng rất lớn. Khi truy cập vào trang Admin để chỉnh sửa các mục này, trình duyệt sẽ tải toàn bộ dung lượng gốc của chúng, gây hao tốn Egress.\n\n`;
   md += `Bạn có thể click vào link để xem ảnh, nén lại bằng TinyPNG và sau đó vào Admin để upload đè lên thay thế.\n\n`;
 
   if (largeFiles.length === 0) {
-    md += `**Tuyệt vời! Không có bức ảnh nào đang sử dụng nặng trên 2MB.**\n`;
+    md += `**Tuyệt vời! Không có bức ảnh nào đang sử dụng nặng trên 0.5MB.**\n`;
   } else {
     for (const file of largeFiles) {
       md += `### 🔴 [${file.name}](${file.url})\n`;
