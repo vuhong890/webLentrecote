@@ -75,7 +75,12 @@ export async function POST(request) {
     // 1. Find PSID via Facebook Graph API
     if (pageAccessToken && data.so_dien_thoai) {
       try {
-        const url = `https://graph.facebook.com/v20.0/me/conversations?limit=20&fields=messages.limit(20){message,from}&access_token=${pageAccessToken}`;
+        // First get the Page ID to exclude it
+        const pageRes = await fetch(`https://graph.facebook.com/v20.0/me?access_token=${pageAccessToken}`);
+        const pageData = await pageRes.json();
+        const pageId = pageData.id;
+
+        const url = `https://graph.facebook.com/v20.0/me/conversations?limit=20&fields=participants,messages.limit(20){message,from}&access_token=${pageAccessToken}`;
         const fbRes = await fetch(url);
         const fbData = await fbRes.json();
         
@@ -95,9 +100,18 @@ export async function POST(request) {
                 const isNameMatch = targetName && msgText.toLowerCase().includes(targetName);
                 
                 if (isPhoneMatch || isNameMatch) {
-                  psid = msg.from.id;
-                  found = true;
-                  break;
+                  // Found the right conversation. Get the user's PSID from participants (not the Page ID)
+                  const userParticipant = conv.participants?.data?.find(p => p.id !== pageId);
+                  if (userParticipant) {
+                    psid = userParticipant.id;
+                  } else {
+                    psid = msg.from.id !== pageId ? msg.from.id : null;
+                  }
+                  
+                  if (psid) {
+                    found = true;
+                    break;
+                  }
                 }
               }
             }
@@ -106,10 +120,11 @@ export async function POST(request) {
         }
         
         // Fallback: take the most recent sender if no match found
-        if (!psid && fbData.data && fbData.data[0] && fbData.data[0].messages) {
-           const messages = fbData.data[0].messages.data;
-           if (messages && messages.length > 0) {
-              psid = messages[0].from.id;
+        if (!psid && fbData.data && fbData.data.length > 0) {
+           const firstConv = fbData.data[0];
+           const userParticipant = firstConv.participants?.data?.find(p => p.id !== pageId);
+           if (userParticipant) {
+              psid = userParticipant.id;
            }
         }
       } catch (fbErr) {
