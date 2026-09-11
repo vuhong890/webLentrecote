@@ -152,23 +152,12 @@ export async function POST(request) {
         if (isTestMode) replyText += ' [TEST FB]';
         
         if (reservation.psid) {
-          const formattedDate = formatDateForSheet(reservation.date);
-          const fbMessage = `Xin chào ${reservation.full_name},\n\n`
-            + `Cảm ơn anh/chị đã lựa chọn L’Entrecôte – Social Meating.\n`
-            + `Nhà hàng xác nhận thông tin đặt bàn của anh/chị như sau:\n\n`
-            + `👤 Tên khách: ${reservation.full_name}\n`
-            + `📅 Ngày: ${formattedDate}\n`
-            + `⏰ Giờ: ${reservation.time}\n`
-            + `👥 Số lượng khách: ${reservation.guests}\n`
-            + `📝 Yêu cầu đặc biệt (không đảm bảo): ${reservation.note || 'Không có'}\n\n`
-            + `🚗 Thông tin gửi xe:\n`
-            + `Chỗ đậu xe máy tùy thuộc vào tình trạng chỗ trống:\n`
-            + `- 55 Đông Du: 10.000 VNĐ / xe máy\n`
-            + `- 63 Đông Du: 20.000 VNĐ / xe máy\n`
-            + `- Ô tô: khoảng 25.000–40.000 VNĐ / giờ\n\n`
-            + `Anh/chị có thêm yêu cầu hoặc cần thay đổi thông tin đặt bàn, vui lòng liên hệ với nhà hàng qua số 032 7157002.\n`
-            + `Rất mong được chào đón quý khách tại L’Entrecôte – Social Meating.\n\n`
-            + `Trân trọng,\nL’Entrecôte – Social Meating`;
+          const fbMessage = `Nhà hàng đã ghi nhận bàn đặt của anh/chị. Bàn sẽ được giữ trong 15p, sau thời gian này bàn có thể sẽ sắp xếp cho lượt khách khác. Nếu có thay đổi, anh/chị liên hệ lại để được hỗ trợ. Cảm ơn anh/chị\n\n`
+            + `We have noted your reservation. After this period, the table may be released to accommodate other guests. If you have any change, please contact in advance to assist your reservation. We will keep your table for 15 minutes. Thank you.\n`
+            + `---\n`
+            + `Thông tin gửi xe/Parking Information:\n`
+            + `- Xe máy/Scooter: 55 Đông Du (10k/xe) hoặc 63 Đông Du (30k/xe).\n`
+            + `- Xe hơi/Car: 63 Đông Du (25k/hr).`;
             
           try {
             await sendFacebookMessage(reservation.psid, fbMessage, pageAccessToken);
