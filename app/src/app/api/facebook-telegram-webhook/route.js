@@ -221,7 +221,12 @@ export async function POST(request) {
           }));
           inline_keyboard.push(row);
         }
-        await sendTelegramMessage(`Vui lòng chọn khung giờ muốn đổi cho đơn #${reservationId}:`, chatId, { reply_markup: { inline_keyboard } });
+        const msgText = `Vui lòng chọn khung giờ mới cho khách hàng:\n` +
+                        `👤 Tên: ${reservation.full_name}\n` +
+                        `📞 SĐT: ${reservation.phone || 'Không có'}\n` +
+                        `📅 Lịch cũ: ${reservation.time} - ${formatDateForSheet(reservation.date)}`;
+        
+        await sendTelegramMessage(msgText, chatId, { reply_markup: { inline_keyboard } });
         if (cbQueryId) {
           await answerTelegramCallbackQuery(cbQueryId, "Vui lòng chọn giờ bên dưới");
         }
