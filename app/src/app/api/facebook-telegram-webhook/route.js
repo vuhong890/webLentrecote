@@ -191,7 +191,8 @@ export async function POST(request) {
                     so_nguoi: reservation.guests,
                     gio_dat: formatTimeForSheet(reservation.time),
                     ghi_chu: reservation.note,
-                    so_dien_thoai: reservation.phone
+                    so_dien_thoai: reservation.phone,
+                    nguon: "FB"
                   })
                 });
               } catch (err) {
