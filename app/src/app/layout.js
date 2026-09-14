@@ -24,11 +24,26 @@ const baskerville = localFont({
   display: 'swap',
 });
 
-export const metadata = {
-  title: "L'Entrecôte | Social Meating",
-  description: "L'Entrecôte Social Meating - Premium steak frites experience in Ho Chi Minh City. Open daily for lunch and dinner.",
-  keywords: "L'Entrecôte, steak, frites, restaurant, Ho Chi Minh City, Saigon, French bistro",
-};
+export async function generateMetadata() {
+  const supabase = getSupabase();
+  const { data: settingsData } = await supabase.from('site_settings').select('key, value').eq('key', 'seo_description').single();
+  
+  const description = settingsData?.value || "L'Entrecôte Social Meating - Premium steak frites experience in Ho Chi Minh City. Open daily for lunch and dinner.";
+
+  return {
+    title: "L'Entrecôte | Social Meating",
+    description: description,
+    keywords: "L'Entrecôte, steak, frites, restaurant, Ho Chi Minh City, Saigon, French bistro",
+    openGraph: {
+      title: "L'Entrecôte | Social Meating",
+      description: description,
+      url: 'https://www.lentrecotevietnam.com',
+      siteName: "L'Entrecôte | Social Meating",
+      locale: 'en_US',
+      type: 'website',
+    }
+  };
+}
 
 export default async function RootLayout({ children }) {
   const supabase = getSupabase();

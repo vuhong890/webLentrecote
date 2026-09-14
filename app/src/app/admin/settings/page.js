@@ -38,6 +38,7 @@ export default function AdminSettings() {
     { key: 'facebook_url', label: 'Facebook URL' },
     { key: 'instagram_url', label: 'Instagram URL' },
     { key: 'tiktok_url', label: 'TikTok URL' },
+    { key: 'seo_description', label: 'SEO Description', desc: 'Miêu tả Website hiển thị trên kết quả tìm kiếm Google, Facebook, Zalo', type: 'textarea' },
   ];
 
   const testFields = [
@@ -58,8 +59,9 @@ export default function AdminSettings() {
     cardTest: { background: '#1f1604', padding: '1.5rem', marginBottom: '1rem', border: '1px solid rgba(240, 199, 94, 0.2)' },
     label: { fontSize: '0.85rem', fontWeight: 700, color: '#fff', marginBottom: '0.25rem' },
     desc: { fontSize: '0.75rem', color: 'rgba(255,255,255,0.4)', marginBottom: '0.75rem' },
-    row: { display: 'flex', gap: '0.75rem', alignItems: 'center' },
+    row: { display: 'flex', gap: '0.75rem', alignItems: 'flex-start' },
     input: { flex: 1, padding: '0.6rem 0.75rem', background: '#0a0a0a', border: '1px solid rgba(255,255,255,0.15)', color: '#fff', fontSize: '0.9rem', fontFamily: 'var(--font-body)', outline: 'none' },
+    textarea: { flex: 1, padding: '0.6rem 0.75rem', background: '#0a0a0a', border: '1px solid rgba(255,255,255,0.15)', color: '#fff', fontSize: '0.9rem', fontFamily: 'var(--font-body)', outline: 'none', minHeight: '80px', resize: 'vertical' },
     saveBtn: { padding: '0.6rem 1.25rem', background: '#F0C75E', color: '#1a1a1a', border: 'none', fontWeight: 700, fontSize: '0.75rem', cursor: 'pointer', whiteSpace: 'nowrap' },
   };
 
@@ -73,6 +75,8 @@ export default function AdminSettings() {
             <option value="true">Bật (True)</option>
             <option value="false">Tắt (False)</option>
           </select>
+        ) : f.type === 'textarea' ? (
+          <textarea style={s.textarea} value={settings[f.key] || ''} onChange={e => setSettings({ ...settings, [f.key]: e.target.value })} />
         ) : (
           <input style={s.input} value={settings[f.key] || ''} onChange={e => setSettings({ ...settings, [f.key]: e.target.value })} />
         )}
