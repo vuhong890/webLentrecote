@@ -178,7 +178,8 @@ export async function POST(request) {
     // 3. Send to Telegram
     if (botToken && chatId) {
       const createdDate = new Date();
-      const bookedOn = `${createdDate.getDate().toString().padStart(2, '0')}/${(createdDate.getMonth()+1).toString().padStart(2, '0')}/${createdDate.getFullYear()} ${createdDate.getHours().toString().padStart(2, '0')}:${createdDate.getMinutes().toString().padStart(2, '0')}`;
+      const options = { timeZone: 'Asia/Ho_Chi_Minh', day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit', hour12: false };
+      const bookedOn = createdDate.toLocaleString('en-GB', options).replace(',', '');
       const testPrefix = isTestMode ? '[TEST FB] ' : '';
 
       const message = `<b>${testPrefix}Thông tin đặt bàn</b>\n`
