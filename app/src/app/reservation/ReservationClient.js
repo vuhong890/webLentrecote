@@ -13,6 +13,12 @@ export default function ReservationClient({ initialPageSections = {} }) {
   
   const tf = (obj, field) => obj ? obj[`${field}_${lang}`] || obj[`${field}_en`] || '' : '';
   const tm = (obj, key) => obj?.metadata ? obj.metadata[`${key}_${lang}`] || obj.metadata[`${key}_en`] || '' : '';
+  
+  const getTodayLocal = () => {
+    const d = new Date();
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+  };
+
   const [formData, setFormData] = useState({
     name: '', email: '', phone: '', date: '', time: '', guests: '', requests: '', branch: ''
   });
@@ -134,23 +140,23 @@ export default function ReservationClient({ initialPageSections = {} }) {
                 <div className={styles.formRow}>
                   <div className={styles.formGroup}>
                     <label className={styles.formLabel}>{t('name')}</label>
-                      <input type="text" name="name" value={formData.name} onChange={handleChange} className={styles.formInput} required placeholder={t('fullNamePlaceholder') || "Your name"} />
+                      <input type="text" name="name" value={formData.name} onChange={handleChange} className={styles.formInput} required minLength={2} placeholder={t('fullNamePlaceholder') || "Your name"} title={lang === 'vi' ? 'Vui lòng nhập tối thiểu 2 ký tự' : 'Please enter at least 2 characters'} />
                     </div>
                     <div className={styles.formGroup}>
                       <label className={styles.formLabel}>{t('phone')}</label>
-                      <input type="tel" name="phone" value={formData.phone} onChange={handleChange} className={styles.formInput} required placeholder="+84 ..." />
+                      <input type="tel" name="phone" value={formData.phone} onChange={handleChange} className={styles.formInput} required pattern="^[+]?[0-9\s\-()]{8,20}$" title={lang === 'vi' ? 'Vui lòng nhập từ 8-20 số' : 'Please enter 8-20 digits'} placeholder="+84 ..." />
                     </div>
                   </div>
 
                   <div className={styles.formGroup}>
                     <label className={styles.formLabel}>{t('email')}</label>
-                    <input type="email" name="email" value={formData.email} onChange={handleChange} className={styles.formInput} required placeholder={t('emailPlaceholder') || "your@email.com"} />
+                    <input type="email" name="email" value={formData.email} onChange={handleChange} className={styles.formInput} required pattern="^[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}$" title={lang === 'vi' ? 'Vui lòng nhập email hợp lệ (VD: name@gmail.com)' : 'Please enter a valid email'} placeholder={t('emailPlaceholder') || "your@email.com"} />
                   </div>
 
                   <div className={styles.formRow}>
                     <div className={styles.formGroup}>
                       <label className={styles.formLabel}>{t('date')}</label>
-                      <input type="date" name="date" value={formData.date} onChange={handleChange} className={styles.formInput} required />
+                      <input type="date" name="date" value={formData.date} onChange={handleChange} className={styles.formInput} required min={getTodayLocal()} />
                     </div>
                     <div className={styles.formGroup}>
                       <label className={styles.formLabel}>{t('time')}</label>
