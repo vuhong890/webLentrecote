@@ -30,6 +30,33 @@ export default function ReservationClient({ initialPageSections = {} }) {
     setLoading(true);
     setError('');
 
+    // Custom Validation
+    if (formData.name.trim().length < 2) {
+      setPopupType('error');
+      setPopupMessage(lang === 'vi' ? 'Tên quá ngắn. Vui lòng nhập đầy đủ tên của bạn.' : 'Name is too short. Please enter your full name.');
+      setShowPopup(true);
+      setLoading(false);
+      return;
+    }
+
+    const phoneRegex = /^[+]?[0-9\s\-()]{8,20}$/;
+    if (!phoneRegex.test(formData.phone)) {
+      setPopupType('error');
+      setPopupMessage(lang === 'vi' ? 'Số điện thoại không hợp lệ. Vui lòng nhập từ 8-20 số.' : 'Invalid phone number. Please enter 8-20 digits.');
+      setShowPopup(true);
+      setLoading(false);
+      return;
+    }
+
+    const emailRegex = /^[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}$/;
+    if (!emailRegex.test(formData.email)) {
+      setPopupType('error');
+      setPopupMessage(lang === 'vi' ? 'Email không hợp lệ. Vui lòng nhập đúng định dạng (VD: name@gmail.com).' : 'Invalid email. Please enter a valid format (e.g. name@gmail.com).');
+      setShowPopup(true);
+      setLoading(false);
+      return;
+    }
+
     try {
       const res = await fetch('/api/reservations', {
         method: 'POST',
