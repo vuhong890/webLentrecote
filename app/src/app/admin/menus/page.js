@@ -143,13 +143,17 @@ export default function AdminMenus() {
   }
 
   async function saveCategory() {
-    if (!catForm.name_en || !catForm.name_vi) return alert('Please enter both English and Vietnamese names.');
+    if (!catForm.name_en || !catForm.name_vi) return alert('Please enter both names');
     const headers = { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` };
+    
     if (catForm.id) {
-      await fetch('/api/menu-categories', { method: 'PUT', headers, body: JSON.stringify({ id: catForm.id, name_en: catForm.name_en, name_vi: catForm.name_vi }) });
+      const res = await fetch('/api/menu-categories', { method: 'PUT', headers, body: JSON.stringify({ id: catForm.id, name_en: catForm.name_en, name_vi: catForm.name_vi }) });
+      if (!res.ok) return alert('Failed to update: ' + (await res.json()).error);
     } else {
       const maxOrder = categories.reduce((max, c) => Math.max(max, c.sort_order || 0), 0);
-      await fetch('/api/menu-categories', { method: 'POST', headers, body: JSON.stringify({ name_en: catForm.name_en, name_vi: catForm.name_vi, sort_order: maxOrder + 1 }) });
+      const slug = catForm.name_en.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
+      const res = await fetch('/api/menu-categories', { method: 'POST', headers, body: JSON.stringify({ name_en: catForm.name_en, name_vi: catForm.name_vi, sort_order: maxOrder + 1, slug }) });
+      if (!res.ok) return alert('Failed to add: ' + (await res.json()).error);
     }
     setCatForm({ id: null, name_en: '', name_vi: '' });
     loadCategories();
