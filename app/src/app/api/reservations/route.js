@@ -1,6 +1,5 @@
 // Trigger recompile
 import { NextResponse } from 'next/server';
-export const dynamic = 'force-dynamic';
 import { sendEmail } from '@/lib/email';
 import { sendTelegramMessage } from '@/lib/telegram';
 import { createClient } from '@supabase/supabase-js';
