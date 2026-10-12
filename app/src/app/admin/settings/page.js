@@ -41,6 +41,15 @@ export default function AdminSettings() {
     { key: 'seo_description', label: 'SEO Description', desc: 'Miêu tả Website hiển thị trên kết quả tìm kiếm Google, Facebook, Zalo', type: 'textarea' },
   ];
 
+  const botFields = [
+    { 
+      key: 'facebook_auto_reply', 
+      label: 'Tự động gửi tin nhắn Facebook Messenger cho khách', 
+      desc: 'Chọn "false" (Mặc định - Đang chờ Meta duyệt API): Bot gửi tin nhắn nhắc nhân viên chat trên Fanpage & kèm mẫu tin nhắn 1-chạm sao chép nhanh. Chọn "true": Bot tự động gọi Facebook Graph API để gửi tin nhắn cho khách.', 
+      type: 'toggle' 
+    },
+  ];
+
   const testFields = [
     { key: 'telegram_test_mode', label: 'Bật Chế Độ Test Telegram', desc: 'Nhập "true" để bật, "false" để tắt. Khi bật, việc ấn nút Yes/No trên Tele sẽ gửi mail xác nhận cho Test Email thay vì khách.', type: 'toggle' },
     { key: 'facebook_test_mode', label: 'Bật Chế Độ Test Facebook Bot', desc: 'Nhập "true" để bật. Khi bật, đơn đặt bàn từ Facebook sẽ gửi về Group Test thay vì Group chính.', type: 'toggle' },
@@ -94,6 +103,9 @@ export default function AdminSettings() {
 
       <h2 style={s.sectionTitle}>General Settings</h2>
       {settingFields.map(f => renderField(f, false))}
+
+      <h2 style={s.sectionTitle}>Facebook Bot Integration</h2>
+      {botFields.map(f => renderField(f, false))}
 
       <h2 style={{...s.sectionTitle, color: '#ff4d4f', borderBottomColor: 'rgba(255, 77, 79, 0.2)'}}>Test Mode Configurations</h2>
       <p style={{...s.desc, marginBottom: '1.5rem', color: '#ff4d4f'}}>

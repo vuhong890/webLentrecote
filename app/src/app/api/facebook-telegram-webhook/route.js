@@ -25,6 +25,14 @@ function formatTimeForSheet(timeStr) {
   return timeStr;
 }
 
+function escapeHtml(str) {
+  if (!str) return '';
+  return String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;');
+}
+
 async function sendFacebookMessage(psid, messageText, pageAccessToken) {
   const url = `https://graph.facebook.com/v20.0/me/messages?access_token=${pageAccessToken}`;
   const response = await fetch(url, {
@@ -64,7 +72,7 @@ export async function POST(request) {
       await fetch(`https://api.telegram.org/bot${botToken}/sendMessage`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ chat_id: chatId, reply_to_message_id: messageId, text })
+        body: JSON.stringify({ chat_id: chatId, reply_to_message_id: messageId, text, parse_mode: 'HTML' })
       });
     };
 
@@ -124,12 +132,14 @@ export async function POST(request) {
       // Load Settings from DB
       let isTestMode = false;
       let sheetUrl = null;
+      let isAutoReply = false;
       const { data: settingsData } = await serviceClient.from('site_settings').select('key, value');
       if (settingsData) {
         const settings = {};
         settingsData.forEach(s => settings[s.key] = s.value);
         isTestMode = settings.facebook_test_mode === 'true';
         sheetUrl = isTestMode ? settings.test_google_sheet_url : settings.google_sheet_url;
+        isAutoReply = settings.facebook_auto_reply === 'true';
       }
 
       if (fetchError || !reservation) {
@@ -163,27 +173,37 @@ export async function POST(request) {
         }
         // if (chatId) await sendTelegramMessage(`DEBUG: Đã update thành confirmed. Đang gửi FB...`, chatId);
 
-        if (reservation.psid) {
-          replyText = `✅ Đã xác nhận đơn đặt bàn. Đã gửi tin nhắn Facebook cho khách.\n(Xác nhận bởi: ${userFullName})`;
-          if (isTestMode) replyText += ' [TEST FB]';
+        const fbConfirmationText = `Nhà hàng đã ghi nhận bàn đặt của anh/chị. Bàn sẽ được giữ trong 15p, sau thời gian này bàn có thể sẽ sắp xếp cho lượt khách khác. Nếu có thay đổi, anh/chị liên hệ lại để được hỗ trợ. Cảm ơn anh/chị\n\n`
+          + `We have noted your reservation. After this period, the table may be released to accommodate other guests. If you have any change, please contact in advance to assist your reservation. We will keep your table for 15 minutes. Thank you.\n`
+          + `---\n`
+          + `Thông tin gửi xe/Parking Information:\n`
+          + `- Xe máy/Scooter: 55 Đông Du (10k/xe) hoặc 63 Đông Du (30k/xe).\n`
+          + `- Xe hơi/Car: 63 Đông Du (25k/hr).`;
 
-          const fbMessage = `Nhà hàng đã ghi nhận bàn đặt của anh/chị. Bàn sẽ được giữ trong 15p, sau thời gian này bàn có thể sẽ sắp xếp cho lượt khách khác. Nếu có thay đổi, anh/chị liên hệ lại để được hỗ trợ. Cảm ơn anh/chị\n\n`
-            + `We have noted your reservation. After this period, the table may be released to accommodate other guests. If you have any change, please contact in advance to assist your reservation. We will keep your table for 15 minutes. Thank you.\n`
-            + `---\n`
-            + `Thông tin gửi xe/Parking Information:\n`
-            + `- Xe máy/Scooter: 55 Đông Du (10k/xe) hoặc 63 Đông Du (30k/xe).\n`
-            + `- Xe hơi/Car: 63 Đông Du (25k/hr).`;
-            
-          try {
-            await sendFacebookMessage(reservation.psid, fbMessage, pageAccessToken);
-          } catch (err) {
-            console.error('FB Send Error:', err);
-            errorMsg = `Lỗi gửi tin nhắn FB: ${err.message}`;
+        if (isAutoReply) {
+          // CHẾ ĐỘ TỰ ĐỘNG (KHI META ĐÃ DUYỆT API)
+          if (reservation.psid) {
+            replyText = `✅ Đã xác nhận đơn đặt bàn. Đã gửi tin nhắn Facebook cho khách.\n(Xác nhận bởi: ${escapeHtml(userFullName)})`;
+            if (isTestMode) replyText += ' [TEST FB]';
+
+            try {
+              await sendFacebookMessage(reservation.psid, fbConfirmationText, pageAccessToken);
+            } catch (err) {
+              console.error('FB Send Error:', err);
+              errorMsg = `Lỗi gửi tin nhắn FB: ${err.message}`;
+            }
+          } else {
+            replyText = `✅ Đã xác nhận đơn đặt bàn vào hệ thống (Chưa gửi FB do không có PSID).\n(Xác nhận bởi: ${escapeHtml(userFullName)})`;
+            if (isTestMode) replyText += ' [TEST FB]';
+            errorMsg = "Không tìm thấy mã PSID của khách hàng này để gửi tin nhắn Facebook tự động. Vui lòng nhắn tin trực tiếp cho khách trên Fanpage!";
           }
         } else {
-          replyText = `✅ Đã xác nhận đơn đặt bàn vào hệ thống (Chưa gửi FB do không có PSID).\n(Xác nhận bởi: ${userFullName})`;
-          if (isTestMode) replyText += ' [TEST FB]';
-          errorMsg = "Không tìm thấy mã PSID của khách hàng này để gửi tin nhắn Facebook tự động. Vui lòng nhắn tin trực tiếp cho khách trên Fanpage!";
+          // CHẾ ĐỘ BÁN TỰ ĐỘNG (CHỜ META DUYỆT - MẶC ĐỊNH)
+          replyText = `✅ <b>Đã xác nhận đơn trên hệ thống & lưu Google Sheets!</b>\n`
+            + `(Xác nhận bởi: ${escapeHtml(userFullName)})${isTestMode ? ' [TEST FB]' : ''}\n\n`
+            + `📢 <b>NHẮN KHÁCH:</b> Nhân viên vui lòng vào Fanpage nhắn tin xác nhận giữ bàn cho khách <b>${escapeHtml(reservation.full_name)}</b>.\n\n`
+            + `💬 <b>Mẫu tin nhắn gửi khách (Chạm vào ô bên dưới để sao chép):</b>\n`
+            + `<code>${escapeHtml(fbConfirmationText)}</code>`;
         }
 
         // Push to Google Sheets (luôn chạy khi xác nhận để đồng bộ)
@@ -209,7 +229,6 @@ export async function POST(request) {
         }
         // Đã update DB ở đầu block confirm
         if (updateError) errorMsg = `Lỗi cập nhật CSDL: ${updateError.message}`;
-        // if (chatId) await sendTelegramMessage(`DEBUG: Chuẩn bị reply Telegram`, chatId);
 
       } else if (action === 'reschedule') {
         const times = ["11:00 AM", "11:30 AM", "12:00 PM", "12:30 PM", "1:00 PM", "1:30 PM", "4:00 PM", "4:30 PM", "5:00 PM", "5:30 PM", "6:00 PM", "6:30 PM", "7:00 PM", "7:30 PM", "8:00 PM", "8:30 PM", "9:00 PM", "9:30 PM"];
@@ -222,9 +241,9 @@ export async function POST(request) {
           inline_keyboard.push(row);
         }
         const msgText = `Vui lòng chọn khung giờ mới cho khách hàng:\n` +
-                        `👤 Tên: ${reservation.full_name}\n` +
-                        `📞 SĐT: ${reservation.phone || 'Không có'}\n` +
-                        `📅 Lịch cũ: ${reservation.time} - ${formatDateForSheet(reservation.date)}`;
+                        `👤 Tên: ${escapeHtml(reservation.full_name)}\n` +
+                        `📞 SĐT: ${escapeHtml(reservation.phone) || 'Không có'}\n` +
+                        `📅 Lịch cũ: ${escapeHtml(reservation.time)} - ${formatDateForSheet(reservation.date)}`;
         
         await sendTelegramMessage(msgText, chatId, { reply_markup: { inline_keyboard } });
         if (cbQueryId) {
@@ -233,29 +252,39 @@ export async function POST(request) {
         return NextResponse.json({ ok: true });
 
       } else if (action === 'newtime') {
-        if (reservation.psid) {
-          replyText = `✅ Đã báo khách đổi giờ sang ${newTime} qua Facebook.\n(Bởi: ${userFullName})`;
-          if (isTestMode) replyText += ' [TEST FB]';
+        const formattedDate = formatDateForSheet(reservation.date);
+        const fbRescheduleText = `Xin chào ${reservation.full_name || 'anh/chị'},\n\n`
+          + `Cảm ơn anh/chị đã lựa chọn L’Entrecôte – Social Meating.\n`
+          + `Nhà hàng rất tiếc rằng khung giờ ${reservation.time} vào ngày ${formattedDate} hiện đã kín bàn. Tuy nhiên, nhà hàng đề xuất khung giờ còn bàn trống lúc ${newTime}.\n\n`
+          + `Nếu khung giờ trên phù hợp, anh/chị có thể liên hệ hotline 032 7157002 hoặc nhắn tin lại tại đây để được hỗ trợ đặt bàn mới.\n`
+          + `L’Entrecôte - Social Meating thành thật xin lỗi vì sự bất tiện này.\n`
+          + `Rất mong sớm được chào đón anh/chị tại L’Entrecôte - Social Meating.\n\n`
+          + `Trân trọng,\nL’Entrecôte – Social Meating`;
 
-          const formattedDate = formatDateForSheet(reservation.date);
-          const fbMessage = `Xin chào ${reservation.full_name},\n\n`
-            + `Cảm ơn anh/chị đã lựa chọn L’Entrecôte – Social Meating.\n`
-            + `Nhà hàng rất tiếc rằng khung giờ ${reservation.time} vào ngày ${formattedDate} hiện đã kín bàn. Tuy nhiên, nhà hàng đề xuất khung giờ còn bàn trống lúc ${newTime}.\n\n`
-            + `Nếu khung giờ trên phù hợp, anh/chị có thể liên hệ hotline 032 7157002 hoặc nhắn tin lại tại đây để được hỗ trợ đặt bàn mới.\n`
-            + `L’Entrecôte - Social Meating thành thật xin lỗi vì sự bất tiện này.\n`
-            + `Rất mong sớm được chào đón anh/chị tại L’Entrecôte - Social Meating.\n\n`
-            + `Trân trọng,\nL’Entrecôte – Social Meating`;
-            
-          try {
-            await sendFacebookMessage(reservation.psid, fbMessage, pageAccessToken);
-          } catch (err) {
-            console.error('FB Send Error:', err);
-            errorMsg = `Lỗi gửi tin nhắn FB: ${err.message}`;
+        if (isAutoReply) {
+          // CHẾ ĐỘ TỰ ĐỘNG
+          if (reservation.psid) {
+            replyText = `✅ Đã báo khách đổi giờ sang ${newTime} qua Facebook.\n(Bởi: ${escapeHtml(userFullName)})`;
+            if (isTestMode) replyText += ' [TEST FB]';
+
+            try {
+              await sendFacebookMessage(reservation.psid, fbRescheduleText, pageAccessToken);
+            } catch (err) {
+              console.error('FB Send Error:', err);
+              errorMsg = `Lỗi gửi tin nhắn FB: ${err.message}`;
+            }
+          } else {
+            replyText = `⚠️ Đã ghi nhận đề xuất đổi giờ sang ${newTime} (Chưa gửi FB do không có PSID).\n(Bởi: ${escapeHtml(userFullName)})`;
+            if (isTestMode) replyText += ' [TEST FB]';
+            errorMsg = "Không tìm thấy mã PSID của khách hàng này để gửi tin nhắn Facebook tự động. Vui lòng nhắn tin trực tiếp cho khách trên Fanpage!";
           }
         } else {
-          replyText = `⚠️ Đã ghi nhận đề xuất đổi giờ sang ${newTime} (Chưa gửi FB do không có PSID).\n(Bởi: ${userFullName})`;
-          if (isTestMode) replyText += ' [TEST FB]';
-          errorMsg = "Không tìm thấy mã PSID của khách hàng này để gửi tin nhắn Facebook tự động. Vui lòng nhắn tin trực tiếp cho khách trên Fanpage!";
+          // CHẾ ĐỘ BÁN TỰ ĐỘNG (CHỜ META DUYỆT - MẶC ĐỊNH)
+          replyText = `🔄 <b>Đã chọn đề xuất đổi giờ sang: ${newTime}</b>\n`
+            + `(Xử lý bởi: ${escapeHtml(userFullName)})${isTestMode ? ' [TEST FB]' : ''}\n`
+            + `📞 SĐT khách: <b>${escapeHtml(reservation.phone) || 'Không có'}</b> <i>(nhân viên có thể gọi điện trực tiếp)</i>\n\n`
+            + `💬 <b>Mẫu tin nhắn chat Fanpage (Chạm vào ô bên dưới để sao chép):</b>\n`
+            + `<code>${escapeHtml(fbRescheduleText)}</code>`;
         }
 
         if (cbQueryId) await answerTelegramCallbackQuery(cbQueryId, `Đã báo đổi sang ${newTime}!`);
