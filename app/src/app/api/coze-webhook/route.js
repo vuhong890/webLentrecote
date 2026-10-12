@@ -118,15 +118,6 @@ export async function POST(request) {
             if (found) break;
           }
         }
-        
-        // Fallback: take the most recent sender if no match found
-        if (!psid && fbData.data && fbData.data.length > 0) {
-           const firstConv = fbData.data[0];
-           const userParticipant = firstConv.participants?.data?.find(p => p.id !== pageId);
-           if (userParticipant) {
-              psid = userParticipant.id;
-           }
-        }
       } catch (fbErr) {
         console.error('Error fetching PSID from Facebook:', fbErr);
       }
@@ -200,7 +191,7 @@ export async function POST(request) {
       ];
 
       const telegramUrl = `https://api.telegram.org/bot${botToken}/sendMessage`;
-      await fetch(telegramUrl, {
+      const teleRes = await fetch(telegramUrl, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -212,6 +203,20 @@ export async function POST(request) {
           }
         })
       });
+      const teleData = await teleRes.json();
+
+      // Nếu không tìm thấy PSID, gửi tin nhắn trả lời cảnh báo trực tiếp vào đơn vừa gửi
+      if (!psid && teleData?.ok && teleData?.result?.message_id) {
+        await fetch(telegramUrl, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            chat_id: chatId,
+            reply_to_message_id: teleData.result.message_id,
+            text: '⚠️ Hiện không tìm thấy tài khoản Facebook phù hợp với đơn đặt bàn này. Nhân viên vui lòng kiểm tra lại các cuộc hội thoại trên Fanpage.'
+          })
+        });
+      }
     }
 
     return NextResponse.json({ ok: true, message: 'Dữ liệu đã được xử lý' });
