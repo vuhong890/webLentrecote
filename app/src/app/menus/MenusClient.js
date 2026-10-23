@@ -147,16 +147,24 @@ export default function MenusClient({ initialCategories = [], allMenuItems = [],
             <div className={styles.menuGrid}>
               {items.map((item, i) => (
                 <div key={`${activeSlug}-${i}`} className={styles.menuCard} style={{ animationDelay: `${i * 0.1}s` }}>
-                  <div className={styles.menuCardImage} style={
-                    getImage(item) 
-                      ? { backgroundImage: `url(${getImage(item)})`, backgroundSize: 'cover', backgroundPosition: 'center' }
-                      : { background: `linear-gradient(${135 + i * 20}deg, #2a1a0a 0%, #4a2a1a 50%, #3a1a0a 100%)` }
-                  }>
-                    {!getImage(item) && (
+                  <div 
+                    className={styles.menuCardImage} 
+                    style={!getImage(item) ? { background: `linear-gradient(${135 + i * 20}deg, #2a1a0a 0%, #4a2a1a 50%, #3a1a0a 100%)` } : undefined}
+                  >
+                    {getImage(item) ? (
+                      <Image
+                        src={getImage(item)}
+                        alt={getName(item) || 'Menu Item'}
+                        fill
+                        sizes="(max-width: 640px) 100vw, (max-width: 1080px) 50vw, 384px"
+                        quality={75}
+                        style={{ objectFit: 'cover', objectPosition: 'center' }}
+                      />
+                    ) : (
                       <div className={styles.menuEmoji}>{getEmoji(activeSlug)}</div>
                     )}
                     {item.badge && (
-                      <span className={styles.menuBadge}>{item.badge}</span>
+                      <span className={styles.menuBadge} style={{ zIndex: 2 }}>{item.badge}</span>
                     )}
                   </div>
                   <div className={styles.menuCardBody}>

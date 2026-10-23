@@ -79,7 +79,7 @@ export default function AdminMenus() {
     if (!file) return;
     setUploading(field);
     try {
-      const options = { maxSizeMB: 0.5, maxWidthOrHeight: 1920, useWebWorker: true, fileType: 'image/webp' };
+      const options = { maxSizeMB: 0.1, maxWidthOrHeight: 800, useWebWorker: true, fileType: 'image/webp' };
       file = await imageCompression(file, options);
     } catch (err) {
       console.warn('Compression error:', err);

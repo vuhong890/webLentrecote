@@ -42,7 +42,7 @@ export default function AdminGallery() {
     if (!file) return;
     setUploading(true);
     try {
-      const options = { maxSizeMB: 0.5, maxWidthOrHeight: 1920, useWebWorker: true, fileType: 'image/webp' };
+      const options = { maxSizeMB: 0.2, maxWidthOrHeight: 1400, useWebWorker: true, fileType: 'image/webp' };
       file = await imageCompression(file, options);
     } catch (e) {
       console.warn('Compression error:', e);
