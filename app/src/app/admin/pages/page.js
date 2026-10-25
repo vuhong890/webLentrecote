@@ -98,7 +98,7 @@ export default function AdminPages() {
     if (!file) return null;
     setUploading(true);
     try {
-      const options = { maxSizeMB: 0.5, maxWidthOrHeight: 1920, useWebWorker: true, fileType: 'image/webp' };
+      const options = { maxSizeMB: 0.15, maxWidthOrHeight: 1400, useWebWorker: true, fileType: 'image/webp' };
       file = await imageCompression(file, options);
     } catch (e) {
       console.warn('Compression error:', e);
@@ -108,6 +108,18 @@ export default function AdminPages() {
     fd.append('bucket', 'page-assets');
     try {
       const res = await fetch('/api/upload', { method: 'POST', headers: { Authorization: `Bearer ${token}` }, body: fd });
+      if (!res.ok) {
+        let errDesc = `Server error (${res.status})`;
+        try {
+          const errData = await res.json();
+          if (errData.error) errDesc = errData.error;
+        } catch {
+          // not json
+        }
+        setUploading(false);
+        alert('Upload failed: ' + errDesc);
+        return null;
+      }
       const data = await res.json();
       setUploading(false);
       if (data.url) return data.url;

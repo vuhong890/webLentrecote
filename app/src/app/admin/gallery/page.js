@@ -52,6 +52,16 @@ export default function AdminGallery() {
     fd.append('bucket', 'gallery');
     try {
       const res = await fetch('/api/upload', { method: 'POST', headers: { Authorization: `Bearer ${token}` }, body: fd });
+      if (!res.ok) {
+        let errDesc = `Server error (${res.status})`;
+        try {
+          const errData = await res.json();
+          if (errData.error) errDesc = errData.error;
+        } catch {}
+        alert('Upload failed: ' + errDesc);
+        setUploading(false);
+        return;
+      }
       const data = await res.json();
       if (data.url) setForm(prev => ({ ...prev, image_url: data.url }));
       else alert('Upload failed: ' + (data.error || 'Unknown error'));
