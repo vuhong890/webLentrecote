@@ -43,20 +43,37 @@ export default function AdminSettings() {
 
   const botFields = [
     { 
-      key: 'facebook_auto_reply', 
-      label: 'Tự động gửi tin nhắn Facebook Messenger cho khách', 
-      desc: 'Chọn "false" (Mặc định - Đang chờ Meta duyệt API): Bot gửi tin nhắn nhắc nhân viên chat trên Fanpage & kèm mẫu tin nhắn 1-chạm sao chép nhanh. Chọn "true": Bot tự động gọi Facebook Graph API để gửi tin nhắn cho khách.', 
+      key: 'facebook_bot_active', 
+      label: 'Kích hoạt AI Chatbot (Facebook & Instagram)', 
+      desc: 'Bật: AI Bot tự động đọc tin nhắn và trò chuyện song ngữ với khách. Tắt: Bot im lặng hoàn toàn, nhường cho nhân viên chat tay.', 
       type: 'toggle' 
+    },
+    { 
+      key: 'facebook_auto_reply', 
+      label: 'Tự động gửi tin nhắn Facebook Messenger khi bấm "Yes" trên Telegram', 
+      desc: 'Bật (Khuyên dùng vì Meta đã duyệt quyền): Khi nhân viên bấm "Yes" trên Telegram, hệ thống tự động gửi tin nhắn Messenger xác nhận + chỉ dẫn gửi xe cho khách.', 
+      type: 'toggle' 
+    },
+    { 
+      key: 'facebook_whitelist_only', 
+      label: 'Chế độ Thử Nghiệm Giới Hạn (Chỉ Tester & Admin)', 
+      desc: 'Bật: Bot CHỈ phản hồi những người dùng có trong danh sách Whitelist dưới đây (dành riêng cho quá trình test nội bộ, tránh ảnh hưởng khách thật). Tắt: Bot phản hồi tất cả mọi người.', 
+      type: 'toggle' 
+    },
+    { 
+      key: 'facebook_whitelist_psids', 
+      label: 'Danh sách PSID Tester (Người thử nghiệm)', 
+      desc: 'Nhập các ID Facebook (PSID) của bạn hoặc nhân viên thử nghiệm, ngăn cách bằng dấu phẩy. Nếu để trống khi bật chế độ Tester, chỉ tài khoản có vai trò Tester/Admin trên Meta App mới nhận được tin nhắn.' 
     },
   ];
 
   const testFields = [
-    { key: 'telegram_test_mode', label: 'Bật Chế Độ Test Telegram', desc: 'Nhập "true" để bật, "false" để tắt. Khi bật, việc ấn nút Yes/No trên Tele sẽ gửi mail xác nhận cho Test Email thay vì khách.', type: 'toggle' },
-    { key: 'facebook_test_mode', label: 'Bật Chế Độ Test Facebook Bot', desc: 'Nhập "true" để bật. Khi bật, đơn đặt bàn từ Facebook sẽ gửi về Group Test thay vì Group chính.', type: 'toggle' },
-    { key: 'facebook_test_chat_id', label: 'Facebook Test Chat ID', desc: 'ID của Group Telegram dùng để Test (Bắt đầu bằng dấu âm, ví dụ: -100xxx)' },
-    { key: 'email_test_mode', label: 'Bật Chế Độ Test Email Đặt Bàn', desc: 'Nhập "true" để bật, "false" để tắt. Khi bật, form đặt bàn mới trên web sẽ gửi mail thông báo vào Test Email thay vì mail nhà hàng.', type: 'toggle' },
+    { key: 'facebook_test_mode', label: 'Bật Chế Độ Test Facebook Bot', desc: 'Bật: Khi khách chốt bàn qua Facebook, thông báo đặt bàn sẽ gửi về Group Telegram Test thay vì Group Telegram chính thức của nhà hàng.', type: 'toggle' },
+    { key: 'facebook_test_chat_id', label: 'Facebook Test Chat ID (Telegram)', desc: 'ID của Group Telegram dùng để nhận thông báo thử nghiệm (ví dụ: -5508852161)' },
+    { key: 'telegram_test_mode', label: 'Bật Chế Độ Test Email Telegram', desc: 'Bật: Việc ấn nút Yes/No trên Tele sẽ gửi email xác nhận vào Test Email thay vì email của khách hàng.', type: 'toggle' },
+    { key: 'email_test_mode', label: 'Bật Chế Độ Test Email Đặt Bàn', desc: 'Bật: Đơn đặt bàn mới từ website sẽ gửi email thông báo vào Test Email thay vì email chính của nhà hàng.', type: 'toggle' },
     { key: 'test_email', label: 'Test Email', desc: 'Email nhận các thư liên quan đến Test Mode' },
-    { key: 'google_sheet_url', label: 'Real Google Sheet URL', desc: 'Link Webhook của file Google Sheet THẬT' },
+    { key: 'google_sheet_url', label: 'Real Google Sheet URL', desc: 'Link Webhook của file Google Sheet THẬT của nhà hàng' },
     { key: 'test_google_sheet_url', label: 'Test Google Sheet URL', desc: 'Link Webhook của file Google Sheet TEST (dùng khi bật Test Mode)' },
   ];
 
