@@ -1,4 +1,4 @@
-import { NextResponse } from 'next/server';
+import { NextResponse, after } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import { generateChatReply } from '@/lib/bot/geminiService';
 import { handleConfirmBooking } from '@/lib/bot/bookingHandler';
@@ -125,7 +125,7 @@ async function processIncomingMessage({ senderPsid, text, platform }) {
       platform: platform
     }]);
 
-    await sleep(1500); // Đợi 1.5 giây để gom tin nhắn ngắn liên tiếp mà không bị quá 5s Meta timeout
+    await sleep(10000); // Đợi 10 giây để khách có thời gian nhắn từng câu riêng biệt
 
     // Kiểm tra xem tin nhắn này có phải là tin nhắn cuối cùng trong chuỗi debounce không
     const { data: queuedMessages } = await serviceClient
@@ -273,13 +273,15 @@ export async function POST(request) {
           const text = messagingEvent.message?.text;
 
           if (senderPsid && text) {
-            // Await xử lý để đảm bảo hoàn thành trên Vercel Serverless
-            await processIncomingMessage({ senderPsid, text, platform });
+            // Dùng after() để Next.js giữ serverless runtime sống trong 10s gom tin nhắn
+            after(async () => {
+              await processIncomingMessage({ senderPsid, text, platform });
+            });
           }
         }
       }
 
-      // TRẢ VỀ 200 OK CHO META
+      // TRẢ VỀ 200 OK NGAY LẬP TỨC CHO META (trong vòng 0.05 giây)
       return new Response('EVENT_RECEIVED', { status: 200 });
     }
 
