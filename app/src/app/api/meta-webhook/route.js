@@ -125,7 +125,7 @@ async function processIncomingMessage({ senderPsid, text, platform }) {
       platform: platform
     }]);
 
-    await sleep(8000); // Đợi 8 giây
+    await sleep(1500); // Đợi 1.5 giây để gom tin nhắn ngắn liên tiếp mà không bị quá 5s Meta timeout
 
     // Kiểm tra xem tin nhắn này có phải là tin nhắn cuối cùng trong chuỗi debounce không
     const { data: queuedMessages } = await serviceClient
@@ -241,6 +241,17 @@ async function handleHumanHandover(recipientPsid) {
 export async function POST(request) {
   try {
     const body = await request.json();
+    console.log('Meta Webhook POST event received:', JSON.stringify(body));
+
+    // Lưu log sự kiện để debug
+    try {
+      await serviceClient.from('bot_webhook_logs').insert([{
+        event_type: body.object,
+        payload: body
+      }]);
+    } catch (logErr) {
+      console.error('Lỗi lưu bot_webhook_logs:', logErr);
+    }
 
     // 1. Kiểm tra đối tượng webhook
     if (body.object === 'page' || body.object === 'instagram') {
@@ -252,7 +263,7 @@ export async function POST(request) {
           if (messagingEvent.message?.is_echo) {
             const recipientPsid = messagingEvent.recipient?.id;
             if (recipientPsid) {
-              handleHumanHandover(recipientPsid);
+              await handleHumanHandover(recipientPsid);
             }
             continue;
           }
@@ -262,20 +273,19 @@ export async function POST(request) {
           const text = messagingEvent.message?.text;
 
           if (senderPsid && text) {
-            // Thực thi ngầm trong nền, không đợi kết quả để trả ngay 200 OK
-            processIncomingMessage({ senderPsid, text, platform });
+            // Await xử lý để đảm bảo hoàn thành trên Vercel Serverless
+            await processIncomingMessage({ senderPsid, text, platform });
           }
         }
       }
 
-      // TRẢ VỀ 200 OK NGAY LẬP TỨC CHO META (Trong vòng vài mili-giây)
+      // TRẢ VỀ 200 OK CHO META
       return new Response('EVENT_RECEIVED', { status: 200 });
     }
 
     return new Response('Not Found', { status: 404 });
   } catch (error) {
     console.error('Lỗi Meta Webhook POST:', error);
-    // Vẫn trả về 200 để Meta không retry gây nghẽn
     return new Response('EVENT_RECEIVED', { status: 200 });
   }
 }
