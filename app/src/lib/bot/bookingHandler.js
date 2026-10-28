@@ -86,7 +86,7 @@ export async function handleConfirmBooking({ bookingData, senderPsid, platform =
         time: formattedTime,
         guests: parseInt(bookingData.guest_count) || 2,
         note: bookingData.notes || '',
-        source: platform,
+        source: platform === 'instagram' ? 'IG' : 'FB',
         psid: senderPsid,
         status: 'pending'
       }])

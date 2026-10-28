@@ -138,7 +138,7 @@ export async function POST(request) {
           time: formatTime(data.gio_dat),
           guests: parseInt(data.so_nguoi) || 2,
           note: data.ghi_chu || '',
-          source: 'facebook',
+          source: 'FB',
           psid: psid,
           status: 'pending'
         }])
