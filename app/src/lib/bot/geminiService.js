@@ -1,4 +1,4 @@
-import { buildSystemInstruction } from './botPrompt';
+import { buildSystemInstruction } from './botPrompt.js';
 
 const BOOKING_TOOL = {
   functionDeclarations: [
@@ -77,15 +77,24 @@ export async function generateChatReply({ history = [], userMessage, customPromp
     }
   };
 
-  const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent?key=${apiKey}`;
+  const primaryModel = process.env.GEMINI_MODEL || 'gemini-3.5-flash';
+  const fallbackModel = 'gemini-2.5-flash';
 
-  const response = await fetch(endpoint, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(payload)
-  });
+  const callModel = async (model) => {
+    const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
+    const res = await fetch(endpoint, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+    return await res.json();
+  };
 
-  const data = await response.json();
+  let data = await callModel(primaryModel);
+  if (data.error && primaryModel !== fallbackModel) {
+    console.warn(`Model ${primaryModel} gặp sự cố (${data.error.message}), tự động fallback sang ${fallbackModel}...`);
+    data = await callModel(fallbackModel);
+  }
 
   if (data.error) {
     console.error('Gemini API Error:', data.error);
