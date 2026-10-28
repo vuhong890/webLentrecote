@@ -42,15 +42,15 @@ const BOOKING_TOOL = {
 /**
  * Gọi Gemini API với System Instruction, History và Tool Declaration
  */
-export async function generateChatReply({ history = [], userMessage }) {
+export async function generateChatReply({ history = [], userMessage, customPrompt = '' }) {
   const apiKey = process.env.GEMINI_API_KEY;
-  const modelName = process.env.GEMINI_MODEL || 'gemini-2.5-flash';
+  const modelName = process.env.GEMINI_MODEL || 'gemini-3.5-flash';
 
   if (!apiKey) {
     throw new Error('Chưa cấu hình GEMINI_API_KEY trong .env.local');
   }
 
-  const systemInstruction = buildSystemInstruction();
+  const systemInstruction = buildSystemInstruction(customPrompt);
 
   // Chuẩn bị payload contents
   const contents = [...history];

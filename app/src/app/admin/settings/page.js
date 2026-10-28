@@ -65,6 +65,13 @@ export default function AdminSettings() {
       label: 'Danh sách PSID Tester (Người thử nghiệm)', 
       desc: 'Nhập các ID Facebook (PSID) của bạn hoặc nhân viên thử nghiệm, ngăn cách bằng dấu phẩy. Nếu để trống khi bật chế độ Tester, chỉ tài khoản có vai trò Tester/Admin trên Meta App mới nhận được tin nhắn.' 
     },
+    {
+      key: 'bot_system_prompt',
+      label: 'Kịch bản & Hướng dẫn AI Bot (System Prompt)',
+      desc: 'Toàn bộ tính cách, vai trò lễ tân, quy tắc xưng hô và quy trình thu thập thông tin đặt bàn của AI Bot. Bạn có thể đọc, chỉnh sửa câu chữ hoặc bổ sung chương trình khuyến mãi bất kỳ lúc nào rồi bấm SAVE bên cạnh.',
+      type: 'textarea',
+      height: '380px'
+    }
   ];
 
   const testFields = [
@@ -102,7 +109,16 @@ export default function AdminSettings() {
             <option value="false">Tắt (False)</option>
           </select>
         ) : f.type === 'textarea' ? (
-          <textarea style={s.textarea} value={settings[f.key] || ''} onChange={e => setSettings({ ...settings, [f.key]: e.target.value })} />
+          <textarea 
+            style={{ 
+              ...s.textarea, 
+              minHeight: f.height || '80px', 
+              fontFamily: f.height ? 'Consolas, monospace' : 'inherit',
+              lineHeight: '1.5'
+            }} 
+            value={settings[f.key] || ''} 
+            onChange={e => setSettings({ ...settings, [f.key]: e.target.value })} 
+          />
         ) : (
           <input style={s.input} value={settings[f.key] || ''} onChange={e => setSettings({ ...settings, [f.key]: e.target.value })} />
         )}

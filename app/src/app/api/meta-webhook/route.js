@@ -62,12 +62,15 @@ async function processIncomingMessage({ senderPsid, text, platform }) {
       return;
     }
 
+    let botCustomPrompt = '';
+
     // 0. Kiểm tra Cài đặt Site Settings (Bật/Tắt Bot & Chế độ Test Whitelist)
     try {
       const { data: settingsData } = await serviceClient.from('site_settings').select('key, value');
       if (settingsData) {
         const settings = {};
         settingsData.forEach(s => settings[s.key] = s.value);
+        botCustomPrompt = settings.bot_system_prompt || '';
 
         // Nếu Bot bị tắt trong Admin Settings
         if (settings.facebook_bot_active === 'false') {
@@ -174,7 +177,11 @@ async function processIncomingMessage({ senderPsid, text, platform }) {
 
     // 5. Gọi Gemini AI sinh câu trả lời
     console.log(`🤖 Đang gọi Gemini AI cho khách ${senderPsid}: "${combinedText}"`);
-    const aiResult = await generateChatReply({ history, userMessage: combinedText });
+    const aiResult = await generateChatReply({ 
+      history, 
+      userMessage: combinedText, 
+      customPrompt: botCustomPrompt 
+    });
 
     // 6. Xử lý kết quả trả về
     if (aiResult.functionCall && aiResult.functionCall.name === 'confirm_booking') {
