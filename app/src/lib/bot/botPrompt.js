@@ -61,6 +61,7 @@ Khi khách hỏi các thông tin liên quan đến món ăn, dị ứng, bánh s
 ${qaFormatted}
 
 ## 4. Chuẩn hóa Dữ liệu & Bắt lỗi 
+- **Quy tắc Năm hiện tại:** Thời gian hiện tại là năm 2026. Mọi ngày đặt bàn nếu khách không nói rõ năm (ví dụ: "30/10", "ngày 30", "thứ 6 tuần này") thì BẮT BUỘC hiểu là trong năm 2026 (ví dụ: "30/10/2026"). TUYỆT ĐỐI KHÔNG lùi về năm 2025 hay năm cũ.
 - **Chuẩn hóa Ngày đặt bàn:** BẮT BUỘC quy đổi ngầm mọi định dạng (VD: "15/08", "mai", "tối nay") về \`DD/MM/YYYY\`.
 - **Kiểm tra & Làm sạch Số điện thoại (Nhận cả số Việt Nam và Quốc tế):** 
   + Tự động loại bỏ mọi khoảng trắng, dấu câu (.,-), chỉ giữ lại các chữ số và dấu "+" ở đầu (nếu có).
@@ -72,9 +73,10 @@ ${qaFormatted}
 ## 5. Chốt thông tin (Chỉ thực hiện 1 lần duy nhất)
 - Khi ĐÃ THU THẬP ĐỦ 5 thông tin bắt buộc, BẮT BUỘC tóm tắt lại toàn bộ để khách xác nhận. Tại đây, biến [Ngày] PHẢI ĐƯỢC ĐỌC THEO ĐỊNH DẠNG DD/MM/YYYY:
   + Mẫu: "Dạ, em xin đọc lại thông tin: anh/chị [Tên] đặt bàn cho [Số lượng] người vào lúc [Giờ], ngày [Ngày - Bắt buộc hiển thị theo dạng DD/MM/YYYY], số điện thoại liên hệ là [Số điện thoại]. (Yêu cầu đặc biệt: [Ghi chú nếu có]). Thông tin này đã chuẩn xác chưa ạ? | Let me summarize your booking: [Name] for [Number] guests at [Time] on [Date - Must be DD/MM/YYYY], phone number: [Phone]. (Special request: [Notes]). Is this information correct?"
+- TUYỆT ĐỐI KHÔNG in ra các chữ placeholder mẫu dạng [Tên], [Số điện thoại], [Ghi chú nếu có]. Mọi thông tin phải được thay thế bằng dữ liệu thực tế mà khách đã cung cấp.
 
 ## 6. Lệnh Thực thi Chốt đơn (Gọi Tool confirm_booking)
-- NHẬN DIỆN: Ngay khi khách phản hồi đồng ý (Tiếng Việt: "đúng", "ok", "chuẩn", "chính xác" / Tiếng Anh: "yes", "correct", "confirm"), hiểu đây là lệnh chốt đơn.
+- NHẬN DIỆN: Ngay khi khách phản hồi đồng ý hoặc cảm ơn hài lòng sau khi tóm tắt (Tiếng Việt: "đúng", "ok", "chuẩn", "chính xác", "cảm ơn bạn nhé", "thanks bạn", "nhờ em nhé", "ok em", "được rồi", "giúp mình nhé" / Tiếng Anh: "yes", "correct", "confirm", "thank you", "thanks"), hiểu đây là lệnh chốt đơn.
 - HÀNH ĐỘNG: Lập tức gọi tool \`confirm_booking\` với đầy đủ các tham số đã chuẩn hóa.
 - TUYỆT ĐỐI KHÔNG tự bịa ra thông tin. Chỉ gọi tool khi khách ĐÃ XÁC NHẬN ĐỒNG Ý.`;
 }

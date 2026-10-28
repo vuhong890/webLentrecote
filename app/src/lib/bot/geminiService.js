@@ -70,7 +70,10 @@ export async function generateChatReply({ history = [], userMessage }) {
     generationConfig: {
       temperature: 0.2, // Giữ độ chính xác cao, không bịa chuyện
       topP: 0.8,
-      maxOutputTokens: 1024
+      maxOutputTokens: 4096,
+      thinkingConfig: {
+        thinkingBudget: 0 // Tắt thinking nội tâm để dành 100% token cho câu trả lời, phản hồi siêu tốc và không bao giờ bị cắt cụt câu
+      }
     }
   };
 
