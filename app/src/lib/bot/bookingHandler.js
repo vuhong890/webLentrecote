@@ -271,6 +271,10 @@ export async function handleRescheduleBooking({ rescheduleData, senderPsid, plat
   // 3. Đồng bộ cập nhật lên Google Sheets
   if (sheetUrl) {
     try {
+      const cleanCustomerNote = (rescheduleData.notes || reservation.note || '')
+        .replace(/\[.*?\]/g, '')
+        .trim();
+
       await fetch(sheetUrl, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -281,7 +285,7 @@ export async function handleRescheduleBooking({ rescheduleData, senderPsid, plat
           so_dien_thoai: phoneNumber,
           gio_dat_moi: newTime,
           gio_dat_cu: oldTime,
-          ghi_chu: `Khách chủ động đổi từ ${oldTime} sang ${newTime}`
+          ghi_chu: cleanCustomerNote // Chỉ gửi ghi chú thực tế của khách, không gắn tag hệ thống
         })
       });
     } catch (sheetErr) {

@@ -260,7 +260,7 @@ async function processIncomingMessage({ senderPsid, text, platform }) {
                 so_dien_thoai: activeReservation.phone,
                 gio_dat_moi: proposedTime,
                 gio_dat_cu: activeReservation.time,
-                ghi_chu: `Khách đồng ý đổi sang ${proposedTime}`
+                ghi_chu: cleanNote // Chỉ gửi ghi chú thực tế của khách (nếu có), không chèn text hệ thống
               })
             });
           } catch (sheetErr) {

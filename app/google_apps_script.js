@@ -85,12 +85,9 @@ function doPost(e) {
         sheet.getRange(foundRow, 6).setValue(newTimeStr);
         sheet.getRange(foundRow, 6).setFontColor("#ff0000");
 
-        // 2. Cập nhật Ghi chú vào Cột K (Cột 11)
-        var currentNote = String(sheet.getRange(foundRow, 11).getValue() || "").trim();
-        var updateTag = "[Đã đổi sang: " + newTimeStr + "]";
-        if (currentNote.indexOf(updateTag) === -1) {
-          var newNote = currentNote ? currentNote + " | " + updateTag : updateTag;
-          sheet.getRange(foundRow, 11).setValue(newNote);
+        // 2. Chỉ cập nhật Cột K (Cột 11 - Ghi chú) nếu khách có ghi chú riêng mới, tuyệt đối không chèn tag hệ thống
+        if (payload.ghi_chu && payload.ghi_chu.trim() !== "") {
+          sheet.getRange(foundRow, 11).setValue(payload.ghi_chu.trim());
         }
 
         // 3. Cập nhật lại Thứ (Cột 1) & Ngày (Cột 2) nếu khách có đổi ngày
@@ -112,8 +109,7 @@ function doPost(e) {
         })).setMimeType(ContentService.MimeType.JSON);
       }
 
-      // Nếu không tìm thấy dòng cũ trong Sheet (edge case), gán thêm tag và chạy tiếp xuống để chèn dòng mới
-      payload.ghi_chu = (payload.ghi_chu || "") + " [Reschedule]";
+      // Nếu không tìm thấy dòng cũ trong Sheet (edge case), tiếp tục chạy xuống dưới để chèn dòng mới (giữ nguyên ghi chú của khách)
     }
 
     // =========================================================================
