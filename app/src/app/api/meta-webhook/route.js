@@ -1,7 +1,7 @@
 import { NextResponse, after } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import { generateChatReply } from '@/lib/bot/geminiService';
-import { handleConfirmBooking } from '@/lib/bot/bookingHandler';
+import { handleConfirmBooking, handleRescheduleBooking, formatDateForSheet } from '@/lib/bot/bookingHandler';
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
@@ -9,6 +9,14 @@ const serviceClient = createClient(supabaseUrl, serviceKey);
 
 // Hàm hỗ trợ delay
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+
+function escapeHtml(str) {
+  if (!str) return '';
+  return String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;');
+}
 
 /**
  * Gửi tin nhắn Facebook Messenger cho khách qua Graph API
@@ -63,6 +71,9 @@ async function processIncomingMessage({ senderPsid, text, platform }) {
     }
 
     let botCustomPrompt = '';
+    let isTestMode = false;
+    let sheetUrl = null;
+    let teleChatId = process.env.TELEGRAM_CHAT_ID;
 
     // 0. Kiểm tra Cài đặt Site Settings (Bật/Tắt Bot & Chế độ Test Whitelist)
     try {
@@ -71,6 +82,11 @@ async function processIncomingMessage({ senderPsid, text, platform }) {
         const settings = {};
         settingsData.forEach(s => settings[s.key] = s.value);
         botCustomPrompt = settings.bot_system_prompt || '';
+        isTestMode = settings.facebook_test_mode === 'true';
+        sheetUrl = isTestMode ? settings.test_google_sheet_url : settings.google_sheet_url;
+        if (isTestMode && settings.facebook_test_chat_id) {
+          teleChatId = settings.facebook_test_chat_id;
+        }
 
         // Nếu Bot bị tắt trong Admin Settings
         if (settings.facebook_bot_active === 'false') {
@@ -118,7 +134,7 @@ async function processIncomingMessage({ senderPsid, text, platform }) {
       return;
     }
 
-    // 3. Cơ chế Debounce gom tin nhắn (Đợi 8 giây để gom các câu ngắn liên tiếp)
+    // 3. Cơ chế Debounce gom tin nhắn (Đợi 5 giây theo yêu cầu để gom các câu ngắn liên tiếp)
     // Lưu tin nhắn hiện tại vào hàng đợi
     const queueId = crypto.randomUUID();
     await serviceClient.from('bot_message_queue').insert([{
@@ -128,7 +144,7 @@ async function processIncomingMessage({ senderPsid, text, platform }) {
       platform: platform
     }]);
 
-    await sleep(10000); // Đợi 10 giây để khách có thời gian nhắn từng câu riêng biệt
+    await sleep(5000); // Đợi 5 giây gom tin nhắn phản hồi nhanh và tự nhiên
 
     // Kiểm tra xem tin nhắn này có phải là tin nhắn cuối cùng trong chuỗi debounce không
     const { data: queuedMessages } = await serviceClient
@@ -155,6 +171,107 @@ async function processIncomingMessage({ senderPsid, text, platform }) {
 
     if (!combinedText) return;
 
+    // 3.5. Kiểm tra đơn đặt bàn hiện có của khách (hôm nay hoặc tương lai)
+    const now = new Date();
+    const vnNow = new Date(now.getTime() + (7 * 60 + now.getTimezoneOffset()) * 60 * 1000);
+    const todayIso = vnNow.toISOString().split('T')[0];
+
+    const { data: activeReservations } = await serviceClient
+      .from('reservations')
+      .select('*')
+      .eq('psid', senderPsid)
+      .gte('date', todayIso)
+      .in('status', ['pending', 'confirmed', 'reschedule_proposed'])
+      .order('created_at', { ascending: false })
+      .limit(1);
+
+    const activeReservation = activeReservations?.[0] || null;
+
+    // XỬ LÝ KỊCH BẢN B: Khách đồng ý với đề xuất đổi giờ từ nhà hàng (reschedule_proposed)
+    if (activeReservation && activeReservation.status === 'reschedule_proposed') {
+      const isAffirmative = /^(ok|oke|okie|oki|được|đồng ý|dong y|yes|yep|cảm ơn|cam on|thanks|thank you|chuẩn|chuan|chốt|chot|dạ được|da duoc|dạ ok|da ok|ok em|ok bạn|ok nha|được em|được nha|ok anh|ok chị|nhất trí|nhat tri)[\s.!?,]*$/i.test(combinedText.trim()) ||
+        /^(ok|oke|okie|được|đồng ý|yes)\b/i.test(combinedText.trim());
+
+      if (isAffirmative) {
+        console.log(`👍 Khách ${senderPsid} đồng ý đổi giờ cho đơn ${activeReservation.id}`);
+        const propMatch = (activeReservation.note || '').match(/\[Đề xuất đổi:\s*([^\]]+)\]/);
+        const proposedTime = propMatch ? propMatch[1].trim() : activeReservation.time;
+
+        const cleanNote = (activeReservation.note || '').replace(/\[Đề xuất đổi:\s*[^\]]+\]/g, '').trim();
+        const finalNote = `${cleanNote} [Khách đồng ý đổi sang: ${proposedTime}]`.trim();
+
+        // Cập nhật CSDL
+        await serviceClient
+          .from('reservations')
+          .update({
+            time: proposedTime,
+            status: 'confirmed',
+            note: finalNote
+          })
+          .eq('id', activeReservation.id);
+
+        // Gửi tin nhắn Facebook xác nhận cho khách
+        const confirmMsg = `Dạ, L'Entrecôte đã xác nhận lịch đặt bàn của anh/chị vào lúc ${proposedTime} ngày ${formatDateForSheet(activeReservation.date)}. Nhà hàng rất hân hạnh được phục vụ anh/chị! | L'Entrecôte has confirmed your reservation at ${proposedTime} on ${formatDateForSheet(activeReservation.date)}. We look forward to welcoming you!`;
+        await sendFacebookMessage(senderPsid, confirmMsg, pageAccessToken);
+
+        // Lưu tin nhắn bot vào DB
+        await serviceClient.from('bot_messages').insert([{
+          conversation_id: conv.id,
+          role: 'model',
+          content: confirmMsg
+        }]);
+
+        // Bắn thông báo Telegram cho nhân viên
+        const botToken = process.env.FACEBOOK_TELEGRAM_BOT_TOKEN;
+        if (botToken && teleChatId) {
+          try {
+            const teleMsg = `✅ <b>KHÁCH ĐÃ ĐỒNG Ý ĐỔI SANG ${escapeHtml(proposedTime)}</b>\n\n` +
+              `👤 <b>Khách hàng:</b> ${escapeHtml(activeReservation.full_name)}\n` +
+              `📞 <b>Số điện thoại:</b> ${escapeHtml(activeReservation.phone || 'N/A')}\n` +
+              `📅 <b>Ngày:</b> ${formatDateForSheet(activeReservation.date)}\n` +
+              `⏰ <b>Giờ mới:</b> <b>${escapeHtml(proposedTime)}</b> (Giờ cũ: ${escapeHtml(activeReservation.time)})\n` +
+              `👥 <b>Số khách:</b> ${activeReservation.guests} người\n\n` +
+              `📝 <i>Hệ thống đã tự động xác nhận đơn và cập nhật trên Google Sheet!</i>`;
+
+            await fetch(`https://api.telegram.org/bot${botToken}/sendMessage`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                chat_id: teleChatId,
+                text: teleMsg,
+                parse_mode: 'HTML'
+              })
+            });
+          } catch (teleErr) {
+            console.error('Error sending Telegram reschedule confirmation:', teleErr);
+          }
+        }
+
+        // Đồng bộ cập nhật lên Google Sheet
+        if (sheetUrl) {
+          try {
+            await fetch(sheetUrl, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                loai_xu_ly: "Reschedule",
+                ngay_dat: formatDateForSheet(activeReservation.date),
+                ten_khach: activeReservation.full_name,
+                so_dien_thoai: activeReservation.phone,
+                gio_dat_moi: proposedTime,
+                gio_dat_cu: activeReservation.time,
+                ghi_chu: `Khách đồng ý đổi sang ${proposedTime}`
+              })
+            });
+          } catch (sheetErr) {
+            console.error('Error syncing reschedule to Google Sheets:', sheetErr);
+          }
+        }
+
+        return; // Đã xử lý xong, không cần gọi Gemini AI
+      }
+    }
+
     // 4. Lấy lịch sử hội thoại gần nhất (8 tin gần nhất)
     const { data: pastMsgs } = await serviceClient
       .from('bot_messages')
@@ -175,18 +292,40 @@ async function processIncomingMessage({ senderPsid, text, platform }) {
       content: combinedText
     }]);
 
+    // Chuẩn bị ngữ cảnh đơn hiện có (nếu khách đã có đơn đặt bàn trước đó)
+    let activeReservationContext = '';
+    if (activeReservation) {
+      activeReservationContext = `
+# THÔNG TIN ĐƠN ĐẶT BÀN HIỆN CÓ CỦA KHÁCH:
+- Khách hàng ĐÃ CÓ đơn đặt bàn trong hệ thống:
+  + Mã đơn (reservation_id): "${activeReservation.id}"
+  + Tên khách: "${activeReservation.full_name}"
+  + Số điện thoại: "${activeReservation.phone}"
+  + Ngày đặt: "${formatDateForSheet(activeReservation.date)}"
+  + Giờ đặt hiện tại: "${activeReservation.time}"
+  + Số khách: ${activeReservation.guests} người
+  + Trạng thái đơn: "${activeReservation.status}"
+- QUY TẮC BẮT BUỘC KHI XỬ LÝ:
+  + Nếu khách yêu cầu đổi giờ, đổi ngày, hoặc đổi số lượng khách của đơn này (ví dụ: "cho mình đổi sang 20h", "dời lịch sang mai..."):
+    * Hãy xác nhận nhẹ nhàng với khách rằng đã ghi nhận đổi giờ/ngày mới.
+    * BẮT BUỘC GỌI TOOL "reschedule_booking" với reservation_id = "${activeReservation.id}", new_time, new_date (nếu có).
+    * TUYỆT ĐỐI KHÔNG GỌI TOOL "confirm_booking" vì sẽ tạo ra đơn mới trùng lặp!
+`;
+    }
+
     // 5. Gọi Gemini AI sinh câu trả lời
     console.log(`🤖 Đang gọi Gemini AI cho khách ${senderPsid}: "${combinedText}"`);
     const aiResult = await generateChatReply({ 
       history, 
       userMessage: combinedText, 
-      customPrompt: botCustomPrompt 
+      customPrompt: botCustomPrompt,
+      activeReservationContext
     });
 
     // 6. Xử lý kết quả trả về
     if (aiResult.functionCall && aiResult.functionCall.name === 'confirm_booking') {
       const bookingArgs = aiResult.functionCall.args;
-      console.log('🎉 Gemini kích hoạt chốt bàn:', bookingArgs);
+      console.log('🎉 Gemini kích hoạt chốt bàn mới:', bookingArgs);
 
       // Tạo đơn và bắn sang Telegram
       await handleConfirmBooking({
@@ -200,6 +339,27 @@ async function processIncomingMessage({ senderPsid, text, platform }) {
       await sendFacebookMessage(senderPsid, closeMsg, pageAccessToken);
 
       // Lưu tin nhắn bot vào DB
+      await serviceClient.from('bot_messages').insert([{
+        conversation_id: conv.id,
+        role: 'model',
+        content: closeMsg
+      }]);
+    } else if (aiResult.functionCall && aiResult.functionCall.name === 'reschedule_booking') {
+      const rescheduleArgs = aiResult.functionCall.args;
+      console.log('🔄 Gemini kích hoạt đổi giờ đặt bàn:', rescheduleArgs);
+
+      await handleRescheduleBooking({
+        rescheduleData: rescheduleArgs,
+        senderPsid: senderPsid,
+        platform: platform,
+        originalReservation: activeReservation
+      });
+
+      const displayTime = rescheduleArgs.new_time || 'mới';
+      const displayDate = rescheduleArgs.new_date || formatDateForSheet(activeReservation?.date);
+      const closeMsg = `Dạ, em đã ghi nhận yêu cầu đổi lịch của anh/chị sang lúc ${displayTime} ngày ${displayDate} ạ. Quản lý nhà hàng sẽ liên hệ xác nhận lại sớm nhé ạ! | We have noted your request to reschedule to ${displayTime} on ${displayDate}. Our manager will confirm with you shortly!`;
+      await sendFacebookMessage(senderPsid, closeMsg, pageAccessToken);
+
       await serviceClient.from('bot_messages').insert([{
         conversation_id: conv.id,
         role: 'model',

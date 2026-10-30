@@ -4,7 +4,7 @@ const BOOKING_TOOL = {
   functionDeclarations: [
     {
       name: "confirm_booking",
-      description: "CHỈ gọi hàm này khi khách ĐÃ CUNG CẤP ĐỦ 5 thông tin bắt buộc (Tên, SĐT, Ngày, Giờ, Số khách) VÀ khách ĐÃ XÁC NHẬN ĐỒNG Ý chốt đặt bàn (nhắn 'đúng', 'ok', 'chuẩn', 'yes', 'confirm', 'chính xác'). Tuyệt đối không tự ý gọi khi khách chưa xác nhận.",
+      description: "CHỈ gọi hàm này khi khách muốn ĐẶT BÀN MỚI và ĐÃ CUNG CẤP ĐỦ 5 thông tin bắt buộc (Tên, SĐT, Ngày, Giờ, Số khách) VÀ khách ĐÃ XÁC NHẬN ĐỒNG Ý chốt đặt bàn (nhắn 'đúng', 'ok', 'chuẩn', 'yes', 'confirm', 'chính xác'). Tuyệt đối không tự ý gọi khi khách chưa xác nhận hoặc khi khách muốn đổi lịch đơn cũ.",
       parameters: {
         type: "OBJECT",
         properties: {
@@ -18,7 +18,7 @@ const BOOKING_TOOL = {
           },
           booking_date: {
             type: "STRING",
-            description: "Ngày đặt bàn theo định dạng YYYY-MM-DD"
+            description: "Ngày đặt bàn theo định dạng YYYY-MM-DD hoặc DD/MM/YYYY"
           },
           booking_time: {
             type: "STRING",
@@ -35,6 +35,36 @@ const BOOKING_TOOL = {
         },
         required: ["customer_name", "phone_number", "booking_date", "booking_time", "guest_count"]
       }
+    },
+    {
+      name: "reschedule_booking",
+      description: "CHỈ gọi hàm này khi khách ĐÃ CÓ ĐƠN ĐẶT BÀN TRƯỚC ĐÓ và khách muốn thay đổi giờ đặt bàn, ngày đặt bàn, hoặc số lượng khách (dời lịch / reschedule).",
+      parameters: {
+        type: "OBJECT",
+        properties: {
+          reservation_id: {
+            type: "STRING",
+            description: "Mã ID đơn đặt bàn hiện có của khách hàng (lấy từ thông tin đơn hiện có)"
+          },
+          new_time: {
+            type: "STRING",
+            description: "Giờ đặt bàn mới của khách (ví dụ 20:00, 20:30)"
+          },
+          new_date: {
+            type: "STRING",
+            description: "Ngày đặt bàn mới (định dạng DD/MM/YYYY hoặc YYYY-MM-DD), chỉ điền nếu khách muốn đổi ngày"
+          },
+          guest_count: {
+            type: "INTEGER",
+            description: "Số lượng khách mới, chỉ điền nếu khách muốn đổi số người"
+          },
+          notes: {
+            type: "STRING",
+            description: "Lý do hoặc ghi chú dời lịch của khách"
+          }
+        },
+        required: ["reservation_id", "new_time"]
+      }
     }
   ]
 };
@@ -42,7 +72,7 @@ const BOOKING_TOOL = {
 /**
  * Gọi Gemini API với System Instruction, History và Tool Declaration
  */
-export async function generateChatReply({ history = [], userMessage, customPrompt = '' }) {
+export async function generateChatReply({ history = [], userMessage, customPrompt = '', activeReservationContext = '' }) {
   const apiKey = process.env.GEMINI_API_KEY;
   const modelName = process.env.GEMINI_MODEL || 'gemini-3.5-flash';
 
@@ -50,7 +80,10 @@ export async function generateChatReply({ history = [], userMessage, customPromp
     throw new Error('Chưa cấu hình GEMINI_API_KEY trong .env.local');
   }
 
-  const systemInstruction = buildSystemInstruction(customPrompt);
+  let systemInstruction = buildSystemInstruction(customPrompt);
+  if (activeReservationContext) {
+    systemInstruction += '\n\n' + activeReservationContext;
+  }
 
   // Chuẩn bị payload contents
   const contents = [...history];

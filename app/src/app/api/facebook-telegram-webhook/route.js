@@ -252,11 +252,24 @@ export async function POST(request) {
         return NextResponse.json({ ok: true });
 
       } else if (action === 'newtime') {
+        // Cập nhật CSDL trạng thái reschedule_proposed và lưu giờ đề xuất vào note
+        const existingNote = reservation.note || '';
+        const cleanNote = existingNote.replace(/\[Đề xuất đổi:.*?\]/g, '').trim();
+        const updatedNote = `${cleanNote} [Đề xuất đổi: ${newTime}]`.trim();
+
+        await serviceClient
+          .from('reservations')
+          .update({
+            status: 'reschedule_proposed',
+            note: updatedNote
+          })
+          .eq('id', reservationId);
+
         const formattedDate = formatDateForSheet(reservation.date);
         const fbRescheduleText = `Xin chào ${reservation.full_name || 'anh/chị'},\n\n`
           + `Cảm ơn anh/chị đã lựa chọn L’Entrecôte – Social Meating.\n`
           + `Nhà hàng rất tiếc rằng khung giờ ${reservation.time} vào ngày ${formattedDate} hiện đã kín bàn. Tuy nhiên, nhà hàng đề xuất khung giờ còn bàn trống lúc ${newTime}.\n\n`
-          + `Nếu khung giờ trên phù hợp, anh/chị có thể liên hệ hotline 032 7157002 hoặc nhắn tin lại tại đây để được hỗ trợ đặt bàn mới.\n`
+          + `Nếu khung giờ trên phù hợp, anh/chị chỉ cần nhắn "OK" hoặc nhắn tin phản hồi tại đây, hệ thống sẽ tự động xác nhận giữ bàn ngay cho mình nhé ạ!\n`
           + `L’Entrecôte - Social Meating thành thật xin lỗi vì sự bất tiện này.\n`
           + `Rất mong sớm được chào đón anh/chị tại L’Entrecôte - Social Meating.\n\n`
           + `Trân trọng,\nL’Entrecôte – Social Meating`;

@@ -17,11 +17,11 @@ export const knowledgeBase = [
   },
   {
     "question": "Có tổ chức sinh nhật không?",
-    "answer": "Dạ, hiện tại nhà hàng chưa áp dụng tổ chức sinh nhật hay trang trí sinh nhật ạ, tuy nhiên nhà hàng luôn sẵn lòng hỗ trợ đặt bàn trước cho mình ạ. Anh/ Chị có muốn đặt bàn luôn không ạ? | Currently, we do not offer birthday organization or decoration services; however, we are always happy to assist you with advance table reservations. Would you like to make a reservation?"
+    "answer": "Dạ, hiện tại nhà hàng chưa áp dụng tổ chức sinh nhật hay gói trang trí sinh nhật ạ, tuy nhiên nhà hàng có tặng món tráng miệng đặc biệt kèm dòng chữ \"HAPPY BIRTHDAY\" và hỗ trợ giữ lạnh bánh nếu mình mang bánh vào ạ. Nếu anh/chị cần hỗ trợ thêm thông tin gì, cứ nhắn em nhé ạ! | Currently, we do not offer birthday organization or decoration services; however, we provide a complimentary dessert with \"HAPPY BIRTHDAY\" and are happy to chill any cake you bring. Please let us know if you need any further assistance!"
   },
   {
     "question": "Có trang trí sinh nhật không?",
-    "answer": "Dạ, hiện tại nhà hàng chưa áp dụng tổ chức sinh nhật hay trang trí sinh nhật ạ, tuy nhiên nhà hàng luôn sẵn lòng hỗ trợ đặt bàn trước cho mình ạ. Anh/ Chị có muốn đặt bàn luôn không ạ? | Currently, we do not offer birthday organization or decoration services; however, we are always happy to assist you with advance table reservations. Would you like to make a reservation?"
+    "answer": "Dạ, hiện tại nhà hàng chưa có dịch vụ trang trí sinh nhật riêng ạ. Tuy nhiên nhà hàng luôn sẵn lòng hỗ trợ chuẩn bị đĩa tráng miệng sinh nhật và sắp xếp góc bàn ấm cúng nhất cho mình ạ. Nếu anh/chị cần hỗ trợ thêm thông tin gì, cứ nhắn em nhé ạ! | Currently, we do not offer birthday decoration services; however, we gladly prepare a complimentary birthday dessert plate and arrange a cozy table for your party. Please let us know if you need any further assistance!"
   },
   {
     "question": "Có bánh sinh nhật không?",
