@@ -296,3 +296,97 @@ export async function handleRescheduleBooking({ rescheduleData, senderPsid, plat
   return reservation.id;
 }
 
+/**
+ * Xử lý khi khách hàng báo HUỶ ĐẶT BÀN
+ * (Chỉ cập nhật DB và bắn thông báo Telegram cho nhân viên, không gọi Google Sheet theo yêu cầu)
+ */
+export async function handleCancelBooking({ reservationId, reason = '', senderPsid, platform = 'facebook', originalReservation }) {
+  const botToken = process.env.FACEBOOK_TELEGRAM_BOT_TOKEN;
+  let chatId = process.env.TELEGRAM_CHAT_ID;
+  let isTestMode = false;
+
+  try {
+    const { data: settingsData } = await serviceClient.from('site_settings').select('key, value');
+    if (settingsData) {
+      const settings = {};
+      settingsData.forEach(s => settings[s.key] = s.value);
+      isTestMode = settings.facebook_test_mode === 'true';
+      if (isTestMode && settings.facebook_test_chat_id) {
+        chatId = settings.facebook_test_chat_id;
+      }
+    }
+  } catch (err) {
+    console.error('Error fetching site_settings in cancel booking:', err);
+  }
+
+  let reservation = originalReservation;
+  const targetId = reservationId || reservation?.id;
+
+  if (!reservation && targetId) {
+    const { data } = await serviceClient
+      .from('reservations')
+      .select('*')
+      .eq('id', targetId)
+      .maybeSingle();
+    reservation = data;
+  }
+
+  if (!reservation) {
+    console.error('Không tìm thấy đơn đặt bàn để huỷ:', targetId);
+    return null;
+  }
+
+  const customerName = reservation.full_name || 'Khách Facebook';
+  const phoneNumber = reservation.phone || 'N/A';
+  const displayDate = formatDateForSheet(reservation.date);
+  const cancelReason = reason ? reason.trim() : 'Khách yêu cầu huỷ qua tin nhắn';
+
+  // 1. Cập nhật trạng thái CSDL Supabase
+  try {
+    const existingNote = reservation.note || '';
+    const updatedNote = `${existingNote} [Khách báo huỷ: ${cancelReason}]`.trim();
+
+    await serviceClient
+      .from('reservations')
+      .update({
+        status: 'cancelled',
+        note: updatedNote
+      })
+      .eq('id', reservation.id);
+  } catch (dbErr) {
+    console.error('Lỗi cập nhật CSDL khi huỷ đơn:', dbErr);
+  }
+
+  // 2. Gửi thông báo nổi bật về Telegram cho nhân viên
+  if (botToken && chatId) {
+    try {
+      const testPrefix = isTestMode ? '🧪 <b>[TEST MODE]</b>\n' : '';
+      const messageText = 
+        `${testPrefix}❌ <b>KHÁCH BÁO HUỶ ĐẶT BÀN (${platform.toUpperCase()})</b>\n\n` +
+        `👤 <b>Khách hàng:</b> ${escapeHtml(customerName)}\n` +
+        `📞 <b>Số điện thoại:</b> ${escapeHtml(phoneNumber)}\n` +
+        `📅 <b>Ngày:</b> ${escapeHtml(displayDate)}\n` +
+        `⏰ <b>Giờ đặt:</b> ${escapeHtml(reservation.time)}\n` +
+        `👥 <b>Số khách:</b> ${reservation.guests} người\n` +
+        `💬 <b>Lý do:</b> ${escapeHtml(cancelReason)}\n` +
+        `🆔 <b>ID Đơn:</b> <code>${reservation.id}</code>\n` +
+        `💬 <b>PSID:</b> <code>${senderPsid || reservation.psid || 'N/A'}</code>\n\n` +
+        `⚠️ <b>LƯU Ý NHÂN VIÊN:</b> Bàn đã được huỷ trên hệ thống. Nhân viên vui lòng kiểm tra và sửa/xóa dòng đặt bàn này trên file Google Sheet!`;
+
+      await fetch(`https://api.telegram.org/bot${botToken}/sendMessage`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          chat_id: chatId,
+          text: messageText,
+          parse_mode: 'HTML'
+        })
+      });
+    } catch (teleErr) {
+      console.error('Error sending Telegram cancellation alert:', teleErr);
+    }
+  }
+
+  return reservation.id;
+}
+

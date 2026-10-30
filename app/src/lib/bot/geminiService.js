@@ -65,6 +65,24 @@ const BOOKING_TOOL = {
         },
         required: ["reservation_id", "new_time"]
       }
+    },
+    {
+      name: "cancel_booking",
+      description: "CHỈ gọi hàm này khi khách ĐÃ CÓ ĐƠN ĐẶT BÀN TRƯỚC ĐÓ và khách nhắn tin yêu cầu HUỶ ĐẶT BÀN (ví dụ: bận đột xuất, không đến được, muốn huỷ đơn).",
+      parameters: {
+        type: "OBJECT",
+        properties: {
+          reservation_id: {
+            type: "STRING",
+            description: "Mã ID đơn đặt bàn hiện có của khách hàng"
+          },
+          reason: {
+            type: "STRING",
+            description: "Lý do khách báo huỷ bàn (nếu khách có chia sẻ, nếu không có thì để rỗng)"
+          }
+        },
+        required: ["reservation_id"]
+      }
     }
   ]
 };

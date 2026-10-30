@@ -1,7 +1,7 @@
 import { NextResponse, after } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import { generateChatReply } from '@/lib/bot/geminiService';
-import { handleConfirmBooking, handleRescheduleBooking, formatDateForSheet } from '@/lib/bot/bookingHandler';
+import { handleConfirmBooking, handleRescheduleBooking, handleCancelBooking, formatDateForSheet } from '@/lib/bot/bookingHandler';
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
@@ -270,6 +270,60 @@ async function processIncomingMessage({ senderPsid, text, platform }) {
 
         return; // Đã xử lý xong, không cần gọi Gemini AI
       }
+
+      // Kiểm tra nếu khách TỪ CHỐI giờ đề xuất
+      const isNegative = /^(thôi|thoi|không được|khong duoc|bận rồi|ban roi|muộn quá|muon qua|hủy|huy|cancel|thôi em|thoi em|để hôm khác|de hom khac|không kịp|khong kip|không tiện|khong tien|không ok|khong ok|vậy thôi|vay thoi|no|nope)\b/i.test(combinedText.trim()) ||
+        /(muộn quá|không được|huỷ giúp|hủy giúp|để hôm khác|bận rồi|không đi được)/i.test(combinedText.trim());
+
+      if (isNegative) {
+        console.log(`❌ Khách ${senderPsid} từ chối đổi giờ đề xuất cho đơn ${activeReservation.id}`);
+        // Cập nhật CSDL sang trạng thái cancelled
+        await serviceClient
+          .from('reservations')
+          .update({
+            status: 'cancelled',
+            note: `${activeReservation.note || ''} [Khách từ chối đổi giờ: ${combinedText}]`.trim()
+          })
+          .eq('id', activeReservation.id);
+
+        const cancelMsg = "Dạ vâng, L'Entrecôte rất tiếc vì khung giờ hôm nay chưa phù hợp với lịch trình của anh/chị ạ. Em xin phép huỷ yêu cầu đặt bàn này và rất hy vọng sẽ được đón tiếp anh/chị vào một dịp gần nhất nhé ạ! | We are truly sorry that the available time today does not fit your schedule. We have cancelled this booking request and warmly look forward to serving you in the future!";
+        await sendFacebookMessage(senderPsid, cancelMsg, pageAccessToken);
+
+        await serviceClient.from('bot_messages').insert([{
+          conversation_id: conv.id,
+          role: 'model',
+          content: cancelMsg
+        }]);
+
+        // Bắn Telegram thông báo cho nhân viên
+        const botToken = process.env.FACEBOOK_TELEGRAM_BOT_TOKEN;
+        if (botToken && teleChatId) {
+          try {
+            const teleMsg = `❌ <b>KHÁCH TỪ CHỐI GIỜ ĐỀ XUẤT ➔ ĐÃ HUỶ YÊU CẦU ĐẶT BÀN</b>\n\n` +
+              `👤 <b>Khách hàng:</b> ${escapeHtml(activeReservation.full_name)}\n` +
+              `📞 <b>Số điện thoại:</b> ${escapeHtml(activeReservation.phone || 'N/A')}\n` +
+              `📅 <b>Ngày:</b> ${formatDateForSheet(activeReservation.date)}\n` +
+              `⏰ <b>Giờ cũ:</b> ${escapeHtml(activeReservation.time)}\n` +
+              `💬 <b>Phản hồi của khách:</b> <i>"${escapeHtml(combinedText)}"</i>\n` +
+              `🆔 <b>ID Đơn:</b> <code>${activeReservation.id}</code>\n\n` +
+              `⚠️ <b>LƯU Ý NHÂN VIÊN:</b> Khách đã từ chối giờ đề xuất, hệ thống đã chuyển đơn sang trạng thái Huỷ. Vui lòng kiểm tra file Google Sheet nếu đơn này đã được xác nhận trước đó!`;
+
+            await fetch(`https://api.telegram.org/bot${botToken}/sendMessage`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                chat_id: teleChatId,
+                text: teleMsg,
+                parse_mode: 'HTML'
+              })
+            });
+          } catch (teleErr) {
+            console.error('Error sending Telegram reschedule rejection alert:', teleErr);
+          }
+        }
+
+        return; // Đã xử lý xong huỷ đơn
+      }
     }
 
     // 4. Lấy lịch sử hội thoại gần nhất (8 tin gần nhất)
@@ -310,6 +364,10 @@ async function processIncomingMessage({ senderPsid, text, platform }) {
     * Hãy xác nhận nhẹ nhàng với khách rằng đã ghi nhận đổi giờ/ngày mới.
     * BẮT BUỘC GỌI TOOL "reschedule_booking" với reservation_id = "${activeReservation.id}", new_time, new_date (nếu có).
     * TUYỆT ĐỐI KHÔNG GỌI TOOL "confirm_booking" vì sẽ tạo ra đơn mới trùng lặp!
+  + Nếu khách yêu cầu HUỶ ĐẶT BÀN (ví dụ: "cho mình huỷ bàn nhé", "hôm nay mình bận đột xuất không qua được", "huỷ lịch giúp mình"):
+    * Hãy thông cảm, gửi lời xin lỗi lịch thiệp và ghi nhận huỷ lịch của khách.
+    * BẮT BUỘC GỌI TOOL "cancel_booking" với reservation_id = "${activeReservation.id}".
+    * TUYỆT ĐỐI KHÔNG GỌI TOOL "confirm_booking" hoặc "reschedule_booking"!
 `;
     }
 
@@ -358,6 +416,26 @@ async function processIncomingMessage({ senderPsid, text, platform }) {
       const displayTime = rescheduleArgs.new_time || 'mới';
       const displayDate = rescheduleArgs.new_date || formatDateForSheet(activeReservation?.date);
       const closeMsg = `Dạ, em đã ghi nhận yêu cầu đổi lịch của anh/chị sang lúc ${displayTime} ngày ${displayDate} ạ. Quản lý nhà hàng sẽ liên hệ xác nhận lại sớm nhé ạ! | We have noted your request to reschedule to ${displayTime} on ${displayDate}. Our manager will confirm with you shortly!`;
+      await sendFacebookMessage(senderPsid, closeMsg, pageAccessToken);
+
+      await serviceClient.from('bot_messages').insert([{
+        conversation_id: conv.id,
+        role: 'model',
+        content: closeMsg
+      }]);
+    } else if (aiResult.functionCall && aiResult.functionCall.name === 'cancel_booking') {
+      const cancelArgs = aiResult.functionCall.args;
+      console.log('❌ Gemini kích hoạt huỷ đặt bàn:', cancelArgs);
+
+      await handleCancelBooking({
+        reservationId: cancelArgs.reservation_id || activeReservation?.id,
+        reason: cancelArgs.reason || '',
+        senderPsid: senderPsid,
+        platform: platform,
+        originalReservation: activeReservation
+      });
+
+      const closeMsg = "Dạ, em đã ghi nhận huỷ lịch đặt bàn của anh/chị rồi ạ. Rất tiếc vì chưa có dịp đón tiếp anh/chị hôm nay, L'Entrecôte rất hy vọng sẽ có cơ hội được đón tiếp anh/chị vào một dịp gần nhất nhé ạ! | We have noted your reservation cancellation. We are sorry to miss you today and warmly look forward to welcoming you to L'Entrecôte in the future!";
       await sendFacebookMessage(senderPsid, closeMsg, pageAccessToken);
 
       await serviceClient.from('bot_messages').insert([{
