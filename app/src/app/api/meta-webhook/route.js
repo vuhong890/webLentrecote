@@ -29,7 +29,10 @@ async function sendFacebookMessage(psid, text, pageAccessToken) {
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
       recipient: { id: psid },
-      message: { text: text },
+      message: { 
+        text: text,
+        metadata: 'BOT_AUTOREPLY'
+      },
       messaging_type: 'RESPONSE'
     })
   });
@@ -506,8 +509,18 @@ export async function POST(request) {
         for (const messagingEvent of entry.messaging || []) {
           // Bắt sự kiện nhân viên chat tay (is_echo = true)
           if (messagingEvent.message?.is_echo) {
+            const isBotEcho = 
+              messagingEvent.message?.metadata === 'BOT_AUTOREPLY' || 
+              String(messagingEvent.message?.app_id) === '4038398959798554';
+
+            if (isBotEcho) {
+              console.log('🤖 Echo từ chính Bot gửi qua API, bỏ qua không pause.');
+              continue;
+            }
+
             const recipientPsid = messagingEvent.recipient?.id;
             if (recipientPsid) {
+              console.log(`👤 Phát hiện nhân viên chat tay (app_id: ${messagingEvent.message?.app_id}). Kích hoạt tạm dừng 30 phút cho PSID: ${recipientPsid}`);
               await handleHumanHandover(recipientPsid);
             }
             continue;
