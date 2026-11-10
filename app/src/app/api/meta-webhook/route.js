@@ -35,8 +35,8 @@ async function sendFacebookMessage(psid, text, pageAccessToken, platform = 'face
   }
 
   const endpoint = isInstagram
-    ? `https://graph.facebook.com/v20.0/${process.env.INSTAGRAM_ACCOUNT_ID || '17841468830487241'}/messages?access_token=${token}`
-    : `https://graph.facebook.com/v20.0/me/messages?access_token=${token}`;
+    ? `https://graph.facebook.com/v27.0/${process.env.INSTAGRAM_ACCOUNT_ID || '17841468830487241'}/messages?access_token=${token}`
+    : `https://graph.facebook.com/v27.0/me/messages?access_token=${token}`;
 
   const bodyPayload = {
     recipient: { id: psid },
