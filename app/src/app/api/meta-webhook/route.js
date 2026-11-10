@@ -19,26 +19,45 @@ function escapeHtml(str) {
 }
 
 /**
- * Gửi tin nhắn Facebook Messenger cho khách qua Graph API
+ * Gửi tin nhắn Facebook Messenger hoặc Instagram Direct qua Graph API
  */
-async function sendFacebookMessage(psid, text, pageAccessToken) {
-  if (!pageAccessToken || !psid || !text) return;
-  const url = `https://graph.facebook.com/v20.0/me/messages?access_token=${pageAccessToken}`;
-  const response = await fetch(url, {
+async function sendFacebookMessage(psid, text, pageAccessToken, platform = 'facebook') {
+  if (!psid || !text) return;
+
+  const isInstagram = platform === 'instagram';
+  const token = isInstagram
+    ? (process.env.INSTAGRAM_ACCESS_TOKEN || pageAccessToken)
+    : (pageAccessToken || process.env.FACEBOOK_PAGE_ACCESS_TOKEN);
+
+  if (!token) {
+    console.error(`Thiếu token gửi tin nhắn (${platform})`);
+    return;
+  }
+
+  const endpoint = isInstagram
+    ? `https://graph.facebook.com/v20.0/${process.env.INSTAGRAM_ACCOUNT_ID || '17841468830487241'}/messages?access_token=${token}`
+    : `https://graph.facebook.com/v20.0/me/messages?access_token=${token}`;
+
+  const bodyPayload = {
+    recipient: { id: psid },
+    message: { 
+      text: text,
+      metadata: 'BOT_AUTOREPLY'
+    }
+  };
+
+  if (!isInstagram) {
+    bodyPayload.messaging_type = 'RESPONSE';
+  }
+
+  const response = await fetch(endpoint, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      recipient: { id: psid },
-      message: { 
-        text: text,
-        metadata: 'BOT_AUTOREPLY'
-      },
-      messaging_type: 'RESPONSE'
-    })
+    body: JSON.stringify(bodyPayload)
   });
   const data = await response.json();
   if (data.error) {
-    console.error('Lỗi khi gửi Facebook message:', data.error);
+    console.error(`Lỗi khi gửi ${platform} message:`, data.error);
   }
   return data;
 }
@@ -67,11 +86,10 @@ export async function GET(request) {
  */
 async function processIncomingMessage({ senderPsid, text, platform }) {
   try {
-    const pageAccessToken = process.env.FACEBOOK_PAGE_ACCESS_TOKEN;
-    if (!pageAccessToken) {
-      console.error('Thiếu FACEBOOK_PAGE_ACCESS_TOKEN');
-      return;
-    }
+    const isInstagram = platform === 'instagram';
+    let pageAccessToken = isInstagram
+      ? (process.env.INSTAGRAM_ACCESS_TOKEN || process.env.FACEBOOK_PAGE_ACCESS_TOKEN)
+      : process.env.FACEBOOK_PAGE_ACCESS_TOKEN;
 
     let botCustomPrompt = '';
     let isTestMode = false;
@@ -89,6 +107,11 @@ async function processIncomingMessage({ senderPsid, text, platform }) {
         sheetUrl = isTestMode ? settings.test_google_sheet_url : settings.google_sheet_url;
         if (isTestMode && settings.facebook_test_chat_id) {
           teleChatId = settings.facebook_test_chat_id;
+        }
+
+        // Lấy token Instagram từ DB nếu có
+        if (isInstagram && settings.instagram_access_token) {
+          pageAccessToken = settings.instagram_access_token;
         }
 
         // Nếu Bot bị tắt trong Admin Settings
@@ -213,9 +236,9 @@ async function processIncomingMessage({ senderPsid, text, platform }) {
           })
           .eq('id', activeReservation.id);
 
-        // Gửi tin nhắn Facebook xác nhận cho khách
+        // Gửi tin nhắn xác nhận cho khách
         const confirmMsg = `Dạ, L'Entrecôte đã xác nhận lịch đặt bàn của anh/chị vào lúc ${proposedTime} ngày ${formatDateForSheet(activeReservation.date)}. Nhà hàng rất hân hạnh được phục vụ anh/chị! | L'Entrecôte has confirmed your reservation at ${proposedTime} on ${formatDateForSheet(activeReservation.date)}. We look forward to welcoming you!`;
-        await sendFacebookMessage(senderPsid, confirmMsg, pageAccessToken);
+        await sendFacebookMessage(senderPsid, confirmMsg, pageAccessToken, platform);
 
         // Lưu tin nhắn bot vào DB
         await serviceClient.from('bot_messages').insert([{
@@ -290,7 +313,7 @@ async function processIncomingMessage({ senderPsid, text, platform }) {
           .eq('id', activeReservation.id);
 
         const cancelMsg = "Dạ vâng, L'Entrecôte rất tiếc vì khung giờ hôm nay chưa phù hợp với lịch trình của anh/chị ạ. Em xin phép huỷ yêu cầu đặt bàn này và rất hy vọng sẽ được đón tiếp anh/chị vào một dịp gần nhất nhé ạ! | We are truly sorry that the available time today does not fit your schedule. We have cancelled this booking request and warmly look forward to serving you in the future!";
-        await sendFacebookMessage(senderPsid, cancelMsg, pageAccessToken);
+        await sendFacebookMessage(senderPsid, cancelMsg, pageAccessToken, platform);
 
         await serviceClient.from('bot_messages').insert([{
           conversation_id: conv.id,
@@ -397,7 +420,7 @@ async function processIncomingMessage({ senderPsid, text, platform }) {
 
       // Tin nhắn chào kết thúc
       const closeMsg = "Dạ, nhà hàng đã ghi nhận lịch của anh/chị, sẽ có nhân viên liên hệ xác nhận chi tiết sớm ạ. Hẹn gặp anh/chị tại L'Entrecôte! | We have received your booking request, our staff will contact you shortly to confirm details. See you at L'Entrecôte!";
-      await sendFacebookMessage(senderPsid, closeMsg, pageAccessToken);
+      await sendFacebookMessage(senderPsid, closeMsg, pageAccessToken, platform);
 
       // Lưu tin nhắn bot vào DB
       await serviceClient.from('bot_messages').insert([{
@@ -419,7 +442,7 @@ async function processIncomingMessage({ senderPsid, text, platform }) {
       const displayTime = rescheduleArgs.new_time || 'mới';
       const displayDate = rescheduleArgs.new_date || formatDateForSheet(activeReservation?.date);
       const closeMsg = `Dạ, em đã ghi nhận yêu cầu đổi lịch của anh/chị sang lúc ${displayTime} ngày ${displayDate} ạ. Quản lý nhà hàng sẽ liên hệ xác nhận lại sớm nhé ạ! | We have noted your request to reschedule to ${displayTime} on ${displayDate}. Our manager will confirm with you shortly!`;
-      await sendFacebookMessage(senderPsid, closeMsg, pageAccessToken);
+      await sendFacebookMessage(senderPsid, closeMsg, pageAccessToken, platform);
 
       await serviceClient.from('bot_messages').insert([{
         conversation_id: conv.id,
@@ -439,7 +462,7 @@ async function processIncomingMessage({ senderPsid, text, platform }) {
       });
 
       const closeMsg = "Dạ, em đã ghi nhận huỷ lịch đặt bàn của anh/chị rồi ạ. Rất tiếc vì chưa có dịp đón tiếp anh/chị hôm nay, L'Entrecôte rất hy vọng sẽ có cơ hội được đón tiếp anh/chị vào một dịp gần nhất nhé ạ! | We have noted your reservation cancellation. We are sorry to miss you today and warmly look forward to welcoming you to L'Entrecôte in the future!";
-      await sendFacebookMessage(senderPsid, closeMsg, pageAccessToken);
+      await sendFacebookMessage(senderPsid, closeMsg, pageAccessToken, platform);
 
       await serviceClient.from('bot_messages').insert([{
         conversation_id: conv.id,
@@ -448,7 +471,7 @@ async function processIncomingMessage({ senderPsid, text, platform }) {
       }]);
     } else if (aiResult.text) {
       // Gửi câu trả lời của AI cho khách
-      await sendFacebookMessage(senderPsid, aiResult.text, pageAccessToken);
+      await sendFacebookMessage(senderPsid, aiResult.text, pageAccessToken, platform);
 
       // Lưu tin nhắn bot vào DB
       await serviceClient.from('bot_messages').insert([{
@@ -511,16 +534,17 @@ export async function POST(request) {
           if (messagingEvent.message?.is_echo) {
             const isBotEcho = 
               messagingEvent.message?.metadata === 'BOT_AUTOREPLY' || 
-              String(messagingEvent.message?.app_id) === '4038398959798554';
+              String(messagingEvent.message?.app_id) === '4038398959798554' ||
+              String(messagingEvent.message?.app_id) === '1462148759203982';
 
             if (isBotEcho) {
-              console.log('🤖 Echo từ chính Bot gửi qua API, bỏ qua không pause.');
+              console.log(`🤖 Echo từ chính Bot gửi qua API (${platform}), bỏ qua không pause.`);
               continue;
             }
 
             const recipientPsid = messagingEvent.recipient?.id;
             if (recipientPsid) {
-              console.log(`👤 Phát hiện nhân viên chat tay (app_id: ${messagingEvent.message?.app_id}). Kích hoạt tạm dừng 30 phút cho PSID: ${recipientPsid}`);
+              console.log(`👤 Phát hiện nhân viên chat tay trên ${platform} (app_id: ${messagingEvent.message?.app_id}). Kích hoạt tạm dừng 30 phút cho PSID: ${recipientPsid}`);
               await handleHumanHandover(recipientPsid);
             }
             continue;

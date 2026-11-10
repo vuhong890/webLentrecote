@@ -135,7 +135,7 @@ export async function POST(request) {
                 gio_dat: formatTimeForSheet(reservation.time),
                 ghi_chu: reservation.note,
                 so_dien_thoai: reservation.phone,
-                nguon: "Web"
+                nguon: reservation.source ? reservation.source.toUpperCase() : "Web"
               })
             });
           } catch (err) {
