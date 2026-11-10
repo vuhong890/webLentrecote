@@ -529,7 +529,22 @@ export async function POST(request) {
       const platform = body.object === 'instagram' ? 'instagram' : 'facebook';
 
       for (const entry of body.entry || []) {
-        for (const messagingEvent of entry.messaging || []) {
+        // Hỗ trợ cả 2 định dạng Webhook của Meta:
+        // 1. Facebook Messenger / Messenger for Instagram: entry.messaging
+        // 2. Instagram Graph API Webhook: entry.changes
+        const events = [];
+        if (Array.isArray(entry.messaging)) {
+          events.push(...entry.messaging);
+        }
+        if (Array.isArray(entry.changes)) {
+          for (const change of entry.changes) {
+            if (change.value && (change.field === 'messages' || change.field === 'messaging_postbacks')) {
+              events.push(change.value);
+            }
+          }
+        }
+
+        for (const messagingEvent of events) {
           // Bắt sự kiện nhân viên chat tay (is_echo = true)
           if (messagingEvent.message?.is_echo) {
             const isBotEcho = 
@@ -550,9 +565,9 @@ export async function POST(request) {
             continue;
           }
 
-          // Bắt sự kiện khách hàng gửi tin nhắn văn bản
+          // Bắt sự kiện khách hàng gửi tin nhắn văn bản hoặc bấm nút postback
           const senderPsid = messagingEvent.sender?.id;
-          const text = messagingEvent.message?.text;
+          const text = messagingEvent.message?.text || messagingEvent.postback?.title || messagingEvent.postback?.payload;
 
           if (senderPsid && text) {
             // Dùng after() để Next.js giữ serverless runtime sống trong 10s gom tin nhắn
