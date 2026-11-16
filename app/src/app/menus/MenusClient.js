@@ -125,7 +125,8 @@ export default function MenusClient({ initialCategories = [], allMenuItems = [],
                       height={1300}
                       className={styles.drinkMenuImg}
                       sizes="(max-width: 768px) 100vw, 1035px"
-                      quality={80}
+                      quality={95}
+                      unoptimized={true}
                       style={{ marginBottom: '2rem' }}
                     />
                   );
@@ -157,7 +158,7 @@ export default function MenusClient({ initialCategories = [], allMenuItems = [],
                         alt={getName(item) || 'Menu Item'}
                         fill
                         sizes="(max-width: 640px) 100vw, (max-width: 1080px) 50vw, 384px"
-                        quality={75}
+                        quality={85}
                         style={{ objectFit: 'cover', objectPosition: 'center' }}
                       />
                     ) : (

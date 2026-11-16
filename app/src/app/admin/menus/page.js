@@ -79,7 +79,10 @@ export default function AdminMenus() {
     if (!file) return;
     setUploading(field);
     try {
-      const options = { maxSizeMB: 0.1, maxWidthOrHeight: 800, useWebWorker: true, fileType: 'image/webp' };
+      const isDrinkCategory = isDrinks || categories.find(c => c.id === form.category_id)?.slug === 'drinks';
+      const options = isDrinkCategory
+        ? { maxSizeMB: 3, maxWidthOrHeight: 2560, useWebWorker: true, fileType: 'image/webp' }
+        : { maxSizeMB: 0.8, maxWidthOrHeight: 1400, useWebWorker: true, fileType: 'image/webp' };
       file = await imageCompression(file, options);
     } catch (err) {
       console.warn('Compression error:', err);
