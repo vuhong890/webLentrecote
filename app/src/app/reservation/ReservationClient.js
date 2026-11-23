@@ -168,6 +168,7 @@ export default function ReservationClient({ initialPageSections = {} }) {
                         <option value="12:30">12:30 PM</option>
                         <option value="13:00">1:00 PM</option>
                         <option value="13:30">1:30 PM</option>
+                        <option value="14:00">2:00 PM</option>
                         <option value="16:00">4:00 PM</option>
                         <option value="16:30">4:30 PM</option>
                         <option value="17:00">5:00 PM</option>
@@ -180,6 +181,7 @@ export default function ReservationClient({ initialPageSections = {} }) {
                         <option value="20:30">8:30 PM</option>
                         <option value="21:00">9:00 PM</option>
                         <option value="21:30">9:30 PM</option>
+                        <option value="22:00">10:00 PM</option>
                       </select>
                     </div>
                     <div className={styles.formGroup}>
