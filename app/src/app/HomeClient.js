@@ -245,14 +245,14 @@ export default function HomeClient({ initialHomeSections, initialHeritageSection
               <span className={styles.reservationInfoIcon}>🕐</span>
               <div>
                 <strong>{t('lunch')}</strong>
-                <p>11:30 AM – 2:00 PM</p>
+                <p>11:00 AM – 2:00 PM</p>
               </div>
             </div>
             <div className={styles.reservationInfoItem}>
               <span className={styles.reservationInfoIcon}>🌙</span>
               <div>
                 <strong>{t('dinner')}</strong>
-                <p>4:00 PM – 11:00 PM</p>
+                <p>4:00 PM – 10:00 PM</p>
               </div>
             </div>
             <div className={styles.reservationInfoItem}>

@@ -55,9 +55,8 @@ export default function Footer({ settings = {} }) {
               <p>{lang === 'vi' ? 'Thành phố Hồ Chí Minh' : 'Ho Chi Minh City'}</p>
               <p className={styles.hours}>
                 {t('openDaily')}<br />
-                11:30 – 14:00 | 16:00 – 23:00
+                11:00 - 14:00 | 16:00 - 22:00
               </p>
-              <p>{t('lastOrder')} 22:00</p>
               <p className={styles.hotline}>
                 {t('hotline')}: <a href={`tel:${settings.restaurant_phone?.replace(/\s/g, '') || '+84327157002'}`}>{settings.restaurant_phone || '(+84) 32 7157 002'}</a>
               </p>

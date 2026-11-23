@@ -108,8 +108,7 @@ export default function ContactClient({ initialPageSections = {} }) {
                 ) : (
                   <>
                     <p>{t('openDaily')}</p>
-                    <p>11:30 – 14:00 | 16:00 – 23:00</p>
-                    <p>{t('lastOrder')} 22:00</p>
+                    <p>11:00 - 14:00 | 16:00 - 22:00</p>
                   </>
                 )}
               </div>

@@ -223,15 +223,11 @@ export default function ReservationClient({ initialPageSections = {} }) {
                     <>
                       <div className={styles.infoItem}>
                         <span className={styles.infoLabel}>{t('lunch').toUpperCase()}</span>
-                        <span>11:30 AM – 2:00 PM</span>
+                        <span>11:00 AM – 2:00 PM</span>
                       </div>
                       <div className={styles.infoItem}>
                         <span className={styles.infoLabel}>{t('dinner').toUpperCase()}</span>
-                        <span>4:00 PM – 11:00 PM</span>
-                      </div>
-                      <div className={styles.infoItem}>
-                        <span className={styles.infoLabel}>{t('lastOrder').toUpperCase()}</span>
-                        <span>10:00 PM</span>
+                        <span>4:00 PM – 10:00 PM</span>
                       </div>
                       <div className={styles.infoDivider}></div>
                       <div className={styles.infoItem}>
