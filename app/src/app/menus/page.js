@@ -18,7 +18,7 @@ export default async function Menus() {
   ] = await Promise.all([
     supabase.from('page_sections').select('*').eq('page', 'menus').order('sort_order'),
     supabase.from('menu_categories').select('*').order('sort_order'),
-    supabase.from('menu_items').select('*, menu_categories(name_en, name_vi, slug)').order('sort_order')
+    supabase.from('menu_items').select('*, menu_categories(name_en, name_vi, name_ja, slug)').order('sort_order')
   ]);
 
   const ps = {};

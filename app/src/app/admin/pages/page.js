@@ -67,7 +67,7 @@ export default function AdminPages() {
     setEditing(section);
     if (section.section_key === 'timeline') {
       const items = section.metadata?.items || [];
-      const paddedItems = [0, 1, 2, 3].map(i => items[i] || { icon_url: '', title_en: '', title_vi: '', text_en: '', text_vi: '' });
+      const paddedItems = [0, 1, 2, 3].map(i => items[i] || { icon_url: '', title_en: '', title_vi: '', title_ja: '', text_en: '', text_vi: '', text_ja: '' });
       setForm({ ...section, metadata: { ...section.metadata, items: paddedItems } });
     } else {
       setForm({ ...section, metadata: section.metadata || {} });
@@ -235,7 +235,7 @@ export default function AdminPages() {
       ...prev,
       metadata: {
         ...prev.metadata,
-        items: [...(prev.metadata?.items || []), { stars: 5, text_en: '', text_vi: '', source_en: '', source_vi: '' }]
+        items: [...(prev.metadata?.items || []), { stars: 5, text_en: '', text_vi: '', text_ja: '', source_en: '', source_vi: '', source_ja: '' }]
       }
     }));
   }
@@ -307,8 +307,10 @@ export default function AdminPages() {
         menu_item_id: menuItem.id,
         name_en: menuItem.name_en,
         name_vi: menuItem.name_vi || '',
+        name_ja: menuItem.name_ja || '',
         description_en: menuItem.description_en,
         description_vi: menuItem.description_vi || '',
+        description_ja: menuItem.description_ja || '',
         image_url: menuItem.image_url || '',
         display_order: sigItems.length + 1,
         is_active: true,
@@ -516,23 +518,26 @@ export default function AdminPages() {
               <h2 style={{ fontFamily: 'var(--font-headline)', fontSize: '1.25rem', marginBottom: '1.5rem', color: '#fff' }}>Edit Section: {k}</h2>
 
               {showLabel && (
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginBottom: '1rem' }}>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '1rem', marginBottom: '1rem' }}>
                   <div style={st.field}><label style={st.label}>Label (EN)</label><input style={st.input} placeholder="e.g. OUR HERITAGE" value={form.metadata?.label_en || form.metadata?.label || ''} onChange={e => setForm({ ...form, metadata: { ...form.metadata, label_en: e.target.value } })} /></div>
                   <div style={st.field}><label style={st.label}>Label (VI)</label><input style={st.input} placeholder="e.g. DI SẢN" value={form.metadata?.label_vi || ''} onChange={e => setForm({ ...form, metadata: { ...form.metadata, label_vi: e.target.value } })} /></div>
+                  <div style={st.field}><label style={st.label}>Label (JA / 日本語)</label><input style={st.input} placeholder="e.g. 伝統と歴史" value={form.metadata?.label_ja || ''} onChange={e => setForm({ ...form, metadata: { ...form.metadata, label_ja: e.target.value } })} /></div>
                 </div>
               )}
 
               {showSubtitle && (
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginBottom: '1rem' }}>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '1rem', marginBottom: '1rem' }}>
                   <div style={st.field}><label style={st.label}>Subtitle (EN) - For Heritage Hero</label><input style={st.input} value={form.metadata?.subtitle_en || form.metadata?.subtitle || ''} onChange={e => setForm({ ...form, metadata: { ...form.metadata, subtitle_en: e.target.value } })} /></div>
                   <div style={st.field}><label style={st.label}>Subtitle (VI)</label><input style={st.input} value={form.metadata?.subtitle_vi || ''} onChange={e => setForm({ ...form, metadata: { ...form.metadata, subtitle_vi: e.target.value } })} /></div>
+                  <div style={st.field}><label style={st.label}>Subtitle (JA / 日本語)</label><input style={st.input} value={form.metadata?.subtitle_ja || ''} onChange={e => setForm({ ...form, metadata: { ...form.metadata, subtitle_ja: e.target.value } })} /></div>
                 </div>
               )}
 
               {showTitle && (
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginBottom: '1rem' }}>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '1rem', marginBottom: '1rem' }}>
                   <div style={st.field}><label style={st.label}>Title (EN)</label><input style={st.input} value={form.title_en || ''} onChange={e => setForm({ ...form, title_en: e.target.value })} /></div>
                   <div style={st.field}><label style={st.label}>Title (VI)</label><input style={st.input} value={form.title_vi || ''} onChange={e => setForm({ ...form, title_vi: e.target.value })} /></div>
+                  <div style={st.field}><label style={st.label}>Title (JA / 日本語)</label><input style={st.input} value={form.title_ja || ''} onChange={e => setForm({ ...form, title_ja: e.target.value })} /></div>
                 </div>
               )}
 
@@ -565,13 +570,15 @@ export default function AdminPages() {
                         </div>
                         
                         <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-                          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.5rem' }}>
+                          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '0.5rem' }}>
                             <input style={st.input} placeholder="Title EN (e.g. BORN IN PARIS)" value={item.title_en || item.title || ''} onChange={e => handleUpdateTimelineItem(idx, 'title_en', e.target.value)} />
                             <input style={st.input} placeholder="Title VI" value={item.title_vi || ''} onChange={e => handleUpdateTimelineItem(idx, 'title_vi', e.target.value)} />
+                            <input style={st.input} placeholder="Title JA (日本語)" value={item.title_ja || ''} onChange={e => handleUpdateTimelineItem(idx, 'title_ja', e.target.value)} />
                           </div>
-                          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.5rem' }}>
+                          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '0.5rem' }}>
                             <textarea style={{ ...st.input, minHeight: '80px', resize: 'vertical' }} placeholder="Description EN" value={item.text_en || item.text || ''} onChange={e => handleUpdateTimelineItem(idx, 'text_en', e.target.value)} />
                             <textarea style={{ ...st.input, minHeight: '80px', resize: 'vertical' }} placeholder="Description VI" value={item.text_vi || ''} onChange={e => handleUpdateTimelineItem(idx, 'text_vi', e.target.value)} />
+                            <textarea style={{ ...st.input, minHeight: '80px', resize: 'vertical' }} placeholder="Description JA (日本語)" value={item.text_ja || ''} onChange={e => handleUpdateTimelineItem(idx, 'text_ja', e.target.value)} />
                           </div>
                         </div>
                       </div>
@@ -601,13 +608,15 @@ export default function AdminPages() {
                             <label style={st.label}>Stars (1-5)</label>
                             <input type="number" min="1" max="5" style={{ ...st.input, width: '80px' }} value={item.stars || 5} onChange={e => handleUpdateTestimonial(idx, 'stars', parseInt(e.target.value))} />
                           </div>
-                          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.5rem' }}>
+                          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '0.5rem' }}>
                             <textarea style={{ ...st.input, minHeight: '60px', resize: 'vertical' }} placeholder="Review Text (EN)" value={item.text_en || item.text || ''} onChange={e => handleUpdateTestimonial(idx, 'text_en', e.target.value)} />
                             <textarea style={{ ...st.input, minHeight: '60px', resize: 'vertical' }} placeholder="Review Text (VI)" value={item.text_vi || ''} onChange={e => handleUpdateTestimonial(idx, 'text_vi', e.target.value)} />
+                            <textarea style={{ ...st.input, minHeight: '60px', resize: 'vertical' }} placeholder="Review Text (JA / 日本語)" value={item.text_ja || ''} onChange={e => handleUpdateTestimonial(idx, 'text_ja', e.target.value)} />
                           </div>
-                          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.5rem' }}>
+                          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '0.5rem' }}>
                             <input style={st.input} placeholder="Source (EN) e.g. - Google Review" value={item.source_en || item.source || ''} onChange={e => handleUpdateTestimonial(idx, 'source_en', e.target.value)} />
                             <input style={st.input} placeholder="Source (VI) e.g. - Đánh giá Google" value={item.source_vi || ''} onChange={e => handleUpdateTestimonial(idx, 'source_vi', e.target.value)} />
+                            <input style={st.input} placeholder="Source (JA) e.g. - Google レビュー" value={item.source_ja || ''} onChange={e => handleUpdateTestimonial(idx, 'source_ja', e.target.value)} />
                           </div>
                         </div>
                       </div>
@@ -618,7 +627,7 @@ export default function AdminPages() {
 
               {showContent && (
                 usePlainTextContent ? (
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginBottom: '1rem' }}>
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '1rem', marginBottom: '1rem' }}>
                     <div style={st.field}>
                       <label style={st.label}>Content / Subtitle (English) - Plain Text</label>
                       <textarea style={{ ...st.input, minHeight: '100px', resize: 'vertical' }} value={form.content_en || ''} onChange={e => setForm(prev => ({ ...prev, content_en: e.target.value }))} />
@@ -626,6 +635,10 @@ export default function AdminPages() {
                     <div style={st.field}>
                       <label style={st.label}>Content / Subtitle (Vietnamese) - Plain Text</label>
                       <textarea style={{ ...st.input, minHeight: '100px', resize: 'vertical' }} value={form.content_vi || ''} onChange={e => setForm(prev => ({ ...prev, content_vi: e.target.value }))} />
+                    </div>
+                    <div style={st.field}>
+                      <label style={st.label}>Content / Subtitle (Japanese / 日本語) - Plain Text</label>
+                      <textarea style={{ ...st.input, minHeight: '100px', resize: 'vertical' }} value={form.content_ja || ''} onChange={e => setForm(prev => ({ ...prev, content_ja: e.target.value }))} />
                     </div>
                   </div>
                 ) : (
@@ -640,6 +653,12 @@ export default function AdminPages() {
                       <label style={st.label}>Content (Vietnamese)</label>
                       <div style={st.quillWrapper}>
                         <ReactQuill theme="snow" value={form.content_vi || ''} onChange={val => { if (val !== form.content_vi) setForm(prev => ({ ...prev, content_vi: val })) }} />
+                      </div>
+                    </div>
+                    <div style={st.field}>
+                      <label style={st.label}>Content (Japanese / 日本語)</label>
+                      <div style={st.quillWrapper}>
+                        <ReactQuill theme="snow" value={form.content_ja || ''} onChange={val => { if (val !== form.content_ja) setForm(prev => ({ ...prev, content_ja: val })) }} />
                       </div>
                     </div>
                   </>
@@ -747,9 +766,10 @@ export default function AdminPages() {
             </div>
 
             {/* Section title edit */}
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginBottom: '1.5rem', padding: '1rem', background: '#0a0a0a', border: '1px solid rgba(255,255,255,0.06)' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '1rem', marginBottom: '1.5rem', padding: '1rem', background: '#0a0a0a', border: '1px solid rgba(255,255,255,0.06)' }}>
               <div style={st.field}><label style={st.label}>Section Title (EN)</label><input style={st.input} value={form.title_en || ''} onChange={e => setForm({ ...form, title_en: e.target.value })} /></div>
               <div style={st.field}><label style={st.label}>Section Title (VI)</label><input style={st.input} value={form.title_vi || ''} onChange={e => setForm({ ...form, title_vi: e.target.value })} /></div>
+              <div style={st.field}><label style={st.label}>Section Title (JA / 日本語)</label><input style={st.input} value={form.title_ja || ''} onChange={e => setForm({ ...form, title_ja: e.target.value })} /></div>
             </div>
 
             {sigItems.length === 0 && <p style={{ color: 'rgba(255,255,255,0.4)', textAlign: 'center', padding: '2rem 0' }}>No items yet. Click &quot;+ ADD FROM MENU&quot; to select menu items.</p>}

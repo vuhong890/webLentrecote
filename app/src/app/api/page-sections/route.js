@@ -37,6 +37,7 @@ export async function PUT(request) {
   // Sanitize content to remove non-breaking spaces that cause ugly word breaks
   if (updates.content_en) updates.content_en = updates.content_en.replace(/&nbsp;/g, ' ');
   if (updates.content_vi) updates.content_vi = updates.content_vi.replace(/&nbsp;/g, ' ');
+  if (updates.content_ja) updates.content_ja = updates.content_ja.replace(/&nbsp;/g, ' ');
 
   const { data, error } = await authClient(token)
     .from('page_sections')
@@ -58,6 +59,7 @@ export async function POST(request) {
   
   if (body.content_en) body.content_en = body.content_en.replace(/&nbsp;/g, ' ');
   if (body.content_vi) body.content_vi = body.content_vi.replace(/&nbsp;/g, ' ');
+  if (body.content_ja) body.content_ja = body.content_ja.replace(/&nbsp;/g, ' ');
 
   const { data, error } = await authClient(token)
     .from('page_sections')

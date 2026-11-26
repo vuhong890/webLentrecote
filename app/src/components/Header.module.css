@@ -101,21 +101,28 @@
 }
 
 /* Language Toggle */
+.langGroup {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  margin-left: 0.5rem;
+}
+
 .langToggle {
-  padding: 0.3rem 0.6rem;
+  padding: 0.25rem 0.55rem;
   font-family: var(--font-body);
-  font-size: 0.95rem;
+  font-size: 0.85rem;
   font-weight: 700;
-  letter-spacing: 0.1em;
+  letter-spacing: 0.08em;
   color: var(--color-gold);
   background: transparent;
   border: 1px solid var(--color-gold);
   cursor: pointer;
   transition: all var(--transition-fast);
-  margin-left: 0.5rem;
 }
 
-.langToggle:hover {
+.langToggle:hover,
+.langToggle.langActive {
   background: var(--color-gold);
   color: var(--color-black);
 }
@@ -205,9 +212,14 @@
     display: flex; 
     order: -1;
   }
-  .langToggle {
+  .langGroup {
     order: 1;
     margin-left: 0;
+    gap: 0.2rem;
+  }
+  .langToggle {
+    padding: 0.2rem 0.35rem;
+    font-size: 0.72rem;
   }
   .logo {
     position: absolute;

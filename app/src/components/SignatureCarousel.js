@@ -3,9 +3,12 @@ import { useState, useEffect, useCallback } from 'react';
 import Image from 'next/image';
 import useEmblaCarousel from 'embla-carousel-react';
 import Autoplay from 'embla-carousel-autoplay';
+import { useLanguage } from '@/lib/i18n';
 import styles from './SignatureCarousel.module.css';
 
 export default function SignatureCarousel({ items, onItemClick }) {
+  const { lang } = useLanguage();
+  const tf = (obj, field) => obj ? obj[`${field}_${lang}`] || obj[`${field}_en`] || '' : '';
   const [emblaRef, emblaApi] = useEmblaCarousel(
     { loop: true, align: 'start' },
     [Autoplay({ delay: 5000, stopOnInteraction: true })]
@@ -55,8 +58,8 @@ export default function SignatureCarousel({ items, onItemClick }) {
                   )}
                 </div>
                 <div className={styles.cardBody}>
-                  <h3>{item.name_en}</h3>
-                  {item.description_en && <p>{item.description_en}</p>}
+                  <h3>{tf(item, 'name')}</h3>
+                  {tf(item, 'description') && <p>{tf(item, 'description')}</p>}
                 </div>
               </div>
             </div>

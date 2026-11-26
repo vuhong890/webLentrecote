@@ -16,7 +16,7 @@ export default async function Home() {
   ] = await Promise.all([
     supabase.from('page_sections').select('*').eq('page', 'home').order('sort_order'),
     supabase.from('page_sections').select('*').eq('page', 'heritage').order('sort_order'),
-    supabase.from('signature_items').select('*, menu_items(id, name_en, name_vi, description_en, description_vi, price, image_url, badge)').eq('is_active', true).order('display_order'),
+    supabase.from('signature_items').select('*, menu_items(id, name_en, name_vi, name_ja, description_en, description_vi, description_ja, price, image_url, badge)').eq('is_active', true).order('display_order'),
     supabase.from('home_gallery_picks').select('*, gallery_images(*)').order('display_order')
   ]);
 
@@ -36,8 +36,10 @@ export default async function Home() {
         ...item,
         name_en: item.name_en || mi.name_en,
         name_vi: item.name_vi || mi.name_vi,
+        name_ja: mi.name_ja || item.name_ja,
         description_en: item.description_en || mi.description_en,
         description_vi: item.description_vi || mi.description_vi,
+        description_ja: mi.description_ja || item.description_ja,
         image_url: item.image_url || mi.image_url,
         price: mi.price,
         badge: mi.badge,

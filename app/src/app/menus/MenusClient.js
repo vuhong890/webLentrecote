@@ -44,14 +44,14 @@ export default function MenusClient({ initialCategories = [], allMenuItems = [],
   }, [activeSlug, categories, allMenuItems]);
 
   const displayCategories = categories.length > 0 ? categories : [
-    { slug: 'small-bites', name_en: 'SMALL BITES', name_vi: 'KHAI VỊ NHỎ' },
-    { slug: 'salads', name_en: 'SALADS', name_vi: 'SALAD' },
-    { slug: 'starters', name_en: 'STARTERS', name_vi: 'MÓN KHAI VỊ' },
-    { slug: 'mains', name_en: 'MAINS', name_vi: 'MÓN CHÍNH' },
-    { slug: 'beef-selection', name_en: 'BEEF SELECTION', name_vi: 'BÒ TUYỂN CHỌN' },
-    { slug: 'sauces', name_en: 'SAUCES', name_vi: 'NƯỚC SỐT' },
-    { slug: 'side-dishes', name_en: 'SIDE DISHES', name_vi: 'MÓN ĂN KÈM' },
-    { slug: 'drinks', name_en: 'DRINK MENU & WINE LIST', name_vi: 'THỨC UỐNG & RƯỢU VANG' },
+    { slug: 'small-bites', name_en: 'SMALL BITES', name_vi: 'KHAI VỊ NHỎ', name_ja: 'スモールバイト' },
+    { slug: 'salads', name_en: 'SALADS', name_vi: 'SALAD', name_ja: 'サラダ' },
+    { slug: 'starters', name_en: 'STARTERS', name_vi: 'MÓN KHAI VỊ', name_ja: '前菜' },
+    { slug: 'mains', name_en: 'MAINS', name_vi: 'MÓN CHÍNH', name_ja: 'メインディッシュ' },
+    { slug: 'beef-selection', name_en: 'BEEF SELECTION', name_vi: 'BÒ TUYỂN CHỌN', name_ja: 'ビーフセレクション' },
+    { slug: 'sauces', name_en: 'SAUCES', name_vi: 'NƯỚC SỐT', name_ja: 'ソース' },
+    { slug: 'side-dishes', name_en: 'SIDE DISHES', name_vi: 'MÓN ĂN KÈM', name_ja: 'デザート' },
+    { slug: 'drinks', name_en: 'DRINK MENU & WINE LIST', name_vi: 'THỨC UỐNG & RƯỢU VANG', name_ja: 'ドリンク＆ワインリスト' },
   ];
 
 
@@ -112,7 +112,8 @@ export default function MenusClient({ initialCategories = [], allMenuItems = [],
                   const parts = (item.image_url || '').split('|');
                   const imgEn = parts[0];
                   const imgVi = parts[1] || parts[0]; // fallback to EN if VI not provided
-                  const imgSrc = lang === 'vi' && imgVi ? imgVi : imgEn;
+                  const imgJa = parts[2] || parts[0]; // fallback to EN if JA not provided
+                  const imgSrc = lang === 'vi' ? imgVi : lang === 'ja' ? imgJa : imgEn;
                   
                   if (!imgSrc) return null;
                   

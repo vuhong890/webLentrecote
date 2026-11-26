@@ -86,7 +86,7 @@ export default function ContactClient({ initialPageSections = {} }) {
           <div className={styles.contactGrid}>
             {/* Contact Info */}
             <div className={styles.infoCol}>
-              <h2>{tm(details, 'label', lang === 'vi' ? 'Vị Trí Của Chúng Tôi' : 'Our Location')}</h2>
+              <h2>{tm(details, 'label', lang === 'vi' ? 'Vị Trí Của Chúng Tôi' : lang === 'ja' ? '所在地・アクセス' : 'Our Location')}</h2>
               <div className={styles.goldDivider}></div>
 
               <div className={styles.infoBlock}>
@@ -96,6 +96,8 @@ export default function ContactClient({ initialPageSections = {} }) {
                 ) : (
                   <div dangerouslySetInnerHTML={{ __html: lang === 'vi' 
                     ? "<p>L'Entrecôte Social Meating</p><p>Tầng 2, Đồng Du</p><p>Phường Sài Gòn, TP. Hồ Chí Minh</p>" 
+                    : lang === 'ja'
+                    ? "<p>L'Entrecôte Social Meating</p><p>サイゴン区ドンユー通り 2階</p><p>ホーチミン市</p>"
                     : "<p>L'Entrecôte Social Meating</p><p>Level 2, Dong Du</p><p>Saigon Ward, Ho Chi Minh City</p>" 
                   }}></div>
                 )}

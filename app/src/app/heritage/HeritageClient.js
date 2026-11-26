@@ -67,9 +67,9 @@ export default function HeritageClient({ initialSections = {} }) {
         )}
         <div className={styles.heroOverlay}></div>
         <div className={styles.heroContent}>
-          <p className={styles.label}>{tm(hero, 'label', lang === 'vi' ? 'DI SẢN' : 'OUR HERITAGE')}</p>
-          <h1>{tf(hero, 'title', lang === 'vi' ? 'Câu Chuyện Được Viết Bằng Hương Vị' : 'A Story Written in Flavour')}</h1>
-          <p className={styles.subtitle}>{tm(hero, 'subtitle', lang === 'vi' ? 'Từ trái tim Paris đến tâm hồn Sài Gòn' : 'From the heart of Paris to the soul of Saigon')}</p>
+          <p className={styles.label}>{tm(hero, 'label', lang === 'vi' ? 'DI SẢN' : lang === 'ja' ? '伝統と歴史' : 'OUR HERITAGE')}</p>
+          <h1>{tf(hero, 'title', lang === 'vi' ? 'Câu Chuyện Được Viết Bằng Hương Vị' : lang === 'ja' ? '味わいで紡ぐ物語' : 'A Story Written in Flavour')}</h1>
+          <p className={styles.subtitle}>{tm(hero, 'subtitle', lang === 'vi' ? 'Từ trái tim Paris đến tâm hồn Sài Gòn' : lang === 'ja' ? 'パリの中心から、サイゴンの魂へ' : 'From the heart of Paris to the soul of Saigon')}</p>
         </div>
       </section>
 

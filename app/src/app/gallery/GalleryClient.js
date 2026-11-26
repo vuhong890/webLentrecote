@@ -25,10 +25,10 @@ const staticGallery = [
 const aspects = ['square', 'tall', 'wide', 'square', 'tall', 'wide'];
 
 const filters = [
-  { id: 'all', label_en: 'ALL', label_vi: 'TẤT CẢ' },
-  { id: 'food', label_en: 'FOOD & DRINKS', label_vi: 'ĐỒ ĂN & THỨC UỐNG' },
-  { id: 'ambiance', label_en: 'AMBIANCE', label_vi: 'KHÔNG GIAN' },
-  { id: 'events', label_en: 'EVENTS', label_vi: 'SỰ KIỆN' },
+  { id: 'all', label_en: 'ALL', label_vi: 'TẤT CẢ', label_ja: 'すべて' },
+  { id: 'food', label_en: 'FOOD & DRINKS', label_vi: 'ĐỒ ĂN & THỨC UỐNG', label_ja: '料理＆ドリンク' },
+  { id: 'ambiance', label_en: 'AMBIANCE', label_vi: 'KHÔNG GIAN', label_ja: '空間・雰囲気' },
+  { id: 'events', label_en: 'EVENTS', label_vi: 'SỰ KIỆN', label_ja: 'イベント' },
 ];
 
 export default function GalleryClient({ initialImages = [], initialPageSections = {} }) {
@@ -111,7 +111,7 @@ export default function GalleryClient({ initialImages = [], initialPageSections 
                   setVisibleCount(12);
                 }}
               >
-                {lang === 'vi' && f.label_vi ? f.label_vi : f.label_en}
+                {f[`label_${lang}`] || f.label_en}
               </button>
             ))}
           </div>
@@ -143,7 +143,7 @@ export default function GalleryClient({ initialImages = [], initialPageSections 
                 className="btn btn-dark"
                 onClick={() => setVisibleCount(prev => prev + 8)}
               >
-                {lang === 'vi' ? 'TẢI THÊM' : 'LOAD MORE'} ({filtered.length - visibleCount})
+                {lang === 'vi' ? 'TẢI THÊM' : lang === 'ja' ? 'もっと見る' : 'LOAD MORE'} ({filtered.length - visibleCount})
               </button>
             </div>
           )}

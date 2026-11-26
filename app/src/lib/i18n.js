@@ -6,7 +6,7 @@ const LanguageContext = createContext({ lang: 'en', setLang: () => {}, t: () => 
 export function LanguageProvider({ children }) {
   const [lang, setLang] = useState('en');
 
-  // Translate a record field: t(item, 'name') → item.name_en or item.name_vi
+  // Translate a record field: t(item, 'name') → item.name_en, item.name_vi, or item.name_ja
   const t = useCallback((obj, field) => {
     if (!obj) return '';
     const key = `${field}_${lang}`;
@@ -125,6 +125,56 @@ const translations = {
     dressCode: 'TRANG PHỤC',
     smartCasual: 'Lịch sự, Thoải mái',
     location: 'ĐỊA CHỈ',
+  },
+  ja: {
+    home: 'ホーム', heritage: '伝統と歴史', menus: 'メニュー', reservation: 'ご予約',
+    gallery: 'ギャラリー', contact: 'お問い合わせ', admin: '管理画面',
+    bookTable: 'テーブルを予約', exploreMenu: 'メニューを見る',
+    discoverStory: '私たちの物語を見る', reserveTable: '今すぐ予約する', exploreFullMenu: '全メニューを見る', viewFullGallery: 'ギャラリーをすべて見る',
+    name: 'お名前', phone: '電話番号', email: 'メールアドレス', date: '日付', time: '時間',
+    guests: '人数', branch: '店舗', notes: '特別なご要望',
+    submit: '送信', confirm: '確認', cancel: 'キャンセル',
+    pending: '保留中', confirmed: '確認済み', cancelled: 'キャンセル済み',
+    search: '検索...', noResults: '結果が見つかりません',
+    login: 'ログイン', logout: 'ログアウト', dashboard: 'ダッシュボード',
+    menuManagement: 'メニュー管理', reservationManagement: '予約管理',
+    galleryManagement: 'ギャラリー管理', pageManagement: 'ページ編集', settings: '設定',
+    save: '保存', delete: '削除', edit: '編集', add: '新規追加',
+    category: 'カテゴリー', price: '価格', description: '説明',
+    image: '画像', status: 'ステータス', actions: '操作',
+    switchToVi: 'Tiếng Việt', switchToEn: 'English', switchToJa: '日本語',
+    // Contact page
+    openingHours: '営業時間',
+    lunch: 'ランチ', dinner: 'ディナー', lastOrder: 'ラストオーダー',
+    openDaily: '年中無休',
+    hotline: 'ホットライン',
+    sendMessage: 'メッセージを送る',
+    contactFormIntro: 'ご質問、ご感想、または特別なご要望がございましたら、お気軽にお問い合わせください。折り返しご連絡いたします。',
+    yourName: 'お名前',
+    subject: '件名',
+    subjectPlaceholder: 'お問い合わせ内容の概要',
+    message: 'メッセージ',
+    messagePlaceholder: 'メッセージを入力してください...',
+    sendBtn: 'メッセージを送信',
+    messageSentTitle: '送信完了',
+    messageSentDesc: 'お問い合わせありがとうございます。24時間以内にご返信いたします。',
+    fullNamePlaceholder: 'フルネーム',
+    emailPlaceholder: 'your@email.com',
+    // Reservation page
+    bookATable: 'テーブル予約',
+    reservationFormIntro: '特別なダイニング体験をご予約ください。8名様以上のご予約はお電話にて直接お問い合わせください：',
+    selectTime: '時間を選択',
+    guest: '名',
+    guestsLabel: '人数',
+    specialRequests: '特別なご要望（確約いたしかねます）',
+    allergiesPlaceholder: 'アレルギー、記念日のお祝い、お席のご希望など...',
+    confirmReservation: '予約を確定する',
+    submitting: '送信中...',
+    reservationConfirmedTitle: 'ご予約を受け付けました',
+    reservationConfirmedDesc: '皆様のご来店を心よりお待ちしております。ご登録のメールアドレスに確認メールを送信いたしました。',
+    dressCode: 'ドレスコード',
+    smartCasual: 'スマートカジュアル',
+    location: '所在地',
   },
 };
 

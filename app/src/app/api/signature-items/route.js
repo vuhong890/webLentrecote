@@ -20,7 +20,7 @@ export async function GET(request) {
 
   let query = supabase
     .from('signature_items')
-    .select('*, menu_items(id, name_en, name_vi, description_en, description_vi, price, image_url, badge)')
+    .select('*, menu_items(id, name_en, name_vi, name_ja, description_en, description_vi, description_ja, price, image_url, badge)')
     .order('display_order');
 
   if (!all) {
@@ -40,6 +40,8 @@ export async function GET(request) {
         name_vi: item.name_vi || mi.name_vi,
         description_en: item.description_en || mi.description_en,
         description_vi: item.description_vi || mi.description_vi,
+        name_ja: mi.name_ja || item.name_ja,
+        description_ja: mi.description_ja || item.description_ja,
         image_url: item.image_url || mi.image_url,
         price: mi.price,
         badge: mi.badge,

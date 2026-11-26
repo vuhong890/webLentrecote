@@ -20,7 +20,7 @@ export async function GET(request) {
 
   let query = supabase
     .from('menu_items')
-    .select('*, menu_categories(name_en, name_vi, slug)')
+    .select('*, menu_categories(name_en, name_vi, name_ja, slug)')
     .order('sort_order');
 
   if (categoryId) query = query.eq('category_id', categoryId);
@@ -39,7 +39,7 @@ export async function POST(request) {
   const { data, error } = await authClient(token)
     .from('menu_items')
     .insert({ ...body, updated_at: new Date().toISOString() })
-    .select('*, menu_categories(name_en, name_vi, slug)')
+    .select('*, menu_categories(name_en, name_vi, name_ja, slug)')
     .single();
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
   revalidatePath('/', 'layout');
@@ -57,7 +57,7 @@ export async function PUT(request) {
     .from('menu_items')
     .update({ ...updates, updated_at: new Date().toISOString() })
     .eq('id', id)
-    .select('*, menu_categories(name_en, name_vi, slug)')
+    .select('*, menu_categories(name_en, name_vi, name_ja, slug)')
     .single();
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
   revalidatePath('/', 'layout');

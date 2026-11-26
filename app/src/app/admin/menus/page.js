@@ -10,13 +10,13 @@ export default function AdminMenus() {
   const [activeCat, setActiveCat] = useState(null);
   const [showForm, setShowForm] = useState(false);
   const [editItem, setEditItem] = useState(null);
-  const [form, setForm] = useState({ name_en: '', name_vi: '', description_en: '', description_vi: '', price: '', image_url: '', image_vi: '', badge: '', category_id: '', is_available: true });
+  const [form, setForm] = useState({ name_en: '', name_vi: '', name_ja: '', description_en: '', description_vi: '', description_ja: '', price: '', image_url: '', image_vi: '', image_ja: '', badge: '', category_id: '', is_available: true });
   const [uploading, setUploading] = useState(null);
   const [token, setToken] = useState('');
   const [deleteConfirmId, setDeleteConfirmId] = useState(null);
   
   const [showCatManager, setShowCatManager] = useState(false);
-  const [catForm, setCatForm] = useState({ id: null, name_en: '', name_vi: '' });
+  const [catForm, setCatForm] = useState({ id: null, name_en: '', name_vi: '', name_ja: '' });
   const [deleteCatId, setDeleteCatId] = useState(null);
 
   async function loadCategories() {
@@ -52,7 +52,7 @@ export default function AdminMenus() {
 
   function openNew() {
     setEditItem(null);
-    setForm({ name_en: '', name_vi: '', description_en: '', description_vi: '', price: '', image_url: '', image_vi: '', badge: '', category_id: activeCat || '', is_available: true });
+    setForm({ name_en: '', name_vi: '', name_ja: '', description_en: '', description_vi: '', description_ja: '', price: '', image_url: '', image_vi: '', image_ja: '', badge: '', category_id: activeCat || '', is_available: true });
     setShowForm(true);
   }
 
@@ -60,15 +60,17 @@ export default function AdminMenus() {
     setEditItem(item);
     let imageEn = item.image_url || '';
     let imageVi = '';
+    let imageJa = '';
     if (isDrinks && imageEn.includes('|')) {
       const parts = imageEn.split('|');
       imageEn = parts[0];
       imageVi = parts[1] || '';
+      imageJa = parts[2] || '';
     }
     setForm({
-      name_en: item.name_en, name_vi: item.name_vi,
-      description_en: item.description_en, description_vi: item.description_vi,
-      price: item.price, image_url: imageEn, image_vi: imageVi, badge: item.badge || '',
+      name_en: item.name_en || '', name_vi: item.name_vi || '', name_ja: item.name_ja || '',
+      description_en: item.description_en || '', description_vi: item.description_vi || '', description_ja: item.description_ja || '',
+      price: item.price, image_url: imageEn, image_vi: imageVi, image_ja: imageJa, badge: item.badge || '',
       category_id: item.category_id, is_available: item.is_available,
     });
     setShowForm(true);
@@ -115,8 +117,8 @@ export default function AdminMenus() {
     
     let finalImageUrl = form.image_url;
     if (isDrinks) {
-      finalImageUrl = `${form.image_url || ''}|${form.image_vi || ''}`;
-      if (finalImageUrl === '|') finalImageUrl = ''; 
+      finalImageUrl = `${form.image_url || ''}|${form.image_vi || ''}|${form.image_ja || ''}`;
+      if (finalImageUrl === '||' || finalImageUrl === '|') finalImageUrl = ''; 
     }
 
     const payload = { 
@@ -128,8 +130,10 @@ export default function AdminMenus() {
     if (isDrinks) {
       payload.name_en = form.name_en || `Drink Menu Page ${items.length + (editItem ? 0 : 1)}`;
       payload.name_vi = form.name_vi || `Drink Menu Page ${items.length + (editItem ? 0 : 1)}`;
+      payload.name_ja = form.name_ja || `Drink Menu Page ${items.length + (editItem ? 0 : 1)}`;
     }
     delete payload.image_vi;
+    delete payload.image_ja;
 
     if (editItem) {
       await fetch('/api/menu-items', { method: 'PUT', headers, body: JSON.stringify({ id: editItem.id, ...payload }) });
@@ -156,19 +160,19 @@ export default function AdminMenus() {
   }
 
   async function saveCategory() {
-    if (!catForm.name_en || !catForm.name_vi) return alert('Please enter both names');
+    if (!catForm.name_en || !catForm.name_vi) return alert('Please enter English and Vietnamese names');
     const headers = { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` };
     
     if (catForm.id) {
-      const res = await fetch('/api/menu-categories', { method: 'PUT', headers, body: JSON.stringify({ id: catForm.id, name_en: catForm.name_en, name_vi: catForm.name_vi }) });
+      const res = await fetch('/api/menu-categories', { method: 'PUT', headers, body: JSON.stringify({ id: catForm.id, name_en: catForm.name_en, name_vi: catForm.name_vi, name_ja: catForm.name_ja || '' }) });
       if (!res.ok) return alert('Failed to update: ' + (await res.json()).error);
     } else {
       const maxOrder = categories.reduce((max, c) => Math.max(max, c.sort_order || 0), 0);
       const slug = catForm.name_en.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
-      const res = await fetch('/api/menu-categories', { method: 'POST', headers, body: JSON.stringify({ name_en: catForm.name_en, name_vi: catForm.name_vi, sort_order: maxOrder + 1, slug }) });
+      const res = await fetch('/api/menu-categories', { method: 'POST', headers, body: JSON.stringify({ name_en: catForm.name_en, name_vi: catForm.name_vi, name_ja: catForm.name_ja || '', sort_order: maxOrder + 1, slug }) });
       if (!res.ok) return alert('Failed to add: ' + (await res.json()).error);
     }
-    setCatForm({ id: null, name_en: '', name_vi: '' });
+    setCatForm({ id: null, name_en: '', name_vi: '', name_ja: '' });
     loadCategories();
   }
 
@@ -274,6 +278,7 @@ export default function AdminMenus() {
               <th style={s.th}>Image</th>
               <th style={s.th}>Name (EN)</th>
               <th style={s.th}>Name (VI)</th>
+              <th style={s.th}>Name (JA)</th>
               <th style={s.th}>Price</th>
               <th style={s.th}>Badge</th>
               <th style={s.th}>Status</th>
@@ -286,6 +291,7 @@ export default function AdminMenus() {
                 <td style={s.td}>{item.image_url ? <Image src={item.image_url} width={50} height={50} style={s.img} alt="" /> : <div style={{ ...s.img, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>🥩</div>}</td>
                 <td style={s.td}>{item.name_en}</td>
                 <td style={s.td}>{item.name_vi}</td>
+                <td style={s.td}>{item.name_ja || <span style={{ color: 'rgba(255,255,255,0.3)' }}>-</span>}</td>
                 <td style={{ ...s.td, ...s.price }}>{Number(item.price).toLocaleString()}₫</td>
                 <td style={s.td}>{item.badge && <span style={s.badge}>{item.badge}</span>}</td>
                 <td style={s.td}><span style={item.is_available ? s.avail : s.unavail}>{item.is_available ? '● Active' : '● Hidden'}</span></td>
@@ -297,7 +303,7 @@ export default function AdminMenus() {
                 </td>
               </tr>
             ))}
-            {items.length === 0 && <tr><td colSpan={7} style={{ ...s.td, color: 'rgba(255,255,255,0.4)', textAlign: 'center' }}>No items in this category</td></tr>}
+            {items.length === 0 && <tr><td colSpan={8} style={{ ...s.td, color: 'rgba(255,255,255,0.4)', textAlign: 'center' }}>No items in this category</td></tr>}
           </tbody>
         </table>
       ) : (
@@ -307,6 +313,7 @@ export default function AdminMenus() {
               <th style={s.th}>Page #</th>
               <th style={s.th}>Image (EN)</th>
               <th style={s.th}>Image (VI)</th>
+              <th style={s.th}>Image (JA)</th>
               <th style={s.th}>Order</th>
               <th style={s.th}>Actions</th>
             </tr>
@@ -316,11 +323,13 @@ export default function AdminMenus() {
               const parts = (item.image_url || '').split('|');
               const imgEn = parts[0];
               const imgVi = parts[1] || '';
+              const imgJa = parts[2] || '';
               return (
                 <tr key={item.id}>
                   <td style={s.td}>Page {index + 1}</td>
                   <td style={s.td}>{imgEn ? <Image src={imgEn} width={50} height={70} style={{width: 50, height: 70, objectFit: 'cover'}} alt="EN" /> : '-'}</td>
                   <td style={s.td}>{imgVi ? <Image src={imgVi} width={50} height={70} style={{width: 50, height: 70, objectFit: 'cover'}} alt="VI" /> : '-'}</td>
+                  <td style={s.td}>{imgJa ? <Image src={imgJa} width={50} height={70} style={{width: 50, height: 70, objectFit: 'cover'}} alt="JA" /> : '-'}</td>
                   <td style={s.td}>
                     <div style={{ display: 'flex', gap: '0.25rem' }}>
                       <button disabled={index === 0} onClick={() => swapItemOrder(index, -1)} style={{ padding: '0.2rem 0.5rem', cursor: index === 0 ? 'not-allowed' : 'pointer', background: 'rgba(255,255,255,0.1)', color: '#fff', border: 'none', opacity: index === 0 ? 0.3 : 1 }}>↑</button>
@@ -336,7 +345,7 @@ export default function AdminMenus() {
                 </tr>
               );
             })}
-            {items.length === 0 && <tr><td colSpan={5} style={{ ...s.td, color: 'rgba(255,255,255,0.4)', textAlign: 'center' }}>No images uploaded yet</td></tr>}
+            {items.length === 0 && <tr><td colSpan={6} style={{ ...s.td, color: 'rgba(255,255,255,0.4)', textAlign: 'center' }}>No images uploaded yet</td></tr>}
           </tbody>
         </table>
       )}
@@ -359,6 +368,10 @@ export default function AdminMenus() {
                     <input style={s.input} value={form.name_vi} onChange={e => setForm({ ...form, name_vi: e.target.value })} />
                   </div>
                 </div>
+                <div style={s.field}>
+                  <label style={s.label}>Name (Japanese / 日本語)</label>
+                  <input style={s.input} value={form.name_ja || ''} onChange={e => setForm({ ...form, name_ja: e.target.value })} placeholder="例：プライムフィレステーキ" />
+                </div>
 
                 <div style={s.field}>
                   <label style={s.label}>Description (English)</label>
@@ -367,6 +380,10 @@ export default function AdminMenus() {
                 <div style={s.field}>
                   <label style={s.label}>Description (Vietnamese)</label>
                   <textarea style={s.textarea} value={form.description_vi} onChange={e => setForm({ ...form, description_vi: e.target.value })} />
+                </div>
+                <div style={s.field}>
+                  <label style={s.label}>Description (Japanese / 日本語)</label>
+                  <textarea style={s.textarea} value={form.description_ja || ''} onChange={e => setForm({ ...form, description_ja: e.target.value })} placeholder="日本語のメニュー説明を入力してください..." />
                 </div>
 
                 <div style={s.row}>
@@ -427,6 +444,14 @@ export default function AdminMenus() {
                     {form.image_vi && <button onClick={() => setForm({...form, image_vi: ''})} style={{...s.delBtn, marginTop: '0.5rem', display: 'block', width: '120px'}}>Remove</button>}
                   </div>
                 </div>
+
+                <div style={{...s.field, background: 'rgba(255,255,255,0.03)', padding: '1rem', borderRadius: '8px', position: 'relative'}}>
+                  <label style={{...s.label, color: '#F0C75E'}}>Image (Japanese / 日本語 - Optional)</label>
+                  <input type="file" accept="image/*" onChange={e => handleUpload(e, 'image_ja')} style={{ color: '#fff', fontSize: '0.8rem', width: '100%', marginBottom: '0.5rem' }} />
+                  {uploading === 'image_ja' && <p style={{ color: '#F0C75E', fontSize: '0.8rem', marginTop: '0.5rem' }}>Uploading...</p>}
+                  {form.image_ja && <Image src={form.image_ja} width={200} height={200} style={s.imgPrev} alt="JA" />}
+                  {form.image_ja && <button onClick={() => setForm({...form, image_ja: ''})} style={{...s.delBtn, marginTop: '0.5rem', display: 'block', width: '120px'}}>Remove</button>}
+                </div>
               </>
             )}
 
@@ -463,7 +488,7 @@ export default function AdminMenus() {
 
             <div style={{ background: 'rgba(255,255,255,0.05)', padding: '1rem', marginBottom: '1.5rem' }}>
               <h3 style={{ fontSize: '0.9rem', marginBottom: '1rem', color: '#F0C75E' }}>{catForm.id ? 'Edit Category' : 'Add New Category'}</h3>
-              <div style={s.row}>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '1rem' }}>
                 <div style={s.field}>
                   <label style={s.label}>Name (EN)</label>
                   <input style={s.input} value={catForm.name_en} onChange={e => setCatForm({...catForm, name_en: e.target.value})} />
@@ -472,13 +497,17 @@ export default function AdminMenus() {
                   <label style={s.label}>Name (VI)</label>
                   <input style={s.input} value={catForm.name_vi} onChange={e => setCatForm({...catForm, name_vi: e.target.value})} />
                 </div>
+                <div style={s.field}>
+                  <label style={s.label}>Name (JA / 日本語)</label>
+                  <input style={s.input} value={catForm.name_ja || ''} onChange={e => setCatForm({...catForm, name_ja: e.target.value})} />
+                </div>
               </div>
               <div style={{ display: 'flex', gap: '0.5rem' }}>
                 <button style={{ padding: '0.5rem 1rem', background: '#F0C75E', color: '#000', border: 'none', fontWeight: 'bold', cursor: 'pointer' }} onClick={saveCategory}>
                   {catForm.id ? 'UPDATE' : 'ADD CATEGORY'}
                 </button>
                 {catForm.id && (
-                  <button style={{ padding: '0.5rem 1rem', background: '#333', color: '#fff', border: 'none', cursor: 'pointer' }} onClick={() => setCatForm({ id: null, name_en: '', name_vi: '' })}>CANCEL EDIT</button>
+                  <button style={{ padding: '0.5rem 1rem', background: '#333', color: '#fff', border: 'none', cursor: 'pointer' }} onClick={() => setCatForm({ id: null, name_en: '', name_vi: '', name_ja: '' })}>CANCEL EDIT</button>
                 )}
               </div>
             </div>
@@ -488,6 +517,7 @@ export default function AdminMenus() {
                 <tr>
                   <th style={s.th}>Name (EN)</th>
                   <th style={s.th}>Name (VI)</th>
+                  <th style={s.th}>Name (JA)</th>
                   <th style={s.th}>Order</th>
                   <th style={s.th}>Actions</th>
                 </tr>
@@ -497,6 +527,7 @@ export default function AdminMenus() {
                   <tr key={cat.id}>
                     <td style={s.td}>{cat.name_en}</td>
                     <td style={s.td}>{cat.name_vi}</td>
+                    <td style={s.td}>{cat.name_ja || '-'}</td>
                     <td style={s.td}>
                       <div style={{ display: 'flex', gap: '0.25rem' }}>
                         <button disabled={index === 0} onClick={() => swapOrder(index, -1)} style={{ padding: '0.2rem 0.5rem', cursor: index === 0 ? 'not-allowed' : 'pointer', background: 'rgba(255,255,255,0.1)', color: '#fff', border: 'none', opacity: index === 0 ? 0.3 : 1 }}>↑</button>

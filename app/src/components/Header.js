@@ -156,13 +156,19 @@ export default function Header() {
         </nav>
 
         {/* Language Switcher */}
-        <button
-          className={styles.langToggle}
-          onClick={() => setLang(lang === 'en' ? 'vi' : 'en')}
-          aria-label="Switch language"
-        >
-          {lang === 'en' ? 'VI' : 'EN'}
-        </button>
+        <div className={styles.langGroup} role="group" aria-label="Switch language">
+          {['en', 'vi', 'ja'].map((code) => (
+            <button
+              key={code}
+              type="button"
+              className={`${styles.langToggle} ${lang === code ? styles.langActive : ''}`}
+              onClick={() => setLang(code)}
+              aria-label={`Switch language to ${code.toUpperCase()}`}
+            >
+              {code.toUpperCase()}
+            </button>
+          ))}
+        </div>
 
         {/* Mobile Toggle */}
         <button

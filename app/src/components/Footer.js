@@ -49,10 +49,10 @@ export default function Footer({ settings = {} }) {
         <div className={styles.topSection}>
           {/* Info Column */}
           <div className={styles.infoColumn}>
-            <h3 className={styles.mapTitle}>{lang === 'vi' ? 'ĐỊA CHỈ' : 'OUR ADDRESS'}</h3>
+            <h3 className={styles.mapTitle}>{lang === 'vi' ? 'ĐỊA CHỈ' : lang === 'ja' ? '所在地' : 'OUR ADDRESS'}</h3>
             <div className={styles.details}>
-              <p>{lang === 'vi' ? 'Tầng 2, Đông Du, Phường Bến Nghé' : 'Level 2, Dong Du, Saigon Ward'}</p>
-              <p>{lang === 'vi' ? 'Thành phố Hồ Chí Minh' : 'Ho Chi Minh City'}</p>
+              <p>{lang === 'vi' ? 'Tầng 2, Đông Du, Phường Bến Nghé' : lang === 'ja' ? 'サイゴン区ドンユー通り 2階' : 'Level 2, Dong Du, Saigon Ward'}</p>
+              <p>{lang === 'vi' ? 'Thành phố Hồ Chí Minh' : lang === 'ja' ? 'ホーチミン市' : 'Ho Chi Minh City'}</p>
               <p className={styles.hours}>
                 {t('openDaily')}<br />
                 11:00 - 14:00 | 16:00 - 22:00
@@ -138,7 +138,7 @@ export default function Footer({ settings = {} }) {
 
           {/* Map Column */}
           <div className={styles.mapColumn}>
-            <h4 className={styles.mapTitle}>{lang === 'vi' ? 'TÌM CHÚNG TÔI TẠI' : 'FIND US AT'}</h4>
+            <h4 className={styles.mapTitle}>{lang === 'vi' ? 'TÌM CHÚNG TÔI TẠI' : lang === 'ja' ? 'アクセスマップ' : 'FIND US AT'}</h4>
             <div className={styles.mapContainer}>
               <iframe
                 src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3919.5!2d106.7041782!3d10.7754419!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x31752fbba5c3008f%3A0x6f4e96e3aff8d93!2sL%E2%80%99Entrecote%20-%20Social%20Meating!5e0!3m2!1sen!2s"

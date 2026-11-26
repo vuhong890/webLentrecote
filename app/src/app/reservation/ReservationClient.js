@@ -39,7 +39,7 @@ export default function ReservationClient({ initialPageSections = {} }) {
     // Custom Validation
     if (formData.name.trim().length < 2) {
       setPopupType('error');
-      setPopupMessage(lang === 'vi' ? 'Tên quá ngắn. Vui lòng nhập đầy đủ tên của bạn.' : 'Name is too short. Please enter your full name.');
+      setPopupMessage(lang === 'vi' ? 'Tên quá ngắn. Vui lòng nhập đầy đủ tên của bạn.' : lang === 'ja' ? 'お名前が短すぎます。フルネームを入力してください。' : 'Name is too short. Please enter your full name.');
       setShowPopup(true);
       setLoading(false);
       return;
@@ -48,7 +48,7 @@ export default function ReservationClient({ initialPageSections = {} }) {
     const phoneRegex = /^[+]?[0-9\s\-()]{8,20}$/;
     if (!phoneRegex.test(formData.phone)) {
       setPopupType('error');
-      setPopupMessage(lang === 'vi' ? 'Số điện thoại không hợp lệ. Vui lòng nhập từ 8-20 số.' : 'Invalid phone number. Please enter 8-20 digits.');
+      setPopupMessage(lang === 'vi' ? 'Số điện thoại không hợp lệ. Vui lòng nhập từ 8-20 số.' : lang === 'ja' ? '電話番号が無効です。8〜20桁の数字を入力してください。' : 'Invalid phone number. Please enter 8-20 digits.');
       setShowPopup(true);
       setLoading(false);
       return;
@@ -57,7 +57,7 @@ export default function ReservationClient({ initialPageSections = {} }) {
     const emailRegex = /^[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}$/;
     if (!emailRegex.test(formData.email)) {
       setPopupType('error');
-      setPopupMessage(lang === 'vi' ? 'Email không hợp lệ. Vui lòng nhập đúng định dạng (VD: name@gmail.com).' : 'Invalid email. Please enter a valid format (e.g. name@gmail.com).');
+      setPopupMessage(lang === 'vi' ? 'Email không hợp lệ. Vui lòng nhập đúng định dạng (VD: name@gmail.com).' : lang === 'ja' ? 'メールアドレスが無効です。正しい形式で入力してください。' : 'Invalid email. Please enter a valid format (e.g. name@gmail.com).');
       setShowPopup(true);
       setLoading(false);
       return;
@@ -82,7 +82,7 @@ export default function ReservationClient({ initialPageSections = {} }) {
       if (!res.ok) throw new Error(data.error || 'Failed to submit');
       
       setPopupType('success');
-      setPopupMessage(lang === 'vi' ? 'Đặt bàn thành công! Chúng tôi sẽ liên hệ lại với bạn sớm nhất.' : 'Reservation successful! We will contact you shortly.');
+      setPopupMessage(lang === 'vi' ? 'Đặt bàn thành công! Chúng tôi sẽ liên hệ lại với bạn sớm nhất.' : lang === 'ja' ? 'ご予約を受け付けました！追って担当者よりご連絡いたします。' : 'Reservation successful! We will contact you shortly.');
       setShowPopup(true);
       
       // Reset form
@@ -92,7 +92,7 @@ export default function ReservationClient({ initialPageSections = {} }) {
     } catch (err) {
       setError(err.message);
       setPopupType('error');
-      setPopupMessage(lang === 'vi' ? 'Lỗi: Không thể gửi yêu cầu đặt bàn lúc này. Vui lòng thử lại.' : 'Error: Failed to submit reservation. Please try again.');
+      setPopupMessage(lang === 'vi' ? 'Lỗi: Không thể gửi yêu cầu đặt bàn lúc này. Vui lòng thử lại.' : lang === 'ja' ? 'エラー：予約を送信できませんでした。もう一度お試しください。' : 'Error: Failed to submit reservation. Please try again.');
       setShowPopup(true);
     } finally {
       setLoading(false);
@@ -187,7 +187,7 @@ export default function ReservationClient({ initialPageSections = {} }) {
                     <div className={styles.formGroup}>
                       <label className={styles.formLabel}>{t('guestsLabel')}</label>
                       <select name="guests" value={formData.guests} onChange={handleChange} className={styles.formInput} required>
-                        <option value="">{lang === 'vi' ? 'Chọn số khách' : 'Select guests'}</option>
+                        <option value="">{lang === 'vi' ? 'Chọn số khách' : lang === 'ja' ? '人数を選択' : 'Select guests'}</option>
                         {[1,2,3,4,5,6,7,8].map(n => (
                           <option key={n} value={n}>{n} {n === 1 ? t('guest') : t('guests')}</option>
                         ))}
@@ -238,7 +238,7 @@ export default function ReservationClient({ initialPageSections = {} }) {
                       </div>
                       <div className={styles.infoItem}>
                         <span className={styles.infoLabel}>{t('location').toUpperCase()}</span>
-                        <span>Level 2, Dong Du,<br/>Saigon Ward, HCMC</span>
+                        <span>{lang === 'vi' ? <>Tầng 2, Đồng Du,<br/>Phường Sài Gòn, TP.HCM</> : lang === 'ja' ? <>ホーチミン市サイゴン区<br/>ドンユー通り 2階</> : <>Level 2, Dong Du,<br/>Saigon Ward, HCMC</>}</span>
                       </div>
                     </>
                   )}
