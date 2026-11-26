@@ -13,18 +13,32 @@ const transporter = nodemailer.createTransport({
   },
 });
 
-export const sendEmail = async ({ to, subject, html }) => {
+export const sendEmail = async ({ to, subject, html, text }) => {
   // We expect EMAIL_USER and EMAIL_PASS to be set in .env.local
-  // This should be a Gmail account and an App Password.
+  // This should be a Gmail / Google Workspace account and an App Password.
   if (!process.env.EMAIL_USER || !process.env.EMAIL_PASS) {
     console.warn('EMAIL_USER or EMAIL_PASS is not set. Email not sent.');
     return { success: false, error: 'Email configuration is missing.' };
   }
 
+  // Generate plain-text fallback from HTML to improve deliverability and spam score
+  const plainText = text || (html
+    ? html
+        .replace(/<br\s*\/?>/gi, '\n')
+        .replace(/<\/p>/gi, '\n\n')
+        .replace(/<\/li>/gi, '\n')
+        .replace(/<[^>]+>/g, '')
+        .replace(/&nbsp;/g, ' ')
+        .replace(/\n{3,}/g, '\n\n')
+        .trim()
+    : '');
+
   const mailOptions = {
-    from: `"L'Entrecôte Notification" <${process.env.EMAIL_USER}>`,
+    from: `"L'Entrecôte Booking" <${process.env.EMAIL_USER}>`,
+    replyTo: process.env.EMAIL_USER,
     to,
     subject,
+    text: plainText,
     html,
   };
 
