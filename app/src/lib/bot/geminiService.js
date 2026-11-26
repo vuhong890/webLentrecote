@@ -87,14 +87,43 @@ const BOOKING_TOOL = {
   ]
 };
 
+// Biến đếm xoay vòng (Round-Robin) giữa các API Key
+let keyRotationIndex = 0;
+
 /**
- * Gọi Gemini API với System Instruction, History và Tool Declaration
+ * Thu thập danh sách tất cả Gemini API Keys được cấu hình
+ * Hỗ trợ:
+ * - GEMINI_API_KEY="key1,key2,key3" (ngăn cách bằng dấu phẩy)
+ * - GEMINI_API_KEY_1, GEMINI_API_KEY_2, GEMINI_API_KEY_3...
+ */
+export function getGeminiApiKeys() {
+  const rawKeys = [
+    process.env.GEMINI_API_KEY || '',
+    process.env.GEMINI_API_KEY_1 || '',
+    process.env.GEMINI_API_KEY_2 || '',
+    process.env.GEMINI_API_KEY_3 || '',
+    process.env.GEMINI_API_KEY_4 || '',
+  ];
+
+  const keys = [];
+  for (const raw of rawKeys) {
+    const parts = raw.split(',').map(k => k.trim()).filter(Boolean);
+    for (const k of parts) {
+      if (!keys.includes(k)) {
+        keys.push(k);
+      }
+    }
+  }
+  return keys;
+}
+
+/**
+ * Gọi Gemini API với System Instruction, History, Tool Declaration và cơ chế Xoay tua Key (Key Rotation + Failover)
  */
 export async function generateChatReply({ history = [], userMessage, customPrompt = '', activeReservationContext = '' }) {
-  const apiKey = process.env.GEMINI_API_KEY;
-  const modelName = process.env.GEMINI_MODEL || 'gemini-3.5-flash';
+  const apiKeys = getGeminiApiKeys();
 
-  if (!apiKey) {
+  if (apiKeys.length === 0) {
     throw new Error('Chưa cấu hình GEMINI_API_KEY trong .env.local');
   }
 
@@ -129,10 +158,11 @@ export async function generateChatReply({ history = [], userMessage, customPromp
   };
 
   const primaryModel = process.env.GEMINI_MODEL || 'gemini-3.5-flash';
-  const fallbackModel = 'gemini-2.5-flash';
+  const fallbackCandidates = ['gemini-3.5-flash', 'gemini-3.8-flash', 'gemini-2.5-flash'];
+  const modelsToTry = [primaryModel, ...fallbackCandidates.filter(m => m !== primaryModel)];
 
-  const callModel = async (model) => {
-    const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
+  const callModelWithKey = async (model, key) => {
+    const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${encodeURIComponent(key)}`;
     const res = await fetch(endpoint, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -141,15 +171,53 @@ export async function generateChatReply({ history = [], userMessage, customPromp
     return await res.json();
   };
 
-  let data = await callModel(primaryModel);
-  if (data.error && primaryModel !== fallbackModel) {
-    console.warn(`Model ${primaryModel} gặp sự cố (${data.error.message}), tự động fallback sang ${fallbackModel}...`);
-    data = await callModel(fallbackModel);
+  // Xác định vị trí key bắt đầu theo Round-Robin để chia đều tải
+  const startIdx = keyRotationIndex % apiKeys.length;
+  keyRotationIndex = (keyRotationIndex + 1) % apiKeys.length;
+
+  let data = null;
+  let lastError = null;
+
+  // Thử xoay tua qua từng API Key; với mỗi Key thử primaryModel rồi fallbackModel
+  outerLoop:
+  for (let i = 0; i < apiKeys.length; i++) {
+    const currentKeyIdx = (startIdx + i) % apiKeys.length;
+    const currentKey = apiKeys[currentKeyIdx];
+    const maskedKey = `${currentKey.slice(0, 8)}...${currentKey.slice(-4)}`;
+
+    for (const model of modelsToTry) {
+      try {
+        const resData = await callModelWithKey(model, currentKey);
+        if (!resData.error) {
+          data = resData;
+          break outerLoop;
+        }
+
+        lastError = resData.error;
+        const status = resData.error.code || resData.error.status;
+        console.warn(`[Gemini Rotation] Key #${currentKeyIdx + 1} (${maskedKey}) | Model ${model} gặp lỗi (${status}): ${resData.error.message}`);
+
+        // Nếu lỗi liên quan đến API Key không hợp lệ hoặc hết Quota (400 API_KEY_INVALID, 403, 429),
+        // nhảy ngay sang Key tiếp theo thay vì thử model khác trên cùng Key lỗi
+        if (
+          resData.error.code === 429 ||
+          resData.error.code === 403 ||
+          (resData.error.message && /API key not valid|quota|rate limit|RESOURCE_EXHAUSTED/i.test(resData.error.message))
+        ) {
+          break;
+        }
+      } catch (networkErr) {
+        lastError = { message: networkErr.message };
+        console.warn(`[Gemini Rotation] Key #${currentKeyIdx + 1} (${maskedKey}) lỗi mạng:`, networkErr.message);
+        break;
+      }
+    }
   }
 
-  if (data.error) {
-    console.error('Gemini API Error:', data.error);
-    throw new Error(`Gemini API Error: ${data.error.message || JSON.stringify(data.error)}`);
+  if (!data || data.error) {
+    const errObj = data?.error || lastError;
+    console.error('All Gemini API Keys failed:', errObj);
+    throw new Error(`Gemini API Error: ${errObj?.message || JSON.stringify(errObj)}`);
   }
 
   const candidate = data.candidates?.[0];
